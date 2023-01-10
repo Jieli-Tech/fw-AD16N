@@ -35,9 +35,9 @@ AD16N 系列通用MCU SDK 固件程序
 
 * 芯片简介 : [SoC 数据手册扼要](./doc)
 
-* SDK 版本信息 : [SDK 历史版本](doc/AD14N-AD15N_SDK_发布版本信息.pdf)
+* SDK 版本信息 : [SDK 历史版本](doc/AD16N_FLASH_SDK_发布版本信息.pdf)
 
-* SDK 介绍文档 : [SDK 快速开始简介](./doc/AD14N_AD15N_AC104N_SDK手册.pdf)
+* SDK 介绍文档 : [SDK 快速开始简介](./doc/AD16N_SDK手册_V1.1.pdf)
 
 * SDK 结构文档 : [SDK 模块结构](./doc/)
 
