@@ -99,7 +99,7 @@
                 "C:/JL/pi32/pi32v2-include"
             ],
             "intelliSenseMode": "clang-x86",
-            "name": "_mbox_flash"
+            "name": "AD16N_mbox_flash"
         }
     ],
     "version": 4

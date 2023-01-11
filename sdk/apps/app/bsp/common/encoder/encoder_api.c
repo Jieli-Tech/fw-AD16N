@@ -10,6 +10,7 @@
 #include "circular_buf.h"
 #include "a_encoder.h"
 #include "mp3_encoder.h"
+#include "clock.h"
 
 
 #define LOG_TAG_CONST       NORM
@@ -52,8 +53,9 @@ enc_obj *enc_hdl;
 
 void start_encode(void)
 {
-    START_ADC_RUN;
     audio_adc_enable();
+    mdelay(10);
+    START_ADC_RUN;
 }
 void stop_encode(void *pfile, u32 dlen)
 {

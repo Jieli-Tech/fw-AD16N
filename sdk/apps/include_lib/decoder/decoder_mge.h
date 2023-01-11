@@ -47,6 +47,7 @@ extern void bit_clr_swi(unsigned char index);
 extern void decoder_soft_hook(void);
 extern int post_event(int event);
 extern void irq_decoder_ret(dec_obj *obj, u32 ret);
+extern void mp3_runflag_set(void *work_buf, int flag); //修复标准MP3解码快进快退获取时间
 
 
 #endif

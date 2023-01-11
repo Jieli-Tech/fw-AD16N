@@ -37,9 +37,12 @@
 #if DECODER_MIDI_KEYBOARD_EN
 #include "midi_ctrl.h"
 #endif
-/* #include "a_api.h" */
-/* #include "mp3_standard_api.h" */
-/* #include "wav_api.h" */
+#if DECODER_MP3_ST_EN
+#include "mp3_standard_api.h"
+#endif
+#if DECODER_WAV_EN
+#include "wav_api.h"
+#endif
 /* #include "msg.h" */
 /* #include "src_api.h" */
 #include "decoder_mge.h"
@@ -371,6 +374,7 @@ void irq_decoder_ret(dec_obj *obj, u32 ret)
     case MAD_ERROR_FILE_END:
     case MAD_ERROR_SYNC_LIMIT:
     case MAD_ERROR_F1X_START_ADDR:
+    case MAD_ERROR_FF_FR_FILE_END:
         obj->sound.enable |= B_DEC_ERR;
         break;
     default:

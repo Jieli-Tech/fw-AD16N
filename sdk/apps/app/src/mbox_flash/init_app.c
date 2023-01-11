@@ -22,6 +22,9 @@
 #include "flash_init.h"
 #include "sine_play.h"
 #include "app_power_mg.h"
+#include "gpio.h"
+#include "power_api.h"
+#include "asm/power_interface.h"
 
 #define LOG_TAG_CONST       NORM
 #define LOG_TAG             "[init]"
@@ -29,6 +32,9 @@
 
 void app_system_init(void)
 {
+    /* 按键唤醒消抖 */
+    /* check_power_on_key(); */
+
     /* UI */
     UI_init();
     SET_UI_MAIN(MENU_POWER_UP);
@@ -85,3 +91,57 @@ void mask_init_for_app(void)
 #endif
 }
 
+static u8 get_power_on_status(void)
+{
+    u8 on_status = 0;
+    gpio_set_direction(POWER_WAKEUP_IO, 1);
+    gpio_set_die(POWER_WAKEUP_IO, 1);
+    gpio_set_dieh(POWER_WAKEUP_IO, 1);
+    if (POWER_WAKEUP_EDGE == FALLING_EDGE) {
+        gpio_set_pull_up(POWER_WAKEUP_IO, 1);
+        gpio_set_pull_down(POWER_WAKEUP_IO, 0);
+        on_status = !(!!gpio_read(POWER_WAKEUP_IO));
+    } else if (POWER_WAKEUP_EDGE == RISING_EDGE) {
+        gpio_set_pull_up(POWER_WAKEUP_IO, 0);
+        gpio_set_pull_down(POWER_WAKEUP_IO, 1);
+        on_status = !!gpio_read(POWER_WAKEUP_IO);
+    } else {
+        on_status = 1;
+    }
+
+    return on_status;
+}
+
+void check_power_on_key(void)
+{
+    extern u64 get_wkup_source_value(void);
+    if (0 == (get_wkup_source_value() & BIT(P3_WKUP_SRC_PORT_EDGE))) {
+        printf("not port edge wakeup!\n");
+        return;
+    }
+
+    u32 delay_10ms_cnt = 0;
+    u32 delay_10msp_cnt = 0;
+
+    while (1) {
+        wdt_clear();
+        mdelay(10);
+
+        if (get_power_on_status()) {
+            log_char('+');
+            delay_10msp_cnt = 0;
+            delay_10ms_cnt++;
+            if (delay_10ms_cnt > 10) {
+                return;
+            }
+        } else {
+            log_char('-');
+            delay_10ms_cnt = 0;
+            delay_10msp_cnt++;
+            if (delay_10msp_cnt > 10) {
+                log_info("enter softpoweroff\n");
+                sys_softoff();
+            }
+        }
+    }
+}

@@ -7,7 +7,7 @@
   strcmp = ABSOLUTE(0xfd60);
   memset = ABSOLUTE(0xfd64);
   IcuInitial = ABSOLUTE(0xfd68);
-  get_mp3_ops = ABSOLUTE(0xfd6c);
+  get_maskrom_mp3_ops = ABSOLUTE(0xfd6c);
   mpegaudio_synth_full = ABSOLUTE(0xfd70);
   mp3_decode = ABSOLUTE(0xfd74);
   mpeg_decode_header = ABSOLUTE(0xfd78);

@@ -9,6 +9,7 @@ extern const u8 mp3_st_evt[10];
 
 u32 mp3_st_decode_api(void *p_file, void **p_dec, void *p_dp_buf);
 u32 mp3_st_buff_api(dec_buf *p_dec_buf);
+extern u32 get_mp3playtime(void *work_buf);
 
 #endif
 

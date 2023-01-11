@@ -42,6 +42,7 @@
 /*---------Power Wakeup IO------------------*/
 #define TCFG_VDDIOM_LEVEL			        VDDIOM_VOL_32V
 #define POWER_WAKEUP_IO				        AD_KEY_IO_SEL
+#define POWER_WAKEUP_EDGE				    FALLING_EDGE
 
 /*---------charge Configuration-------------*/
 #define TCFG_CHARGE_ENABLE		            ENABLE
@@ -132,7 +133,7 @@
 #include "usb_common_def.h"
 
 #undef USB_DEVICE_CLASS_CONFIG
-#define  USB_DEVICE_CLASS_CONFIG            (MASSSTORAGE_CLASS|SPEAKER_CLASS|HID_CLASS)  //配置usb从机模式支持的class
+#define  USB_DEVICE_CLASS_CONFIG            (MASSSTORAGE_CLASS|AUDIO_CLASS|HID_CLASS)  //配置usb从机模式支持的class
 #endif
 
 #endif

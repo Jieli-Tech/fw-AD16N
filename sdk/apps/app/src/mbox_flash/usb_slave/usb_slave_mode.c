@@ -9,6 +9,7 @@
 #include "msg.h"
 #include "ui_api.h"
 #include "hot_msg.h"
+#include "stream_frame.h"
 
 #include "usb/usb_config.h"
 #include "usb/device/hid.h"
@@ -40,6 +41,7 @@ void usb_slave_app(void)
     SET_UI_MAIN(MENU_PC_MAIN);
     UI_menu(MENU_PC_MAIN);
 
+    stream_frame_init();
     usb_device_mode(0, 0);
     usb_start();
 

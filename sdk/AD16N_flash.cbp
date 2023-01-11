@@ -2,7 +2,7 @@
 <CodeBlocks_project_file>
 <FileVersion major="1" minor="6" />
 <Project>
-<Option title="_mbox_flash" />
+<Option title="AD16N_mbox_flash" />
 <Option compiler="pi32v2_r1_large_lto_compiler" />
 <Build>
 <Target title="Release">
@@ -132,6 +132,7 @@
 <Add option="--gc-sections" />
 <Add option="--plugin-opt=-pi32v2-large-program=true" />
 <Add option="--start-group" />
+<Add option="apps/include_lib/liba/ARCH/pi32v2_lto_r1/mp3_patch_lib.a" />
 <Add option="apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_f1a_decode.a" />
 <Add option="apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_a_decode.a" />
 <Add option="apps/include_lib/liba/ARCH/pi32v2_lto_r1/ump3_dec_lib.a" />

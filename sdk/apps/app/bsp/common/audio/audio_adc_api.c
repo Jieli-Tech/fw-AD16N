@@ -62,7 +62,7 @@ void audio_adc_mode_init(void)
 }
 
 
-u32 audio_adc_init_api(u32 sr, AUDIO_ADC_MODE mode, u32 ch)
+u32 audio_adc_init_api(u32 sr, AUDIO_ADC_MODE mode, u32 throw_sp_num)
 {
     u32 res = 0;
     if (AUDIO_ADC_MIC == mode) {
@@ -112,7 +112,7 @@ u32 audio_adc_init_api(u32 sr, AUDIO_ADC_MODE mode, u32 ch)
     /* void dac_analog_init_t(); */
     /* dac_analog_init_t(); */
     if (0 == res) {
-        res = audio_adc_phy_init((void *)&c_audio_adc_hdl, sr, AUDIO_ADC_CON_DEFAULT, 0);
+        res = audio_adc_phy_init((void *)&c_audio_adc_hdl, sr, AUDIO_ADC_CON_DEFAULT, throw_sp_num);
     }
     return res;
 

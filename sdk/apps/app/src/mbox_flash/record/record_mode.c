@@ -165,7 +165,7 @@ static int encode_start(Encode_Control *obj)
     u32 sr = RECORD_AUDIO_ADC_SR;
     /* u32 sr = dac_sr_read(); */
     /* log_info("adc sr:%d\n", sr); */
-    int err = audio_adc_init_api(sr, AUDIO_ADC_MIC, 0);
+    int err = audio_adc_init_api(sr, AUDIO_ADC_MIC, 3000);
     if (0 != err) {
         log_info(" audio adc init fail : 0x%x\n");
         return err;

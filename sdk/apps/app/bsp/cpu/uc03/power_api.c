@@ -76,7 +76,7 @@ const struct low_power_param power_param = {
 /**************************************************** wk_param *********************************************************/
 const struct port_wakeup port0 = {
     .pullup_down_enable = 1,                          //配置I/O 内部上下拉是否使能
-    .edge       = FALLING_EDGE,                       //唤醒方式选择,可选：上升沿\下降沿
+    .edge       = POWER_WAKEUP_EDGE,                  //唤醒方式选择,可选：上升沿\下降沿
     .iomap      = POWER_WAKEUP_IO,                    	  //唤醒口选择
 };
 

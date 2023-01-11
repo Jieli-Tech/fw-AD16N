@@ -338,6 +338,7 @@ LFLAGS := \
 	--gc-sections \
 	--plugin-opt=-pi32v2-large-program=true \
 	--start-group \
+	apps/include_lib/liba/ARCH/pi32v2_lto_r1/mp3_patch_lib.a \
 	apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_f1a_decode.a \
 	apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_a_decode.a \
 	apps/include_lib/liba/ARCH/pi32v2_lto_r1/ump3_dec_lib.a \

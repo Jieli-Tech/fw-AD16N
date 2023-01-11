@@ -10,6 +10,7 @@
 #define RECORD_ADC_SR_12K       12000
 #define RECORD_ADC_SR_16K       16000
 #define RECORD_ADC_SR_22K05     22050
+#define RECORD_ADC_SR_24K       24000
 #define RECORD_ADC_SR_32K       32000
 #define RECORD_ADC_SR_44K1      44100
 #define RECORD_ADC_SR_48K       48000
