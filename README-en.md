@@ -66,7 +66,7 @@ SDK support Codeblock to build to project,make sure you already setup the enviro
 Hardware
 -------------
 
-* EV Board ：(https://shop321455197.taobao.com/?spm=a230r.7195193.1997079397.2.2a6d391d3n5udo)
+* EV Board ：[link](https://item.taobao.com/item.htm?spm=a230r.1.14.16.3515573bt22ZGR&id=696613076397&ns=1&abbucket=17#detail)
 
 * Production Tool : massive prodution and program the SoC, please accquire the tool from the [link](https://item.taobao.com/item.htm?spm=a1z10.1-c-s.w4004-22883854875.8.504d246bXKwyeH&id=620941819219) and check the releated [doc](./doc/stuff/烧写器使用说明文档.pdf)
 
