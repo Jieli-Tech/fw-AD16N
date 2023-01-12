@@ -40,7 +40,7 @@ FORCE_4K_ALIGN=YES
 
 
 [CHIP_VERSION]
-SUPPORTED_LIST=A,B,C
+SUPPORTED_LIST=A
 
 //#####################################################    UBOOT配置项，请勿随意调整顺序    ##################################################
 [SYS_CFG_PARAM]
