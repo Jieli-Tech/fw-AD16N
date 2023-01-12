@@ -95,9 +95,13 @@
 #define TFG_SPI_WORK_MODE				    SPI_MODE_BIDIR_1BIT
 #define TFG_SPI_READ_DATA_WIDTH			    2
 #define TFG_SPI_CS_PORT_SEL				    IO_PORTB_00
+#define TFG_SPI_CS_PORT         		    PB00
 #define TFG_SPI_CLK_PORT_SEL			    IO_PORTB_01
+#define TFG_SPI_CLK_PORT        		    PB01
 #define TFG_SPI_DO_PORT_SEL				    IO_PORTB_02
+#define TFG_SPI_DO_PORT         		    PB02
 #define TFG_SPI_DI_PORT_SEL				    IO_PORTB_03
+#define TFG_SPI_DI_PORT         		    PB03
 
 /*---------SD Configuration-----------------*/
 #define TFG_SD_EN				            ENABLE

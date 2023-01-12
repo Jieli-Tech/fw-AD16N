@@ -217,6 +217,7 @@ __simple_decode_exit:
 
 
 
+#if TFG_EXT_FLASH_EN
 static bool simple_switch_device(play_control *ppctl)
 {
     decoder_stop(ppctl->p_dec_obj, NEED_WAIT, ppctl->pdp);//记录音乐断点
@@ -260,6 +261,7 @@ static bool simple_switch_device(play_control *ppctl)
 #endif
     return true;
 }
+#endif
 
 static bool simple_next_dir(play_control *ppctl)
 {

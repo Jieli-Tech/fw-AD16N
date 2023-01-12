@@ -1,4 +1,13 @@
 // *INDENT-OFF*
+#include "app_config.h"
+#define _CAT2(a,b) a ## _ ## b
+#define CAT2(a,b) _CAT2(a,b)
+#define _CAT3(a,b,c) a ## _ ## b ##  _  ## c
+#define CAT3(a,b,c) _CAT3(a,b,c)
+#define _CAT4(a,b,c,d) a ## _ ## b ##  _  ## c ## _ ## d
+#define CAT4(a,b,c,d) _CAT4(a,b,c,d)
+#define _CAT5(a,b,c,d,e) a ## _ ## b ##  _  ## c ## _ ## d ## _ ## e
+#define CAT5(a,b,c,d,e) _CAT5(a,b,c,d,e)
 //#####################################################
 //#
 //#   配置数据按照 长度+配置名字+数据的方式存储
@@ -61,24 +70,34 @@ UTBD=1000000;//uboot串口波特率
 //#RESET=PB01_08_0;   //port口_长按时间_有效电平（长按时间有00、04、08三个值可选，单位为秒，当长按时间为00时，则关闭长按复位功能。）
 //CACHE_WAY=1;// 范围1~4
 //#WAIT_TIME=10;// * 100ms
-EX_FLASH=PB00_1A_PB08;  #cs,spi1,A,flashpower
-EX_FLASH_IO=1_PB01_PB02_PB03_PB04_PB05;  #data_width,clk,do,di,d2,d3
+#if TFG_EXT_FLASH_EN
+EX_FLASH=CAT2(TFG_SPI_CS_PORT,1A_NULL);  //#cs,spi1,A,flashpower
+EX_FLASH_IO=CAT5(1,TFG_SPI_CLK_PORT,TFG_SPI_DO_PORT,TFG_SPI_DI_PORT,NULL_NULL);  //#data_width,clk,do,di,d2,d3
+#endif
 //#############################################################################################################################################
 
 //####################################################
 [TOOL_CONFIG]
-1TO2_MIN_VER=2.24.0
-1TO8_MIN_VER=3.0.34
-BTBOX_MIN_VER=1.2.4.f
+1TO2_MIN_VER=2.27.0
+1TO8_MIN_VER=3.1.15
+//BTBOX_MIN_VER=1.2.4.f
 //####################################################
 
 //####################################################
 //烧写器配置项
-//OTP_BOOT = 0,DEBUG模式
-//OTP_BOOT = 1,OTP模式
+//OTP_BOOT 0,FLASH模式 1,OTP模式
+//LIGHTING2TYPEC 0,uboot启动 1,快速启动
+//####################################################
 [BURNER_PASSTHROUGH_CFG]
 LIGHTING2TYPEC=0    //uboot_start
 OTP_BOOT=0
+
+//####################################################
+//烧写器配置项
+//2.078v 2.188v 2.297v 2.406v 2.515v 2.624v 2.733v 2.840v
+//####################################################
+[BURNER_OPTIONS]
+LVD=2.515v
 
 //########flash空间使用配置区域###############################################
 //#PDCTNAME:    产品名，对应此代码，用于标识产品，升级时可以选择匹配产品名
