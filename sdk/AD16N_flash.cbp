@@ -97,6 +97,7 @@
 <Add directory="apps/include_lib/device/usb/device" />
 <Add directory="apps/include_lib/device/usb/host" />
 <Add directory="apps/include_lib/device/norflash" />
+<Add directory="apps/include_lib/update" />
 <Add directory="apps/app/bsp" />
 <Add directory="apps/app/bsp/common/key" />
 <Add directory="apps/include_lib/sound_effect_list" />
@@ -151,6 +152,7 @@
 <Add option="apps/include_lib/liba/uc03/mbox_flash/malloc_lib.a" />
 <Add option="apps/include_lib/liba/uc03/mbox_flash/fs_lib.a" />
 <Add option="apps/include_lib/liba/uc03/mbox_flash/src_lib.a" />
+<Add option="apps/include_lib/liba/uc03/mbox_flash/update_lib.a" />
 <Add option="--end-group" />
 <Add option="--end-group " />
 <Add option="-Tapps/app/post_build/uc03/app.ld" />
@@ -212,6 +214,8 @@
 <Unit filename="apps/app/bsp/common/key/key_drv_mic.h" />
 <Unit filename="apps/app/bsp/common/key/key_ir.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/key/key_ir.h" />
+<Unit filename="apps/app/bsp/common/key/key_touch.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/common/key/key_touch.h" />
 <Unit filename="apps/app/bsp/common/msg/msg.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/my_malloc.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/norflash/norflash.c"><Option compilerVer="CC"/></Unit>
@@ -246,6 +250,8 @@
 <Unit filename="apps/app/bsp/cpu/uc03/clock.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/irflt.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/lcd_seg4x8_driver.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/cpu/uc03/pl_cnt.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/cpu/uc03/pl_cnt.h" />
 <Unit filename="apps/app/bsp/cpu/uc03/power_api.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/power_api.h" />
 <Unit filename="apps/app/bsp/cpu/uc03/power_port.c"><Option compilerVer="CC"/></Unit>
@@ -328,6 +334,7 @@
 <Unit filename="apps/include_lib/common/common.h" />
 <Unit filename="apps/include_lib/common/config.h" />
 <Unit filename="apps/include_lib/common/errno-base.h" />
+<Unit filename="apps/include_lib/common/flash_wp.h" />
 <Unit filename="apps/include_lib/common/includes.h" />
 <Unit filename="apps/include_lib/common/jiffies.h" />
 <Unit filename="apps/include_lib/common/log.h" />
@@ -352,6 +359,7 @@
 <Unit filename="apps/include_lib/cpu/uc03/audio_dac.h" />
 <Unit filename="apps/include_lib/cpu/uc03/clock.h" />
 <Unit filename="apps/include_lib/cpu/uc03/cpu.h" />
+<Unit filename="apps/include_lib/cpu/uc03/crc16.h" />
 <Unit filename="apps/include_lib/cpu/uc03/csfr.h" />
 <Unit filename="apps/include_lib/cpu/uc03/efuse.h" />
 <Unit filename="apps/include_lib/cpu/uc03/fusb_pll_trim.h" />
@@ -370,7 +378,6 @@
 <Unit filename="apps/include_lib/cpu/uc03/typedef.h" />
 <Unit filename="apps/include_lib/cpu/uc03/uc03.h" />
 <Unit filename="apps/include_lib/cpu/wdt.h" />
-<Unit filename="apps/include_lib/crc.h" />
 <Unit filename="apps/include_lib/decoder/decoder_api.h" />
 <Unit filename="apps/include_lib/decoder/decoder_mge.h" />
 <Unit filename="apps/include_lib/decoder/decoder_msg_tab.h" />
@@ -429,5 +436,6 @@
 <Unit filename="apps/include_lib/sound_effect_list/speed_api.h" />
 <Unit filename="apps/include_lib/sound_mge/sound_mge.h" />
 <Unit filename="apps/include_lib/sound_mge/stream_frame.h" />
+<Unit filename="apps/include_lib/update/update.h" />
 </Project>
 </CodeBlocks_project_file>

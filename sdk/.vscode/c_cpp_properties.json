@@ -78,6 +78,7 @@
                 "${workspaceFolder}/apps/include_lib/device/usb/device",
                 "${workspaceFolder}/apps/include_lib/device/usb/host",
                 "${workspaceFolder}/apps/include_lib/device/norflash",
+                "${workspaceFolder}/apps/include_lib/update",
                 "${workspaceFolder}/apps/app/bsp",
                 "${workspaceFolder}/apps/app/bsp/common/key",
                 "${workspaceFolder}/apps/include_lib/sound_effect_list",

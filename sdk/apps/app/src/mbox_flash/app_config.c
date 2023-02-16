@@ -61,6 +61,14 @@ const bool config_usbslave_ctl_mic = 1;
 // 0 :vcm不会外挂电容；1：vcm会外挂电容；
 const bool config_vcm_cap_addon = 0;
 
+/************update*************************************/
+//升级使用区域， 0:VM区, 1:eeprom区
+const u8 dev_update_use_eeprom = 0;
+//升级时是否保持IO状态
+const u8 dev_update_keep_io_status = 0;
+//ufw文件的vid要求：0:vid相同  1:vid不同
+const u8 ufw_vid_need_to_be_different = 0;
+
 /*************audio dac analog config*************************************
  * 以下配置，作用为系统音频 DAC 模块开机默认配置
  * */

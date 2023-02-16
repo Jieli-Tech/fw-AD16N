@@ -34,6 +34,7 @@
 #include "usb/host/usb_host.h"
 #include "usb/device/usb_stack.h"
 #include "usb/otg.h"
+#include "wdt.h"
 
 #define LOG_TAG_CONST       APP
 #define LOG_TAG             "[mbox_app]"
@@ -87,11 +88,15 @@ void app_timer_loop(void)
     charge_timer_handle();
 #endif
 }
-
+u32 get_up_suc_flag();
 void mbox_flash_main(void)
 {
-    log_info("Mbox-Flash App\n");
-
+    log_info("Mbox Flash App\n");
+    if (get_up_suc_flag()) {
+        log_info("----device update end----\n");
+        wdt_close();
+        while (1);
+    }
 #if AUDIO_EQ_ENABLE
     audio_eq_init_api();
 #endif

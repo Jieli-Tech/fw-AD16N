@@ -4,7 +4,7 @@
 #pragma const_seg(".finit.text.const")
 #pragma code_seg(".finit.text")
 #pragma str_literal_override(".finit.text.const")
-
+#include "flash_wp.h"
 #include "flash_init.h"
 #include "tick_timer_driver.h"
 #include "device.h"
@@ -70,7 +70,7 @@ int flash_info_init(void)
     dev_ioctl(device, IOCTL_SET_PROTECT_INFO, (u32)flash_code_protect_callback);
     dev_close(device);
 
-
+    norflash_set_write_protect(1);
     return 0;
 }
 struct vfs_attr *get_vm_attr_p(void)
@@ -113,6 +113,8 @@ void vm_init_api(void)
     vfs_fs_close(&pvfs);
 
     syscfg_vm_init(eeprom_attr.sclust, eeprom_attr.fsize);
+    // extern void nvm_demo(u32 start, u32 size);
+    // nvm_demo(eeprom_attr.sclust, eeprom_attr.fsize);
     /*
      *demo
     u8 data_buf[10];

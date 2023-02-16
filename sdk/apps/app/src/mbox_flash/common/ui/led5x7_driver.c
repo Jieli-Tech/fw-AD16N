@@ -652,6 +652,7 @@ u16 led_port_tab[] = {
 };
 
 
+AT(.led5x7.text.cache.L1)
 void LED5X7_scan(void)
 {
     static u8 cnt;

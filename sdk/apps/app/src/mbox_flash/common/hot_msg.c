@@ -84,6 +84,16 @@ __app_vol_deal:
         log_info("MSG_PC_OUT\n");
         usb_stop();
         break;
+#if defined(TFG_DEV_UPGRADE_SUPPORT) && (1 == TFG_DEV_UPGRADE_SUPPORT)
+    case MSG_USB_DISK_IN:
+    case MSG_SDMMCA_IN:
+        if (time_before(maskrom_get_jiffies(), 150)) {
+            break;//上电1.5s内不响应设备上线消息
+        }
+        u8 update_dev = key - MSG_USB_DISK_IN;
+        device_update(update_dev);
+        break;
+#endif
 
     //-------------模式退出处理
     case MSG_NEXT_WORKMODE:

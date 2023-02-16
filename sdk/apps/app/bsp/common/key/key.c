@@ -51,7 +51,14 @@ static u16(*key_msg_filter)(u8, u8, u8) = NULL;
 #define d_get_irkey_value() irkey_get_value()
 #endif
 
-#if ((!KEY_IO_EN) && (!KEY_MATRIX_EN) && (!KEY_AD_EN) && (!KEY_MIC_EN))
+#if KEY_TOUCH_EN
+#include "key_touch.h"
+#define D_TOUCHKEY_TYPE        KEY_TYPE_TOUCH
+#define d_touchkey_init()      touch_key_init()
+#define d_get_touchkey_value() get_touch_key_value()
+#endif
+
+#if ((!KEY_IO_EN) && (!KEY_MATRIX_EN) && (!KEY_AD_EN) && (!KEY_MIC_EN)&&(!KEY_TOUCH_EN))
 #define D_KEY_TYPE        0
 #define d_key_init()      asm("nop")
 #define d_get_key_value() 0xff
@@ -71,6 +78,9 @@ void key_init(void)
     d_key_init();
 #if KEY_IR_EN
     d_irkey_init();
+#endif
+#if KEY_TOUCH_EN
+    d_touchkey_init();
 #endif
 }
 /*----------------------------------------------------------------------------*/
@@ -150,9 +160,17 @@ void key_scan()
         }
     } else
 #endif
-    {
-        key_type = D_KEY_TYPE;
-    }
+#if KEY_TOUCH_EN
+        if (cur_key == NO_KEY) {
+            cur_key = d_get_touchkey_value();
+            if (cur_key != NO_KEY) {
+                key_type = D_TOUCHKEY_TYPE;
+            }
+        } else
+#endif
+        {
+            key_type = D_KEY_TYPE;
+        }
 
     if (cur_key == last_key) {                          //长时间按键
         if (cur_key == NO_KEY) {

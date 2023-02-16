@@ -3,7 +3,7 @@
 
 #include "typedef.h"
 
-#define AUDAC_CHANNEL_TOTAL   2
+#define AUDAC_CHANNEL_TOTAL   3
 
 /********* define for DAC_CON0**********************************/
 #define A_DAC_PND          BIT(7)

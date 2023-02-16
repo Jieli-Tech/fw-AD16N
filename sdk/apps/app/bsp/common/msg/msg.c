@@ -153,6 +153,7 @@ int get_msg(int len, int *msg)
         /* log_info(" gm a 0x%x\n",param); */
         /*get no msg,cpu enter idle.why do this? TODO*/
         /* __builtin_pi32_idle(); */
+        __asm__ volatile("idle");
         msg[0] = NO_MSG;
         return MSG_NO_MSG;
     }

@@ -154,6 +154,9 @@ void music_app(void)
             }
             used_device = msg[0] - MSG_USB_DISK_IN;
             log_info("DEV_IN %d\n", used_device);
+#if defined(TFG_DEV_UPGRADE_SUPPORT) && (1 == TFG_DEV_UPGRADE_SUPPORT)
+            device_update(used_device);
+#endif
             post_msg(1, MSG_SEL_NEW_DEVICE);
             break;
         case MSG_SDMMCA_OUT:

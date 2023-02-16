@@ -26,8 +26,8 @@
 #define KEY_AD_EN				            1//<AD按键使能
 #define KEY_MIC_EN                          0//<耳机按键使能
 #define KEY_MATRIX_EN			            0//<矩阵按键使能
-#define KEY_IR_EN				            1//<IR按键使能
-// #define KEY_TOUCH_EN			            0//<触摸按键使能
+#define KEY_IR_EN				            0//<IR按键使能
+#define KEY_TOUCH_EN			            0//<触摸按键使能
 //AD KEY
 #define AD_KEY_IO_SEL		                IO_PORTA_08
 #define AD_KEY_CH_SEL				        ADC_CH_PA8
@@ -35,7 +35,8 @@
 #define IR_KEY_IO			                IO_PORTA_05
 #define IR_KEY_IRQ_IDX  	                IRQ_TIME2_IDX
 #define IR_KEY_TIMER		                JL_TIMER2
-
+//TOUCH KEY
+#define TOUCH_KEY_IO_SEL		           {IO_PORTA_07,IO_PORTB_10}
 /*---------KEY VOICE Configuration----------*/
 #define D_HAS_KEY_VOICE   				    DISABLE
 
@@ -75,6 +76,10 @@
 
 /*---------EQ Configuration-----------------*/
 #define AUDIO_EQ_ENABLE                     ENABLE//eq总使能
+
+/*---------------UPDATE---------------------*/
+#define TFG_DEV_UPGRADE_SUPPORT  0
+#define TFG_UPGRADE_FILE_NAME    "/update.ufw"
 
 /*---------UI Configuration-----------------*/
 #define LED_5X7			                    ENABLE

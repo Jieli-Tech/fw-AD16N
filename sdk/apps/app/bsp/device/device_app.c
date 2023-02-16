@@ -11,6 +11,7 @@
 #include "device.h"
 #include "device_app.h"
 #include "errno-base.h"
+#include "update/update.h"
 
 /* #define LOG_TAG_CONST       NORM */
 #define LOG_TAG_CONST       OFF
@@ -147,3 +148,9 @@ u32 device_status(u32 index, bool mode)
     }
 }
 
+#if defined(TFG_DEV_UPGRADE_SUPPORT) && (1 == TFG_DEV_UPGRADE_SUPPORT)
+void device_update(u8 update_dev)
+{
+    try_to_upgrade((char *)device_name[update_dev], TFG_UPGRADE_FILE_NAME);
+}
+#endif

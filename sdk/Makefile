@@ -173,6 +173,7 @@ INCLUDES := \
 	-Iapps/include_lib/device/usb/device \
 	-Iapps/include_lib/device/usb/host \
 	-Iapps/include_lib/device/norflash \
+	-Iapps/include_lib/update \
 	-Iapps/app/bsp \
 	-Iapps/app/bsp/common/key \
 	-Iapps/include_lib/sound_effect_list \
@@ -231,6 +232,7 @@ c_SRC_FILES := \
 	apps/app/bsp/common/key/key_drv_matrix.c \
 	apps/app/bsp/common/key/key_drv_mic.c \
 	apps/app/bsp/common/key/key_ir.c \
+	apps/app/bsp/common/key/key_touch.c \
 	apps/app/bsp/common/msg/msg.c \
 	apps/app/bsp/common/my_malloc.c \
 	apps/app/bsp/common/norflash/norflash.c \
@@ -256,6 +258,7 @@ c_SRC_FILES := \
 	apps/app/bsp/cpu/uc03/clock.c \
 	apps/app/bsp/cpu/uc03/irflt.c \
 	apps/app/bsp/cpu/uc03/lcd_seg4x8_driver.c \
+	apps/app/bsp/cpu/uc03/pl_cnt.c \
 	apps/app/bsp/cpu/uc03/power_api.c \
 	apps/app/bsp/cpu/uc03/power_port.c \
 	apps/app/bsp/cpu/uc03/saradc_isr.c \
@@ -357,6 +360,7 @@ LFLAGS := \
 	apps/include_lib/liba/uc03/mbox_flash/malloc_lib.a \
 	apps/include_lib/liba/uc03/mbox_flash/fs_lib.a \
 	apps/include_lib/liba/uc03/mbox_flash/src_lib.a \
+	apps/include_lib/liba/uc03/mbox_flash/update_lib.a \
 	--end-group \
 	--end-group  \
 	-Tapps/app/post_build/uc03/app.ld \

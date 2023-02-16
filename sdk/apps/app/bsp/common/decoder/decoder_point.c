@@ -10,7 +10,7 @@
 #include "config.h"
 #include "typedef.h"
 #include "decoder_api.h"
-#include "crc.h"
+#include "crc16.h"
 #include "errno-base.h"
 
 
@@ -19,7 +19,6 @@
 #define LOG_TAG             "[d_poit]"
 #include "log.h"
 
-#define CRC16 chip_crc16
 bool get_dp(dec_obj *obj, dp_buff *dbuff)
 {
     u32 t_size;

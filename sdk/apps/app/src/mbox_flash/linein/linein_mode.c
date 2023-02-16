@@ -108,6 +108,7 @@ __linein_app_exit:
     audio_adc_disable();
     unregist_audio_adc_channel(&digital_linein_sound);
     unregist_dac_channel(&digital_linein_sound);
+    audio_adc_off_api();
     dac_sr_api(sr);
 #else
     audac_analog_open();
