@@ -2,7 +2,7 @@
 AD16N系列通用音频MCU选型表:
 -------------
 
-型号|封装|内置 系统Flash|外挂 系统Flash|供电范围|关机功耗|GPIO|10bit ADC|FUSB|SPI|I2C|UART|SDIO|QDEC|2812LED|IRDA|TIM PWM|MCPWM|MIC|AUX|AUD DAC|直推耳机|锂电池充电|RTC|LCD 段码屏|产品应用
+型号|封装|内置 系统Flash|外挂 系统Flash|供电范围|关机功耗|GPIO|10bit ADC|FUSB|SPI|I2C|UART|SDIO|QDEC|2812LED|IRDA|TIM PWM|MCPWM| MIC |AUX|AUD DAC|直推耳机|锂电池充电|RTC|LCD 段码屏|产品应用
 -|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|
 AD160A0|QFN52|×|√|2.7V-5V|2uA|38|16|√|1|1|2|1|1|1|√|3|2对|单端/差分|2|立体声|双VCMO立体声|√|√|√|全封装 音频MCU
 AD160A4|QFN52|4Mbit|×|2.7V-5V|2uA|33|16|√|1|1|2|1|1|1|√|3|2对|单端/差分|2|立体声|双VCMO立体声|√|√|√|全封装 音频MCU

@@ -37,6 +37,8 @@ Documentation
 
 * Chipset brief : [SoC datasheet](./doc)
 
+* Product Select Guide : [SoC Select Guide](./doc/README.md)
+
 * SDK Version: [SDK History](doc/AD16N_FLASH_SDK_发布版本信息.pdf)
 
 * SDK introduction : [SDK quick start guide](./doc/AD16N_SDK手册_V1.1.pdf)
