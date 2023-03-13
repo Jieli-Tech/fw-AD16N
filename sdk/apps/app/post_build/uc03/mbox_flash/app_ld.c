@@ -143,17 +143,17 @@ SECTIONS
             *(.mode_smpl_dec_data);
             PROVIDE(mode_smpl_dec_ovly_end = .);
         }
-        .d_speed
+        .d_song_speed
         {
             . = MAX(mode_music_overlay_data_end, mode_smpl_dec_ovly_end);
-            PROVIDE(speed_buf_start = .);
+            PROVIDE(song_speed_buf_start = .);
             . = ALIGN(4);
-            *(.sp_data)
-            PROVIDE(speed_buf_end = .);
+            *(.song_sp_data)
+            PROVIDE(song_speed_buf_end = .);
         }
         .d_a
         {
-            . = speed_buf_end;
+            . = song_speed_buf_end;
             PROVIDE(a_buf_start = .);
             *(.a_data);
             PROVIDE(a_buf_end = .);
@@ -189,17 +189,18 @@ SECTIONS
             *(.midi_ctrl_buf);
             PROVIDE(midi_ctrl_buf_end = .);
         }
-        /* 标准MP3与WAV不与A格式同时播放 */
+        /* 标准MP3解码，与A格式和歌曲变速变调资源复用 */
         .d_mp3_st
         {
-            . = speed_buf_end;
+            . = MAX(mode_music_overlay_data_end, mode_smpl_dec_ovly_end);
+            /* . = song_speed_buf_end; */
             PROVIDE(mp3_st_buf_start = .);
             *(.mp3_st_data);
             PROVIDE(mp3_st_buf_end = .);
         }
         .d_wav
         {
-            . = speed_buf_end;
+            . = a_buf_end;
             PROVIDE(wav_buf_start = .);
             *(.wav_data);
             PROVIDE(wav_buf_end = .);
@@ -236,6 +237,7 @@ SECTIONS
             *(.digital_linein_data);
             PROVIDE(mode_linein_overlay_data_end = .);
         }
+
         .d_usb_slave
         {
             PROVIDE(mode_pc_overlay_data_start = .);
@@ -247,9 +249,66 @@ SECTIONS
             *(.usb_msd_dma);
             *(.usb_hid_dma);
             *(.usb_iso_dma);
+            *(.usb_descriptor);
+            *(.usb_config_var);
             PROVIDE(mode_pc_overlay_data_end = .);
         }
+        .d_norflash_cache
+        {
+            . = mode_pc_overlay_data_end;
+            *(.norflash_cache_buf)
+            norflash_cache_buf_end = .;
+        }
 
+        /* loudspk模式除howling外，其他音效资源复用 */
+        .d_loud_speaker
+        {
+            PROVIDE(mode_loud_spk_overlay_data_start = .);
+            . = ALIGN(4);
+            *(.speaker_data);
+            PROVIDE(mode_loud_spk_overlay_data_end = .);
+        }
+        .d_howling
+        {
+            . = mode_loud_spk_overlay_data_end;
+            PROVIDE(howling_data_start = .);
+            . = ALIGN(4);
+            *(.howling_data);
+            PROVIDE(howling_data_end = .);
+        }
+        .d_realtime_sp
+        {
+            . = howling_data_end;
+            PROVIDE(realtime_sp_data_start = .);
+            . = ALIGN(4);
+            *(.sp_data);
+            PROVIDE(realtime_sp_data_end = .);
+        }
+        .d_echo
+        {
+            . = howling_data_end;
+            PROVIDE(echo_data_start = .);
+            . = ALIGN(4);
+            *(.echo_data);
+            PROVIDE(echo_data_end = .);
+        }
+        .d_voice_pitch
+        {
+            . = howling_data_end;
+            PROVIDE(vp_data_start = .);
+            . = ALIGN(4);
+            *(.vp_data);
+            PROVIDE(vp_data_end = .);
+        }
+
+        /* rtc模式 */
+        .d_rtc
+        {
+            PROVIDE(mode_rtc_overlay_data_start = .);
+            . = ALIGN(4);
+            *(.rtc_mode_data);
+            PROVIDE(mode_rtc_overlay_data_end = .);
+        }
     } > ram0
     __overlay_end = .;
 
@@ -278,26 +337,35 @@ SECTIONS
     text_size       = SIZEOF(.app_code);
 
     heap_size = _free_end - _free_start;
-    speed_buf_size = speed_buf_end - speed_buf_start;
-    a_buf_size = a_buf_end - a_buf_start;
 
     __overlay_size = __overlay_end - __overlay_start;
-    linein_size = mode_linein_overlay_data_end - mode_linein_overlay_data_start;
-    usb_slave_size = mode_pc_overlay_data_end - mode_pc_overlay_data_start;
     music_play_size = mode_music_overlay_data_end - mode_music_overlay_data_start;
-    simple_decode_size = mode_smpl_dec_ovly_end - a_buf_start;
-
+    simple_decode_size = mode_smpl_dec_ovly_end - mode_smpl_dec_ovly_start;
     decoder_start_addr = MAX(mode_music_overlay_data_end,mode_smpl_dec_ovly_end);
+    a_buf_size = a_buf_end - a_buf_start;
+    song_speed_buf_size = song_speed_buf_end - song_speed_buf_start;
     f1a_size = f1a_buf_end - f1a_1_buf_start;
     ump3_size = ump3_buf_end - ump3_buf_start;
     mp3_st_size = mp3_st_buf_end - mp3_st_buf_start;
     wave_size = wav_buf_end - wav_buf_start;
-    midi_a_size = midi_ctrl_buf_end - a_buf_end;
+    midi_size = midi_ctrl_buf_end - midi_buf_start;
 
-    a_rec_size = rec_data_end - rec_data_start;
-    mp3_rec_size = enc_mp3_data_end - rec_data_start;
-    ump3_rec_size = enc_ump3_data_end - rec_data_start;
+    linein_size = mode_linein_overlay_data_end - mode_linein_overlay_data_start;
 
+    usb_slave_size = mode_pc_overlay_data_end - mode_pc_overlay_data_start;
+    norflash_cache_size = norflash_cache_buf_end - mode_pc_overlay_data_end;
 
+    record_size = rec_data_end - rec_data_start;
+    a_enc_size = enc_a_data_end - rec_data_end;
+    mp3_enc_size = enc_mp3_data_end - rec_data_end;
+    ump3_enc_size = enc_ump3_data_end - rec_data_end;
+
+    loudspeaker_size = mode_loud_spk_overlay_data_end - mode_loud_spk_overlay_data_start;
+    howling_size = howling_data_end - howling_data_start;
+    realtime_sp_size = realtime_sp_data_end - realtime_sp_data_start;
+    echo_size = echo_data_end - echo_data_start;
+    vp_size = vp_data_end - vp_data_start;
+
+    rtc_size = mode_rtc_overlay_data_end - mode_rtc_overlay_data_start;
 }
 

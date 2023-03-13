@@ -64,6 +64,9 @@ struct UPDATA_PARM {
 
 struct UPDATA_EXT_PARM {
     char sd_port;
+    char sd_cmd;
+    char sd_clk;
+    char sd_dat;
     u32 sd_speed;
     u32 porta_die_dir;
     u32 porta_pu_pd;

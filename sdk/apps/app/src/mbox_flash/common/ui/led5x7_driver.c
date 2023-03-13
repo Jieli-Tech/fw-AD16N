@@ -23,7 +23,7 @@
 #include "music_play.h"
 #include "audio_dac_api.h"
 #include "device_app.h"
-#include "audio_eq_api.h"
+#include "audio_eq.h"
 
 #define LOG_TAG_CONST       NORM
 #define LOG_TAG             "[normal]"
@@ -442,8 +442,8 @@ void LED5X7_show_music_main(void)
 void LED5X7_show_eq(void)
 {
     LED5X7_show_string((u8 *)"Eq ");
-    extern AUDIO_EQ_INFO g_eq_info;
-    LED5X7_show_char(g_eq_info.eq_mode % 10 + '0');
+    extern u8 eq_mode;
+    LED5X7_show_char(eq_mode % 10 + '0');
 }
 #endif
 /*----------------------------------------------------------------------------*/

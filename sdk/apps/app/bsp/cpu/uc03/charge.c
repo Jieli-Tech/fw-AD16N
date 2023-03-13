@@ -232,6 +232,10 @@ static void charge_full_detect(void)
         return;
     }
 
+    if (__this->trickle_flag == 1) {
+        return;
+    }
+
     if (CHARGE_FULL_FILTER_GET()) {
         if (CHARGE_FULL_FLAG_GET() && LVCMP_DET_GET()) {
             /* putchar('F'); */
@@ -333,6 +337,18 @@ void charge_timer_handle(void)
 u8 charge_check_is_idle(void)
 {
     return ((__this->vpwr_isr == 0) && (__this->vbat_isr == 0) && (IS_CHARGE_EN() == 0));
+}
+
+/*----------------------------------------------------*/
+/**@brief    充电是否充满判断
+   @param    无
+   @return   0:充电未充满或不在充电 1:充电充满
+   @note     无
+*/
+/*----------------------------------------------------*/
+u8 charge_check_is_full(void)
+{
+    return __this->full_flag;
 }
 
 /*----------------------------------------------------*/

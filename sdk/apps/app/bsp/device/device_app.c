@@ -20,7 +20,7 @@
 
 
 static const char device_name[MAX_DEVICE][9] = {
-    {"udisk"},
+    {"udisk0"},
     {"sd0"},
 #ifdef D_SFC_DEVICE_EN
     {"sfc"},

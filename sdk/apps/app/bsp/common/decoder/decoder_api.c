@@ -17,6 +17,7 @@
 #include "audio_dac.h"
 #include "audio_dac_api.h"
 #include "app_modules.h"
+#include "audio_dac_fade.h"
 
 #if DECODER_F1A_EN
 #include "f1a_api.h"
@@ -28,8 +29,8 @@
 #include "a_api.h"
 #endif
 
-#if HAS_SPEED_EN
-#include "speed_api.h"
+#if HAS_SONG_SPEED_EN
+#include "song_speed_api.h"
 #endif
 #if DECODER_MIDI_EN
 #include "midi_api.h"
@@ -50,8 +51,9 @@
 #include "string.h"
 #include "errno-base.h"
 #include "decoder_msg_tab.h"
-#include "audio_eq_api.h"
-/* #include "eq.h" */
+#if AUDIO_EQ_ENABLE
+#include "audio_eq.h"
+#endif
 #if HAS_MIO_EN
 #include "mio_api.h"
 #endif
@@ -224,29 +226,32 @@ dec_obj *decoder_io(void *pfile, u32 dec_ctl, dp_buff *dbuff, u8 loop)
         p_curr_sound->enable = 0;
         sound_out_obj *first_sound = p_curr_sound;
         void *cbuff_o = p_dec->sound.p_obuf;
-#if HAS_SPEED_EN
+        u8 output_ch = (first_sound->info & B_STEREO) ? 2 : 1;
+#if defined(HAS_SONG_SPEED_EN) && HAS_SONG_SPEED_EN
         //变速变调
         if (dec_ctl & BIT_SPEED) {
-            p_curr_sound = link_speed_sound(\
-                                            p_curr_sound,               \
-                                            cbuff_o,                    \
-                                            (void **) NULL,             \
-                                            p_dec->sr);
-            /* p_curr_sound->effect = speed_api(cbuff_o, p_dec->sr, (void **) &p_next_sound); */
-            /* if (NULL != p_curr_sound->effect) { */
-            /* p_curr_sound->enable |= B_DEC_EFFECT; */
-            /* p_curr_sound = p_next_sound; */
-            /* p_curr_sound->p_obuf = cbuff_o; */
-            /* p_next_sound = 0; */
-            /* log_info("src init succ\n"); */
-            /* } */
+            p_curr_sound = link_song_speed_sound(\
+                                                 p_curr_sound,               \
+                                                 cbuff_o,                    \
+                                                 (void **) NULL,             \
+                                                 p_dec->sr,                  \
+                                                 output_ch);
         }
 #endif
 
-
+#if AUDIO_EQ_ENABLE
+        //EQ
+        if (dec_ctl & BIT_EQ) {
+            p_curr_sound = link_eq_sound(\
+                                         p_curr_sound,               \
+                                         cbuff_o,                    \
+                                         (void **) &p_dec->eq_effect, \
+                                         p_dec->sr,                  \
+                                         output_ch);
+        }
+#endif
         //硬件src
         u32 dac_sr = dac_sr_read();
-        u8 output_ch = (first_sound->info & B_STEREO) ? 2 : 1;
         p_curr_sound->enable = 0;
 #if defined(D_IS_FLASH_SYSTEM) && HAS_SRC_EN
         if (dac_sr != p_dec->sr) {
@@ -268,16 +273,16 @@ dec_obj *decoder_io(void *pfile, u32 dec_ctl, dp_buff *dbuff, u8 loop)
         }
         p_curr_sound->mio = p_dec->sound.mio;
 #endif
-#if AUDIO_EQ_ENABLE
-#if defined(D_IS_FLASH_SYSTEM) && HAS_SRC_EN
-        void *p_eq_obj = audio_eq_open_api(output_ch, dac_sr);
-#else
-        void *p_eq_obj = audio_eq_open_api(output_ch, p_dec->sr);
-#endif
-        if (NULL != p_eq_obj) {
-            p_curr_sound->info |= B_EQ;
-        }
-#endif
+        /* #if AUDIO_EQ_ENABLE */
+        /* #if defined(D_IS_FLASH_SYSTEM) && HAS_SRC_EN */
+        /*         void *p_eq_obj = audio_eq_open_api(output_ch, dac_sr); */
+        /* #else */
+        /*         void *p_eq_obj = audio_eq_open_api(output_ch, p_dec->sr); */
+        /* #endif */
+        /*         if (NULL != p_eq_obj) { */
+        /*             p_curr_sound->info |= B_EQ; */
+        /*         } */
+        /* #endif */
 #if (1 == DAC_TRACK_NUMBER)
         /* DAC差分输出时双声道音源融合成单声道 */
         if (2 == output_ch) {
@@ -311,7 +316,7 @@ dec_obj *decoder_io(void *pfile, u32 dec_ctl, dp_buff *dbuff, u8 loop)
         }
 #endif
     }
-    dac_fade_in_api();
+    /* dac_fade_in_api(); */
     //while(1)clear_wdt();
     return p_dec;
 }
@@ -428,7 +433,7 @@ bool decoder_stop_phy(dec_obj *obj, DEC_STOP_WAIT wait, void *p_dp, bool fade)
     log_info("decode stop\n");
     obj->sound.enable &= ~B_DEC_RUN_EN;
     get_dp(obj, p_dp);
-    dac_fade_out_api(200);
+    /* dac_fade_out_api(200); */
     if (NO_WAIT != wait) {
         /* log_info("decode stop wait!\n"); */
         while (obj->sound.enable & B_DEC_OBUF_EN) {
@@ -441,10 +446,10 @@ bool decoder_stop_phy(dec_obj *obj, DEC_STOP_WAIT wait, void *p_dp, bool fade)
         /* log_info("decode stop no wait!\n"); */
     }
 
-#if AUDIO_EQ_ENABLE
-    audio_eq_close_api();
-    obj->sound.info &= ~B_EQ;
-#endif
+    /* #if AUDIO_EQ_ENABLE */
+    /*     audio_eq_close_api(); */
+    /*     obj->sound.info &= ~B_EQ; */
+    /* #endif */
 
 
 #if HAS_MIO_EN
@@ -456,6 +461,11 @@ bool decoder_stop_phy(dec_obj *obj, DEC_STOP_WAIT wait, void *p_dp, bool fade)
         src_reless(&obj->src_effect);
 #endif
     }
+#if AUDIO_EQ_ENABLE
+    if (NULL != obj->eq_effect) {
+        eq_reless(&obj->eq_effect);
+    }
+#endif
     return 1;
 }
 

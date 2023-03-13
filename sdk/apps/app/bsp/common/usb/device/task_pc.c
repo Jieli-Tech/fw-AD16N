@@ -22,7 +22,6 @@
 void usb_start()
 {
     log_info("USB Start");
-    usb_device_mode(0, USB_DEVICE_CLASS_CONFIG);
 #if (USB_DEVICE_CLASS_CONFIG & HID_CLASS)
     hid_init();
 #endif
@@ -32,6 +31,7 @@ void usb_start()
 #if USB_DEVICE_CLASS_CONFIG & AUDIO_CLASS
     uac_init();
 #endif
+    usb_device_mode(0, USB_DEVICE_CLASS_CONFIG);
 }
 
 void usb_pause()

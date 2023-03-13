@@ -102,6 +102,10 @@ void usb_slave_sound_open(sound_out_obj *p_sound, u32 sr)
                        ); //为了省代码，没有写成上一句的样子
         //*/
 #endif
+#if (1 == DAC_TRACK_NUMBER)
+        /* DAC差分输出时双声道音源融合成单声道 */
+        p_curr_sound->info |= B_LR_COMB;
+#endif
         if ((NULL != usb_src_obj) && (NULL != usb_src_obj->p_si)) {
             sound_in_obj *p_src_si = usb_src_obj->p_si;
             SRC_STUCT_API *p_ops =  p_src_si->ops;

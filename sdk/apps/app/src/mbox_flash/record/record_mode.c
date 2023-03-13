@@ -16,7 +16,7 @@
 #include "play_file.h"
 #include "app.h"
 #include "jiffies.h"
-#include "vm.h"
+#include "vm_api.h"
 
 #include "decoder_api.h"
 #include "decoder_msg_tab.h"
@@ -49,7 +49,8 @@ void record_app(void)
     int msg[2];
     u32 err = 0;
     dec_obj *p_dec_obj = 0;
-    u16 decode_type = BIT_A | BIT_MP3_ST | BIT_UMP3 | BIT_SPEED;
+    u16 fat_decode_type = BIT_MP3_ST;
+    u16 norfs_decode_type = BIT_A | BIT_UMP3 | BIT_SPEED;
     key_table_sel(record_key_msg_filter);
     decoder_init();
 
@@ -57,10 +58,12 @@ void record_app(void)
 
     while (1) {
         err = get_msg(2, &msg[0]);
+        bsp_loop();
         if (MSG_NO_ERROR != err) {
             msg[0] = NO_MSG;
             log_info("get msg err 0x%x\n", err);
         }
+
         switch (msg[0]) {
         case MSG_RECODE_START:
             if (ENC_ING == record_obj.enc_status) {
@@ -80,9 +83,10 @@ void record_app(void)
             decoder_stop(p_dec_obj, NEED_WAIT, 0);
 
             if (0 == (strcmp(record_obj.fs_name, "fat"))) {
-                p_dec_obj = fatfs_enc_file_decode(&record_obj, decode_type);
+                /* 标准MP3解码与变速变调资源互斥 */
+                p_dec_obj = fatfs_enc_file_decode(&record_obj, fat_decode_type & (~BIT_SPEED));
             } else if (0 == (strcmp(record_obj.fs_name, "norfs"))) {
-                p_dec_obj = norfs_enc_file_decode(&record_obj, decode_type);
+                p_dec_obj = norfs_enc_file_decode(&record_obj, norfs_decode_type);
             } else {
                 log_info("record hasn't been started!\n");
                 break;
@@ -94,12 +98,12 @@ void record_app(void)
             break;
 
         case MSG_REC_SPEED_EN:
-            if (decode_type & BIT_SPEED) {
+            if (norfs_decode_type & BIT_SPEED) {
                 log_info("record normal mode \n");
-                decode_type &= ~BIT_SPEED;
+                norfs_decode_type &= ~BIT_SPEED;
             } else {
                 log_info("record speed mode \n");
-                decode_type |= BIT_SPEED;
+                norfs_decode_type |= BIT_SPEED;
             }
             break;
         case MSG_WFILE_FULL:

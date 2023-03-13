@@ -11,6 +11,8 @@ typedef enum {
     MIDI_DEC_MODE,
     MIDI_KEYBOARD_MODE,
     SIMPLE_DEC_MODE,
+    LOUDSPEAKER_MODE,
+    RTC_MODE,
     MAX_WORK_MODE,
 
     SOFTOFF_MODE = 0xfe//该模式只由POWER_OFF消息进入

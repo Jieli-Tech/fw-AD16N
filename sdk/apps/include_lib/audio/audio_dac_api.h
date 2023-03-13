@@ -29,22 +29,6 @@ bool dac_cbuff_active(void *sound_hld);
 void dac_kick(void *sound_hld, void *pkick);
 
 
-
-
-
-
-/*---------DAC FADE IN & OUT Configuration---------------*/
-#define DAC_FADE_ENABLE 0
-
-// #if DAC_FADE_ENABLE
-#define dac_fade_api()
-#define dac_fade_in_api()
-#define dac_fade_out_api(...)
-
-// #endif
-
-
-
 #endif
 
 

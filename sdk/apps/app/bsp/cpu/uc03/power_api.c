@@ -71,6 +71,9 @@ const struct low_power_param power_param = {
     .osc_type       = OSC_TYPE_LRC,						   //低功耗使用晶振
     .vdc13_cap_en   = 0,								   //根据vdc13引脚是否有外部电容来配置, 1.外挂电容 0.无外挂电容
     .flash_pg_keep = 0,									   //低功耗是否保持flash电源
+#if ((defined RTC_CLK_SEL) && (0 != RTC_CLK_SEL))
+    .rtc_clk = RTC_CLK_SEL,
+#endif
 };
 
 /**************************************************** wk_param *********************************************************/

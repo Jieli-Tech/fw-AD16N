@@ -43,6 +43,7 @@ void msd_init(void);
 u32 msd_desc_config(const usb_dev usb_id, u8 *ptr, u32 *cur_itf_num);
 void USB_MassStorage(const struct usb_device_t *usb_device);
 u32 msd_set_wakeup_handle(void (*handle)(struct usb_device_t *usb_device));
+void msd_register_disk_api(void);
 u32 msd_register_disk(const char *name, void *arg);
 u32 msd_unregister_disk(const char *name);
 u32 msd_unregister_all();

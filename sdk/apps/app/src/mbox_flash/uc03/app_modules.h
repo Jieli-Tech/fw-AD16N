@@ -43,10 +43,23 @@
 #define ENCODER_A_EN 1
 
 //  MIO功能使能
-#define HAS_MIO_EN 1
+#define HAS_MIO_EN 0
 
-//  SPEED功能(变速变调)使能
+//  实时SPEED功能(用于扩音)使能
 #define HAS_SPEED_EN 1
+
+//  歌曲SPEED功能(用于解码)使能
+#define HAS_SONG_SPEED_EN 1
+
+//  陷波/移频啸叫抑制使能(二选一)
+#define NOTCH_HOWLING_EN 1
+#define PITCHSHIFT_HOWLING_EN 2
+#define HOWLING_SEL PITCHSHIFT_HOWLING_EN
+//  变声功能使能
+#define VO_PITCH_EN 1
+
+//  ECHO混响功能使能
+#define ECHO_EN 1
 
 //  A/F1A格式的解码文件需要同时判断后缀名确认采样率
 #if ( DECODER_A_EN || DECODER_F1A_EN )
@@ -60,8 +73,10 @@
 #define RECORD_MODE_EN 1 //  录音应用模式
 #define LINEIN_MODE_EN 1 //  Linein应用模式
 #define SIMPLE_DEC_EN 1 //  多路解码应用模式
+#define LOUDSPEAKER_EN 1 //  扩音应用模式
+#define RTC_EN 0 //  RTC模式
 
-#define NEW_VM_EN 0 //  NVM使能
+#define NEW_VM_EN 1 //  NVM使能
 
 
 #endif

@@ -249,6 +249,7 @@ u32 usb_release(const usb_dev usb_id)
     usb_setup_init(usb_id, NULL, NULL);
 
     usb_config_var[usb_id] = NULL;
+    usb_device_set_desc(usb_id, NULL);
 
     return 0;
 }

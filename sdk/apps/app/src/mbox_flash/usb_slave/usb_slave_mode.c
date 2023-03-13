@@ -9,13 +9,16 @@
 #include "msg.h"
 #include "ui_api.h"
 #include "hot_msg.h"
-#include "stream_frame.h"
 
 #include "usb/usb_config.h"
 #include "usb/device/hid.h"
 #include "usb/device/msd.h"
 
 #include "audio_dac_api.h"
+#include "app_config.h"
+#include "stream_frame.h"
+
+#if TCFG_PC_ENABLE
 
 #define LOG_TAG_CONST       APP
 #define LOG_TAG             "[pc]"
@@ -38,11 +41,20 @@ void usb_slave_app(void)
     u8 temp_vol = dac_vol('r', 0);
     key_table_sel(usb_slave_key_msg_filter);
 
+    stream_frame_init(IRQ_STREAM_IP);
     SET_UI_MAIN(MENU_PC_MAIN);
     UI_menu(MENU_PC_MAIN);
 
-    stream_frame_init();
     usb_device_mode(0, 0);
+#if TCFG_USB_EXFLASH_UDISK_ENABLE
+    void *device = dev_open("ext_flsh", 0);
+    if (device != NULL) {
+        dev_ioctl(device, IOCTL_SET_READ_USE_CACHE, 1);
+        dev_ioctl(device, IOCTL_SET_CACHE_SYNC_ISR_EN, 0);
+    } else {
+        log_info("dev open err\n");
+    }
+#endif
     usb_start();
 
     int msg[2];
@@ -52,6 +64,7 @@ void usb_slave_app(void)
         USB_MassStorage(NULL);
 #endif
         err = get_msg(2, &msg[0]);
+        bsp_loop();
         if (MSG_NO_ERROR != err) {
             msg[0] = NO_MSG;
             log_info("get msg err 0x%x\n", err);
@@ -110,10 +123,16 @@ void usb_slave_app(void)
         }
     }
 __out_t_usb_slave:
-
+#if TCFG_USB_EXFLASH_UDISK_ENABLE
+    if (device != NULL) {
+        dev_close(device);
+    }
+#endif
     dac_vol(0, temp_vol);
     dac_sr_api(dac_sr);
     SET_UI_MAIN(MENU_POWER_UP);
     UI_menu(MENU_POWER_UP);
     key_table_sel(NULL);
+    stream_frame_uninit();
 }
+#endif

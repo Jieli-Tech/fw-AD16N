@@ -37,8 +37,12 @@ typedef enum _vm_err {
     VM_ERR_PROTECT
 } VM_ERR;
 
+#if 0
 typedef enum {
     VM_INDEX_DEMO = 0,//用户可以使用
+    VM_OLD_RTC_TIME,
+    VM_OLD_REAL_TIME,
+    VM_RTC_ALARM_TIME,
     VM_INDEX_SONG,
     VM_INDEX_ENG,
     VM_INDEX_POETRY,
@@ -77,6 +81,7 @@ typedef enum {
     VM_INDEX_AUTO_BP,
     VM_INDEX_MAX = 128,
 } VM_INDEX;
+#endif
 
 typedef union {
     u8 buff[20];//reserve;
@@ -108,8 +113,8 @@ void vm_check_all(u8 level);    //level : default 0
 void vm_defrag_line_set(u8 defrag_line);//设置vm空间整理的阀值,按照百分比计算，取值范围0~100
 int vm_get_area_using_info(u32 *vm_area_len, u32 *vm_used_len);
 // io api
-s32 vm_write(vm_hdl hdl, u8 *data_buf, u16 len);
-s32 vm_read(vm_hdl hdl, u8 *data_buf, u16 len);
+s32 vm_write_phy(vm_hdl hdl, u8 *data_buf, u16 len);
+s32 vm_read_phy(vm_hdl hdl, u8 *data_buf, u16 len);
 
 bool sfc_erase(FLASH_ERASER cmd, u32 addr);
 u32 sfc_write(const u8 *buf, u32 addr, u32 len);
@@ -122,7 +127,7 @@ bool sfc_erase_zone(u32 addr, u32 len);
 
 void vm_api_write_mult(u16 start_id, u16 end_id, void *buf, u16 len, u32 delay);
 int vm_api_read_mult(u16 start_id, u16 end_id, void *buf, u16 len);
-VM_ERR syscfg_vm_init(u32 eeprom_saddr, u32 eeprom_size);
+VM_ERR syscfg_vm_init_phy(u32 eeprom_saddr, u32 eeprom_size);
 u16 vm_buff_alloc(u8 **buf);
 
 // vm擦写时可放出多个中断

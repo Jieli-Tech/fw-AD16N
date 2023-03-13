@@ -32,6 +32,23 @@ enum {				 //输出数据存放模式
     SEQUENCE_DAT_OUT, //序列模式，例如输入数据是2通道，先存放第通道的第一个数据，再存放第2个通道的第一个数据，以此类推。
 };
 
+/*eq IIR type*/
+typedef enum {
+    EQ_IIR_TYPE_HIGH_PASS = 0x00,
+    EQ_IIR_TYPE_LOW_PASS,
+    EQ_IIR_TYPE_BAND_PASS,
+    EQ_IIR_TYPE_HIGH_SHELF,
+    EQ_IIR_TYPE_LOW_SHELF,
+} EQ_IIR_TYPE;
+
+struct eq_seg_info {
+    unsigned char index;	//eq段序号
+    unsigned char iir_type; //滤波器类型EQ_IIR_TYPE
+    unsigned short freq;   	//中心截止频率
+    float gain;             //增益（-12 ~12 db）
+    float q;                //q值（0.3~30）
+};
+
 typedef long long   int64;
 #define div64(n, d, q) (((int64)(n) << (q)) / (d))
 #define mul64(x, y, q) (((int64)(x) * (y)) >> (q))
@@ -44,4 +61,72 @@ typedef long long   int64;
 #define EQ_COEFF4		coeff[2]
 
 void design_pe_for_int(int fc, int fs, int gain, int quality_factor, float *coeff);
+//系数计算子函数
+/*----------------------------------------------------------------------------*/
+/**@brief    低通滤波器
+   @param    fc:中心截止频率
+   @param    fs:采样率
+   @param    quality_factor:q值
+   @param    coeff:计算后，系数输出地址
+   @return
+   @note
+*/
+/*----------------------------------------------------------------------------*/
+extern void design_lp(int fc, int fs, float quality_factor, float *coeff);
+/*----------------------------------------------------------------------------*/
+/**@brief    高通滤波器
+   @param    fc:中心截止频率
+   @param    fs:采样率
+   @param    quality_factor:q值
+   @param    coeff:计算后，系数输出地址
+   @return
+   @note
+*/
+/*----------------------------------------------------------------------------*/
+extern void design_hp(int fc, int fs, float quality_factor, float *coeff);
+/*----------------------------------------------------------------------------*/
+/**@brief    带通滤波器
+   @param    fc:中心截止频率
+   @param    fs:采样率
+   @param    gain:增益
+   @param    quality_factor:q值
+   @param    coeff:计算后，系数输出地址
+   @return
+   @note
+*/
+/*----------------------------------------------------------------------------*/
+extern void design_pe(int fc, int fs, float gain, float quality_factor, float *coeff);
+/*----------------------------------------------------------------------------*/
+/**@brief    低频搁架式滤波器
+   @param    fc:中心截止频率
+   @param    fs:采样率
+   @param    gain:增益
+   @param    quality_factor:q值
+   @param    coeff:计算后，系数输出地址
+   @return
+   @note
+*/
+/*----------------------------------------------------------------------------*/
+extern void design_ls(int fc, int fs, float gain, float quality_factor, float *coeff);
+/*----------------------------------------------------------------------------*/
+/**@brief    高频搁架式滤波器
+   @param    fc:中心截止频率
+   @param    fs:采样率
+   @param    gain:增益
+   @param    quality_factor:q值
+   @param    coeff:计算后，系数输出地址
+   @return
+   @note
+*/
+/*----------------------------------------------------------------------------*/
+extern void design_hs(int fc, int fs, float gain, float quality_factor, float *coeff);
+/*----------------------------------------------------------------------------*/
+/**@brief    滤波器系数检查
+   @param    coeff:滤波器系数
+   @return
+   @note
+*/
+/*----------------------------------------------------------------------------*/
+extern int eq_stable_check(float *coeff);
+float eq_db2mag(float x);
 #endif

@@ -143,6 +143,7 @@ int usb_device_mode(const usb_dev usb_id, const u32 class)
     if ((class & MASSSTORAGE_CLASS) == MASSSTORAGE_CLASS) {
 #if (USB_DEVICE_CLASS_CONFIG & MASSSTORAGE_CLASS) == MASSSTORAGE_CLASS
         msd_register(&msd_var);
+        msd_register_disk_api();
         usb_add_desc_config(usb_id, class_index++, msd_desc_config);
         log_info("add desc msd");
 #else

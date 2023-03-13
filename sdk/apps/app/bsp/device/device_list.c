@@ -33,7 +33,7 @@ const struct spi_platform_data spi1_p_data = {
     },
     .mode = TFG_SPI_WORK_MODE,
     .role = SPI_ROLE_MASTER,
-    .clk = 1000000,
+    .clk = 10000000,
 };
 NORFLASH_DEV_PLATFORM_DATA_BEGIN(norflash_data)
     .spi_hw_num = TFG_SPI_HW_NUM,
@@ -130,7 +130,7 @@ const struct device_operations mass_storage_ops = {
 };
 #endif
 
-#if TCFG_OTG_USB_DEV_EN
+#if (TCFG_PC_ENABLE || TCFG_UDISK_ENABLE)
 const struct otg_dev_data otg_data = {
     .usb_dev_en = 1,//TCFG_OTG_USB_DEV_EN,
     .slave_online_cnt = 2,//TCFG_OTG_SLAVE_ONLINE_CNT,
@@ -149,7 +149,11 @@ struct device_operations usb_dev_ops;
 
 REGISTER_DEVICES(device_table) = {
 #if TFG_EXT_FLASH_EN
+#if TCFG_USB_EXFLASH_UDISK_ENABLE
     {.name = __EXT_FLASH_NANE, .ops = &norflash_dev_ops, .priv_data = (void *) &norflash_data},
+#else
+    {.name = __EXT_FLASH_NANE, .ops = &norfs_dev_ops, .priv_data = (void *) &norflash_data},
+#endif
 #endif
 #if TFG_SD_EN
     {.name = __SD0_NANE, .ops = &sd_dev_ops, .priv_data = (void *) &sd0_data},
@@ -157,7 +161,7 @@ REGISTER_DEVICES(device_table) = {
 #if TCFG_UDISK_ENABLE
     {.name = __UDISK, .ops = &mass_storage_ops, .priv_data = (void *)NULL},
 #endif
-#if TCFG_OTG_USB_DEV_EN
+#if (TCFG_PC_ENABLE || TCFG_UDISK_ENABLE)
     {.name = __OTG, .ops = &usb_dev_ops, .priv_data = (void *)&otg_data},
 #endif
 #if SD_CDROM_EN
@@ -174,7 +178,7 @@ REGISTER_DEVICES(device_table) = {
 
 int	devices_init_api()
 {
-#if TCFG_OTG_USB_DEV_EN
+#if (TCFG_PC_ENABLE || TCFG_UDISK_ENABLE)
     usb_dev_ops.init = usb_otg_init;
 #endif
     set_device_node((struct dev_node *)device_node_begin, (struct dev_node *)device_node_end);

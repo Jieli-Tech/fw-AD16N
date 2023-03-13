@@ -12,7 +12,7 @@
 #define __EXT_FLASH_NANE    "ext_flsh"
 #define __OTG               "otg"
 // #define __UDISK0            "udisk0"
-#define __UDISK             "udisk"
+#define __UDISK             "udisk0"
 
 struct dev_node;
 struct device;

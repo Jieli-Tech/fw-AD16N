@@ -45,6 +45,13 @@
 #define POWER_WAKEUP_IO				        AD_KEY_IO_SEL
 #define POWER_WAKEUP_EDGE				    FALLING_EDGE
 
+/*---------RTC Configuration-------------*/
+#if RTC_EN
+#define RTC_CLK_SEL                         CLK_SEL_LRC//RTC时钟源选择,可选32k晶振或者LRC时钟
+#else
+#define RTC_CLK_SEL                         0//无RTC功能
+#endif
+
 /*---------charge Configuration-------------*/
 #define TCFG_CHARGE_ENABLE		            ENABLE
 #define TCFG_CHARGE_FULL_V					CHARGE_FULL_V_4199
@@ -68,18 +75,19 @@
 #define TCFG_AUTO_UNMUTE_TIME               50//自动解除mute的时间
 
 /*---------DAC数字音量设置淡入淡出配置-----*/
+#define TCFG_DAC_VOL_FADE_EN                DISABLE//硬件DAC淡入淡出
+#define DAC_SOFT_FADE_EN                    DISABLE//软件运算淡入淡出
 //若为44.1K采样率,音量从最小0->调大最大16384耗时:((16384-0)/step)/(352.8K/(slow+1)) = 46.4ms / step * (slow+1)
 //若为48K/32K采样率,音量从最小0->调大最大16384耗时:((16384-0)/step)/(384K/(slow+1)) = 42.7ms / step * (slow+1)
-#define TCFG_DAC_VOL_FADE_EN                DISABLE
 #define TCFG_DAC_VOL_FADE_STEP              1//0和1一样效果,配置范围0~15
-#define TCFG_DAC_VOL_FADE_SLOW              0//配置范围0~15
+#define TCFG_DAC_VOL_FADE_SLOW              15//配置范围0~15
 
 /*---------EQ Configuration-----------------*/
 #define AUDIO_EQ_ENABLE                     ENABLE//eq总使能
 
 /*---------------UPDATE---------------------*/
-#define TFG_DEV_UPGRADE_SUPPORT  0
-#define TFG_UPGRADE_FILE_NAME    "/update.ufw"
+#define TFG_DEV_UPGRADE_SUPPORT             ENABLE
+#define TFG_UPGRADE_FILE_NAME               "/update.ufw"
 
 /*---------UI Configuration-----------------*/
 #define LED_5X7			                    ENABLE
@@ -107,6 +115,7 @@
 #define TFG_SPI_DO_PORT         		    PB02
 #define TFG_SPI_DI_PORT_SEL				    IO_PORTB_03
 #define TFG_SPI_DI_PORT         		    PB03
+#define SPI_SD_IO_REUSE                     0
 
 /*---------SD Configuration-----------------*/
 #define TFG_SD_EN				            ENABLE
@@ -127,6 +136,12 @@
 #define SD_CDROM_EN                         DISABLE
 #endif
 
+#if TCFG_USB_EXFLASH_UDISK_ENABLE
+#define FLASH_CACHE_ENABLE                  1
+#else
+#define FLASH_CACHE_ENABLE                  0
+#endif
+
 #define TCFG_USB_PORT_CHARGE                DISABLE
 #define TCFG_OTG_USB_DEV_EN                 BIT(0)  //USB0 = BIT(0)  USB1 = BIT(1)
 
@@ -137,10 +152,10 @@
 #define	USB_DISK_EN        //是否可以读U盘
 #endif
 
-#if TCFG_PC_ENABLE || TCFG_UDISK_ENABLE
 #include "usb_std_class_def.h"
 #include "usb_common_def.h"
 
+#if TCFG_PC_ENABLE || TCFG_UDISK_ENABLE
 #undef USB_DEVICE_CLASS_CONFIG
 #define  USB_DEVICE_CLASS_CONFIG            (MASSSTORAGE_CLASS|AUDIO_CLASS|HID_CLASS)  //配置usb从机模式支持的class
 #endif

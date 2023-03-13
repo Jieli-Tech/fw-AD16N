@@ -1,12 +1,7 @@
 {
   "ExpandedNodes": [
     "",
-    "\\sdk",
-    "\\sdk\\apps",
-    "\\sdk\\apps\\app",
-    "\\sdk\\apps\\app\\post_build",
-    "\\sdk\\apps\\app\\post_build\\uc03",
-    "\\sdk\\apps\\app\\post_build\\uc03\\mbox_flash"
+    "\\doc"
   ],
   "SelectedNode": "\\README.md",
   "PreviewInSolutionExplorer": false

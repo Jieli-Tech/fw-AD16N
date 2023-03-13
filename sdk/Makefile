@@ -118,6 +118,10 @@ DEFINES := \
 	-DHAS_UMP3_ENCODER \
 	-DHAS_A_ENCODER \
 	-DHAS_SPEED_EFFECT \
+	-DHAS_SONG_SPEED_EFFECT \
+	-DHAS_HOWLING_EFFECT \
+	-DHAS_ECHO_EFFECT \
+	-DHAS_VOICE_PITCH_EFFECT \
 	-DHAS_USB_EN=1 \
 	-DHAS_SDMMC_EN=1 \
 	-DHAS_EXTFLASH_EN=1 \
@@ -129,6 +133,9 @@ DEFINES := \
 	-DHAS_RECORD_MODE \
 	-DHAS_MUSIC_MODE \
 	-DHAS_USB_SLAVE_MODE \
+	-DHAS_LOUDSPEAKER_MODE \
+	-DHAS_RTC_MODE \
+	-DHAS_NEW_VM_MODE \
 	-DNOFLOAT \
 
 
@@ -187,6 +194,8 @@ INCLUDES := \
 	-Iapps/app/src/mbox_flash/simple_decode \
 	-Iapps/app/src/mbox_flash/midi_dec \
 	-Iapps/app/src/mbox_flash/midi_keyboard \
+	-Iapps/app/src/mbox_flash/loudspeaker \
+	-Iapps/app/src/mbox_flash/rtc \
 	-Iapps/app/src/mbox_flash/softoff_app \
 	-Iapps/app/src/mbox_flash/test_dir \
 	-Iapps/app/bsp/common/usb \
@@ -199,6 +208,7 @@ INCLUDES := \
 c_SRC_FILES := \
 	apps/app/bsp/common/audio/audio_adc_api.c \
 	apps/app/bsp/common/audio/audio_dac_api.c \
+	apps/app/bsp/common/audio/audio_dac_fade.c \
 	apps/app/bsp/common/audio/fill_audac.c \
 	apps/app/bsp/common/audio_eq/audio_eq_api.c \
 	apps/app/bsp/common/decoder/decoder_api.c \
@@ -237,7 +247,13 @@ c_SRC_FILES := \
 	apps/app/bsp/common/my_malloc.c \
 	apps/app/bsp/common/norflash/norflash.c \
 	apps/app/bsp/common/power_manage/app_power_mg.c \
+	apps/app/bsp/common/sound_effect_list/echo_api.c \
+	apps/app/bsp/common/sound_effect_list/notch_howling_api.c \
+	apps/app/bsp/common/sound_effect_list/pitchshift_howling_api.c \
+	apps/app/bsp/common/sound_effect_list/song_speed_api.c \
 	apps/app/bsp/common/sound_effect_list/speed_api.c \
+	apps/app/bsp/common/sound_effect_list/vo_pitch_api.c \
+	apps/app/bsp/common/speaker/speak_api.c \
 	apps/app/bsp/common/tab_read.c \
 	apps/app/bsp/common/usb/device/descriptor.c \
 	apps/app/bsp/common/usb/device/hid.c \
@@ -252,6 +268,7 @@ c_SRC_FILES := \
 	apps/app/bsp/common/usb/usr/uac_sync.c \
 	apps/app/bsp/common/usb/usr/usb_audio_interface.c \
 	apps/app/bsp/common/usb/usr/usb_mic_interface.c \
+	apps/app/bsp/common/vm/nvm_api.c \
 	apps/app/bsp/common/vm/vm_api.c \
 	apps/app/bsp/cpu/uc03/audio_dac_cpu.c \
 	apps/app/bsp/cpu/uc03/charge.c \
@@ -261,14 +278,17 @@ c_SRC_FILES := \
 	apps/app/bsp/cpu/uc03/pl_cnt.c \
 	apps/app/bsp/cpu/uc03/power_api.c \
 	apps/app/bsp/cpu/uc03/power_port.c \
+	apps/app/bsp/cpu/uc03/rtc_api.c \
 	apps/app/bsp/cpu/uc03/saradc_isr.c \
 	apps/app/bsp/cpu/uc03/sd.c \
 	apps/app/bsp/cpu/uc03/spi.c \
 	apps/app/bsp/cpu/uc03/tick_timer_sys.c \
+	apps/app/bsp/cpu/uc03/timer_drv.c \
 	apps/app/bsp/cpu/uc03/timer_pwm.c \
 	apps/app/bsp/cpu/uc03/uart.c \
 	apps/app/bsp/device/device_app.c \
 	apps/app/bsp/device/device_list.c \
+	apps/app/bsp/start/bsp_loop.c \
 	apps/app/bsp/start/flash_init.c \
 	apps/app/bsp/start/init.c \
 	apps/app/bsp/start/uc03/main.c \
@@ -284,6 +304,8 @@ c_SRC_FILES := \
 	apps/app/src/mbox_flash/init_app.c \
 	apps/app/src/mbox_flash/linein/linein_mode.c \
 	apps/app/src/mbox_flash/linein/linein_mode_key.c \
+	apps/app/src/mbox_flash/loudspeaker/loudspk_mode.c \
+	apps/app/src/mbox_flash/loudspeaker/loudspk_mode_key.c \
 	apps/app/src/mbox_flash/midi_dec/midi_dec_mode.c \
 	apps/app/src/mbox_flash/midi_dec/midi_dec_mode_key.c \
 	apps/app/src/mbox_flash/midi_keyboard/midi_keyboard_mode.c \
@@ -297,6 +319,8 @@ c_SRC_FILES := \
 	apps/app/src/mbox_flash/record/enc_in_norfs.c \
 	apps/app/src/mbox_flash/record/record_mode.c \
 	apps/app/src/mbox_flash/record/record_mode_key.c \
+	apps/app/src/mbox_flash/rtc/rtc_mode.c \
+	apps/app/src/mbox_flash/rtc/rtc_mode_key.c \
 	apps/app/src/mbox_flash/simple_decode/simple_decode.c \
 	apps/app/src/mbox_flash/simple_decode/simple_decode_key.c \
 	apps/app/src/mbox_flash/softoff_app/softoff_mode.c \
@@ -351,6 +375,11 @@ LFLAGS := \
 	apps/include_lib/liba/ARCH/pi32v2_lto_r1/ump2_enc_lib.a \
 	apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_a_code.a \
 	apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_speed_pitch.a \
+	apps/include_lib/liba/ARCH/pi32v2_lto_r1/ps_song_lib.a \
+	apps/include_lib/liba/ARCH/pi32v2_lto_r1/howling.a \
+	apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_howling_fs.a \
+	apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_echo_cal.a \
+	apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_vopitch_cal.a \
 	--start-group  \
 	apps/include_lib/liba/uc03/mbox_flash/decoder_mge_lib.a \
 	apps/include_lib/liba/uc03/mbox_flash/cpu_lib.a \
@@ -362,6 +391,7 @@ LFLAGS := \
 	apps/include_lib/liba/uc03/mbox_flash/src_lib.a \
 	apps/include_lib/liba/uc03/mbox_flash/update_lib.a \
 	--end-group \
+	apps/include_lib/liba/uc03/mbox_flash/new_vm_lib.a \
 	--end-group  \
 	-Tapps/app/post_build/uc03/app.ld \
 	-M=apps/app/post_build/uc03/app.map \

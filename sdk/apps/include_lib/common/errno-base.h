@@ -96,6 +96,11 @@
 #define E_NVM_BUF_LEN          (0x8300 + 0x07)
 #define E_NVM_BMAP_OVERFLOW    (0x8300 + 0x08)
 #define E_NVM_OPEN_DEVICE      (0x8300 + 0x09)
+#define E_NVM_CACHE_NULL       (0x8300 + 0x0a)
+#define E_NVM_ENTRY_NULL       (0x8300 + 0x0b)
+#define E_NVM_CRC_ERR          (0x8300 + 0x0c)
+#define E_NVM_DATA_TOO_LONG    (0x8300 + 0x0d)
+#define E_NVM_DATA_ADDR        (0x8300 + 0x0e)
 
 
 

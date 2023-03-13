@@ -27,5 +27,11 @@ isd_download.exe -tonorflash -dev uc03 -boot 0x101600 -div8 -wait 300 -otp usbbo
 @rem - format all       // 擦除所有
 @rem - reboot 500       // reset chip, valid in JTAG debug
 
+copy /y /b output_flash.fw jl_isd.fw
+fw_add.exe -noenc -fw jl_isd.fw -add ota.bin -type 100 -out jl_isd.fw
+ufw_maker.exe -fw_to_ufw jl_isd.fw
+copy jl_isd.ufw update.ufw
+del jl_isd.ufw
+
 ping / n 2 127.1 > null
 IF EXIST null del null

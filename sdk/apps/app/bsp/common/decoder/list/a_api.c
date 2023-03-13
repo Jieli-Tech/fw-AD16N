@@ -2,6 +2,9 @@
 
 #include "a_api.h"
 #include "cpu.h"
+#include "app_modules.h"
+#if DECODER_A_EN
+
 #include "config.h"
 #include "typedef.h"
 #include "hwi.h"
@@ -125,3 +128,4 @@ u32 a_buff_api(dec_buf *p_dec_buf)
 
 
 
+#endif

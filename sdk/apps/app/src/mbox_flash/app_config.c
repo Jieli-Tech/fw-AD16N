@@ -2,6 +2,7 @@
 #include "app_config.h"
 #include "audio_adc.h"
 #include "audio_dac.h"
+#include "gpio.h"
 //中断优先级
 //系统使用到的
 const int IRQ_IRTMR_IP   = 6;
@@ -14,6 +15,7 @@ const int IRQ_TICKTMR_IP = 3;
 const int IRQ_USB_IP	 = 3;
 const int IRQ_SD_IP		 = 3;
 const int IRQ_STREAM_IP  = 4;
+const int IRQ_SPEAKER_IP = 1;
 //系统还未使用到的
 const int IRQ_UART0_IP   = 3;
 const int IRQ_UART1_IP   = 3;
@@ -49,7 +51,7 @@ const int MAX_DEC_PLAYER_CNT = 8;   //midi乐谱解码最大同时发声的key�
 const int MAX_CTR_PLAYER_CNT = 15;  //midi琴最大同时发声的key数,范围[1,31]
 const int NOTE_OFF_TRIGGER = 0;     //midi琴note_off time传0时，是否产生回调音符结束 1：不回调 0：回调
 #endif
-
+const int config_rtc_enable = 1;
 /*********************usb slave config************************************/
 const bool config_usbslave_ctl_mic = 1;
 /*********************usb slave config end********************************/
@@ -62,6 +64,12 @@ const bool config_usbslave_ctl_mic = 1;
 const bool config_vcm_cap_addon = 0;
 
 /************update*************************************/
+#if TFG_SDPG_ENABLE
+const u8 dev_update_power_io = IO_PORTC_03;
+#else
+const u8 dev_update_power_io = -1;
+#endif
+
 //升级使用区域， 0:VM区, 1:eeprom区
 const u8 dev_update_use_eeprom = 0;
 //升级时是否保持IO状态
@@ -148,6 +156,12 @@ AUDIO_MICPGA_G const audio_adc_aux_pga_g = AUMIC_M2db;
 /*************docoder mge aechite****************************************/
 bool const config_decoder_auto_mutex = 1;
 
+/*************choose VM old or new version  1:new  0:old***************************************/
+#if NEW_VM_EN
+const char config_use_new_vm = 1;
+#else
+const char config_use_new_vm = 0;
+#endif
 
 
 /**

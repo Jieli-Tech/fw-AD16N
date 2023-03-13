@@ -5,7 +5,7 @@
 #include "key.h"
 #include "simple_play_file.h"
 
-#define MUSIC_BREAK_POINT_EN    1
+#define SIMPLE_DEC_BP_ENABLE    1
 
 void simple_decode_app(void);
 extern u16 simple_dec_key_msg_filter(u8 key_status, u8 key_num, u8 key_type);

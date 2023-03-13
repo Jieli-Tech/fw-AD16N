@@ -5,6 +5,7 @@
 
 #if HAS_SPEED_EN
 #include "lib_speed_api.h"
+#include "sound_mge.h"
 
 #if 0
 typedef struct _RS_IO_CONTEXT_ {
@@ -51,6 +52,7 @@ SPEEDPITCH_STUCT_API *get_sppitch_context();
 
 // void *speed_api(void *obuf, u32 insample);
 //void *speed_api(void *obuf,u32 insample, u32 outsample);
+void set_speed_parm(EFFECT_OBJ *e_obj, SPEED_PITCH_PARA_STRUCT *new_sp_parm);
 void *speed_api(void *obuf, u32 insample, void **ppsound);
 void *speed_phy(void *obuf, SPEED_PITCH_PARA_STRUCT *psp_parm, void **ppsound);
 void *link_speed_sound(void *p_sound_out, void *p_dac_cbuf, void **pp_effect, u32 in_sr);

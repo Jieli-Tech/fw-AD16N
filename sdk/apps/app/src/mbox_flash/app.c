@@ -8,7 +8,7 @@
 #include "common.h"
 #include "app.h"
 #include "msg.h"
-#include "vm.h"
+#include "vm_api.h"
 
 #include "music_play.h"
 #include "usb_slave_mode.h"
@@ -17,6 +17,8 @@
 #include "simple_decode.h"
 #include "midi_dec_mode.h"
 #include "midi_keyboard_mode.h"
+#include "loudspk_mode.h"
+#include "rtc_mode.h"
 #include "softoff_mode.h"
 
 #include "jiffies.h"
@@ -29,12 +31,12 @@
 #include "charge.h"
 #include "pa_mute.h"
 #include "device_app.h"
-#include "audio_eq_api.h"
 #include "saradc.h"
 #include "usb/host/usb_host.h"
 #include "usb/device/usb_stack.h"
 #include "usb/otg.h"
 #include "wdt.h"
+#include "bsp_loop.h"
 
 #define LOG_TAG_CONST       APP
 #define LOG_TAG             "[mbox_app]"
@@ -54,6 +56,11 @@ void tick_timer_ram_loop(void)
 #endif
 }
 
+#if (FLASH_CACHE_ENABLE == 1)
+#if TFG_EXT_FLASH_EN
+extern u8 get_flash_cache_timer(void);
+#endif
+#endif
 extern u8 tick_cnt;
 void app_timer_loop(void)
 {
@@ -65,7 +72,16 @@ void app_timer_loop(void)
         usb_hotplug_detect_plus(NULL);
     }
 #endif
-
+#if (FLASH_CACHE_ENABLE == 1)
+#if TFG_EXT_FLASH_EN
+    if (get_flash_cache_timer()) {
+        if (0 == (tick_cnt % 50)) {
+            bsp_post_event(B_EVENT_100MS);
+            /* putchar('t'); */
+        }
+    }
+#endif
+#endif
 #if TCFG_PC_ENABLE
     static u16 cnt = 0;
     cnt++;
@@ -97,15 +113,13 @@ void mbox_flash_main(void)
         wdt_close();
         while (1);
     }
-#if AUDIO_EQ_ENABLE
-    audio_eq_init_api();
-#endif
+
     delay_10ms(50);//等待系统稳定
     pa_mute(0);
 
     u8 vol = 0;
-    vm_read(VM_INDEX_VOL, &vol, sizeof(vol));
-    if (vol <= 31) {
+    u32 res = vm_read(VM_INDEX_VOL, &vol, sizeof(vol));
+    if ((vol <= 31) && (res == sizeof(vol))) {
         dac_vol(0, vol);
         log_info("powerup set vol : %d\n", vol);
     }
@@ -117,8 +131,11 @@ void mbox_flash_main(void)
     /* work_mode = MIDI_DEC_MODE; */
     /* work_mode = MIDI_KEYBOARD_MODE; */
     /* work_mode = SIMPLE_DEC_MODE; */
+    /* work_mode = LOUDSPEAKER_MODE; */
+    /* work_mode = RTC_MODE; */
     while (1) {
         clear_all_message();
+        vm_pre_erase();
         switch (work_mode) {
 #if MUSIC_MODE_EN
         case MUSIC_MODE:
@@ -167,6 +184,20 @@ void mbox_flash_main(void)
             simple_decode_app();
             break;
 #endif
+#if LOUDSPEAKER_EN
+        case LOUDSPEAKER_MODE:
+            log_info("-Loud Speaker Mode\n");
+            loudspeaker_app();
+            break;
+#endif
+#if RTC_EN
+        case RTC_MODE:
+            log_info("-Rtc Mode\n");
+            rtc_app();
+            /* rtc_timed_wakeup_app(); */
+            break;
+#endif
+
         case SOFTOFF_MODE:
             log_info("-SoftOff Mode\n");
             softoff_app();

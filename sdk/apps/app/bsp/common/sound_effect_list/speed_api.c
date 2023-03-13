@@ -15,20 +15,41 @@
 
 SPEED_PITCH_PARA_STRUCT sp_parm AT(.sp_data);
 
+const int SPITCH_PARM_PR_HResolution = 0;//pitchrate精度调节
+
 void *speed_api(void *obuf, u32 insample, void **ppsound)
 {
     log_info("speed_api\n");
 
     sp_parm.insample = insample;             //输入音频采样率
-    sp_parm.pitchrate = 100;           //变调比例，128:为不变调，<128:音调变高，>128:音调变低，声音更沉
+    if (SPITCH_PARM_PR_HResolution) {
+        sp_parm.pitchrate = 32768;          //变调比例，32768:为不变调，<32768:音调变高，>32768:音调变低，声音更沉
+    } else {
+        sp_parm.pitchrate = 100;            //变调比例，128:为不变调，<128:音调变高，>128:音调变低，声音更沉
+    }
     //speedout/speedin 的结果大于0.6小于1.8.变快变慢最好都不要超过2倍
-    sp_parm.speedin = 80;
-    sp_parm.speedout = 144;          //sp_parm.speedin：sp_parm.speedout为变速比例，例如speedin=1;speedout=2;则为变慢1倍
+    sp_parm.speedin = 1;
+    sp_parm.speedout = 1;          //sp_parm.speedin：sp_parm.speedout为变速比例，例如speedin=1;speedout=2;则为变慢1倍
     sp_parm.quality = 4;            //变调运算的运算质量，跟速度成正比，配置范围3-8
     sp_parm.pitchflag = 1;     //如果pitchflag=1,就是输入输出速度只由speedin：speedout决定,调节音调的时候，速度比例保持不变。例如设置speedout：speedin=1:2 ，这时候，去调节pitchrate，都是只变调，速度一直是保持放慢1倍。
     //如果pitchflag=0，就是变速变调比例分开控制 ，这样实际变速的比例是 （speedout/speedin)*pitchrate了。
 
     return speed_phy(obuf, &sp_parm, ppsound);
+}
+
+void update_speed_parm(void *priv, SPEED_PITCH_PARA_STRUCT *new_speed_parm)
+{
+    if ((NULL == priv) || (NULL == new_speed_parm)) {
+        return;
+    }
+    log_info("Update Speed Parm\n");
+
+    EFFECT_OBJ *e_obj = (EFFECT_OBJ *)priv;
+    sound_in_obj *p_si = e_obj->p_si;
+    SPEEDPITCH_STUCT_API *ops = p_si->ops;
+    OS_ENTER_CRITICAL();
+    ops->open(p_si->p_dbuf, new_speed_parm, NULL);
+    OS_EXIT_CRITICAL();
 }
 
 void *link_speed_sound(void *p_sound_out, void *p_dac_cbuf, void **pp_effect, u32 in_sr)
@@ -53,7 +74,7 @@ void *link_speed_sound(void *p_sound_out, void *p_dac_cbuf, void **pp_effect, u3
 
 /***************************phy***************************************************************/
 EFFECT_OBJ speed_obj AT(.sp_data);
-u32  SP_BUFLEN[0xbb4 / 4] AT(.sp_data);          //处理32k音频变速变调需要的空间
+u32 SP_BUFLEN[0x10b4 / 4] AT(.sp_data);//处理48k音频变速变调需要的空间
 
 static sound_in_obj speed_si AT(.sp_data);
 
@@ -81,7 +102,7 @@ void *speed_phy(void *obuf, SPEED_PITCH_PARA_STRUCT *psp_parm, void **ppsound)
     ops = get_sppitch_context();           //获取变采样函数接口
     buff_len = ops->need_buf(psp_parm->insample);                          //运算空间获取
     if (buff_len > sizeof(SP_BUFLEN)) {
-        log_info("speed buff need : 0x%x\n", buff_len);
+        log_error("speed buff need : 0x%x\n", buff_len);
         return 0;
     }
     log_info("speed buff need : 0x%x, 0x%x ", buff_len, sizeof(SP_BUFLEN));

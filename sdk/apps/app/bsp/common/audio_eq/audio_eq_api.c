@@ -1,188 +1,209 @@
-#pragma bss_seg(".audio_eq.data.bss")
-#pragma data_seg(".audio_eq.data")
-#pragma const_seg(".audio_eq.text.const")
-#pragma code_seg(".audio_eq.text")
-#pragma str_literal_override(".audio_eq.text.const")
-
-#include "audio_eq_api.h"
-#include "audio_dac_api.h"
-#include "app_config.h"
+#include "audio_eq.h"
+#include "typedef.h"
+#include "config.h"
+#include "sound_mge.h"
+#include "decoder_api.h"
+#include "my_malloc.h"
 
 #define LOG_TAG_CONST       NORM
 #define LOG_TAG             "[eq]"
 #include "log.h"
 
-#if AUDIO_EQ_ENABLE
+//仅使用一路EQ，需要344字节ram；多路EQ时，每一路需要(344+64*最大段数)字节ram
+const int config_hw_single_eq = 1;
+const int config_eq_fade_enbale = 1;
+const int config_eq_fade_step = 128;
 
-AUDIO_EQ_INFO g_eq_info;
-sound_fade_obj g_sound_fade;
-
-/* EQ频点，单位Hz */
-const u16 eq_freq[EQ_SECTION_MAX] = {31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000};
-
-/* EQ频点增益，单位dB */
-const char eq_mode_normal[EQ_SECTION_MAX] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-const char eq_mode_rock[EQ_SECTION_MAX] = {-2, 0, 2, 4, -2, -2, 0, 0, 4, 4};
-const char eq_mode_pop[EQ_SECTION_MAX] = { 3, 1, 0, -2, -4, -4, -2, 0, 1, 1};
-const u32 eq_type_tab[] = {
-    (u32)eq_mode_normal,
-    (u32)eq_mode_rock,
-    (u32)eq_mode_pop,
+const struct eq_seg_info eq_tab_normal[] = {
+    {0, EQ_IIR_TYPE_BAND_PASS, 31,    0, 0.7f},
+    {1, EQ_IIR_TYPE_BAND_PASS, 62,    0, 0.7f},
+    {2, EQ_IIR_TYPE_BAND_PASS, 125,   0, 0.7f},
+    {3, EQ_IIR_TYPE_BAND_PASS, 250,   0, 0.7f},
+    {4, EQ_IIR_TYPE_BAND_PASS, 500,   0, 0.7f},
+    {5, EQ_IIR_TYPE_BAND_PASS, 1000,  0, 0.7f},
+    {6, EQ_IIR_TYPE_BAND_PASS, 2000,  0, 0.7f},
+    {7, EQ_IIR_TYPE_BAND_PASS, 4000,  0, 0.7f},
+    {8, EQ_IIR_TYPE_BAND_PASS, 8000,  0, 0.7f},
+    {9, EQ_IIR_TYPE_BAND_PASS, 16000, 0, 0.7f},
+};
+const struct eq_seg_info eq_tab_rock[] = {
+    {0, EQ_IIR_TYPE_BAND_PASS, 31,    -2, 0.7f},
+    {1, EQ_IIR_TYPE_BAND_PASS, 62,     0, 0.7f},
+    {2, EQ_IIR_TYPE_BAND_PASS, 125,    2, 0.7f},
+    {3, EQ_IIR_TYPE_BAND_PASS, 250,    4, 0.7f},
+    {4, EQ_IIR_TYPE_BAND_PASS, 500,   -2, 0.7f},
+    {5, EQ_IIR_TYPE_BAND_PASS, 1000,  -2, 0.7f},
+    {6, EQ_IIR_TYPE_BAND_PASS, 2000,   0, 0.7f},
+    {7, EQ_IIR_TYPE_BAND_PASS, 4000,   0, 0.7f},
+    {8, EQ_IIR_TYPE_BAND_PASS, 8000,   4, 0.7f},
+    {9, EQ_IIR_TYPE_BAND_PASS, 16000,  4, 0.7f},
+};
+const struct eq_seg_info eq_tab_pop[] = {
+    {0, EQ_IIR_TYPE_BAND_PASS, 31,     3, 0.7f},
+    {1, EQ_IIR_TYPE_BAND_PASS, 62,     1, 0.7f},
+    {2, EQ_IIR_TYPE_BAND_PASS, 125,    0, 0.7f},
+    {3, EQ_IIR_TYPE_BAND_PASS, 250,   -2, 0.7f},
+    {4, EQ_IIR_TYPE_BAND_PASS, 500,   -4, 0.7f},
+    {5, EQ_IIR_TYPE_BAND_PASS, 1000,  -4, 0.7f},
+    {6, EQ_IIR_TYPE_BAND_PASS, 2000,  -2, 0.7f},
+    {7, EQ_IIR_TYPE_BAND_PASS, 4000,   0, 0.7f},
+    {8, EQ_IIR_TYPE_BAND_PASS, 8000,   1, 0.7f},
+    {9, EQ_IIR_TYPE_BAND_PASS, 16000,  2, 0.7f},
+};
+const struct eq_seg_info eq_tab_classic[] = {
+    {0, EQ_IIR_TYPE_BAND_PASS, 31,     0, 0.7f},
+    {1, EQ_IIR_TYPE_BAND_PASS, 62,     8, 0.7f},
+    {2, EQ_IIR_TYPE_BAND_PASS, 125,    8, 0.7f},
+    {3, EQ_IIR_TYPE_BAND_PASS, 250,    4, 0.7f},
+    {4, EQ_IIR_TYPE_BAND_PASS, 500,    0, 0.7f},
+    {5, EQ_IIR_TYPE_BAND_PASS, 1000,   0, 0.7f},
+    {6, EQ_IIR_TYPE_BAND_PASS, 2000,   0, 0.7f},
+    {7, EQ_IIR_TYPE_BAND_PASS, 4000,   0, 0.7f},
+    {8, EQ_IIR_TYPE_BAND_PASS, 8000,   2, 0.7f},
+    {9, EQ_IIR_TYPE_BAND_PASS, 16000,  2, 0.7f},
+};
+const struct eq_seg_info eq_tab_country[] = {
+    {0, EQ_IIR_TYPE_BAND_PASS, 31,    -2, 0.7f},
+    {1, EQ_IIR_TYPE_BAND_PASS, 62,     0, 0.7f},
+    {2, EQ_IIR_TYPE_BAND_PASS, 125,    0, 0.7f},
+    {3, EQ_IIR_TYPE_BAND_PASS, 250,    2, 0.7f},
+    {4, EQ_IIR_TYPE_BAND_PASS, 500,    2, 0.7f},
+    {5, EQ_IIR_TYPE_BAND_PASS, 1000,   0, 0.7f},
+    {6, EQ_IIR_TYPE_BAND_PASS, 2000,   0, 0.7f},
+    {7, EQ_IIR_TYPE_BAND_PASS, 4000,   0, 0.7f},
+    {8, EQ_IIR_TYPE_BAND_PASS, 8000,   4, 0.7f},
+    {9, EQ_IIR_TYPE_BAND_PASS, 16000,  4, 0.7f},
+};
+const struct eq_seg_info eq_tab_jazz[] = {
+    {0, EQ_IIR_TYPE_BAND_PASS, 31,     0, 0.7f},
+    {1, EQ_IIR_TYPE_BAND_PASS, 62,     0, 0.7f},
+    {2, EQ_IIR_TYPE_BAND_PASS, 125,    0, 0.7f},
+    {3, EQ_IIR_TYPE_BAND_PASS, 250,    4, 0.7f},
+    {4, EQ_IIR_TYPE_BAND_PASS, 500,    4, 0.7f},
+    {5, EQ_IIR_TYPE_BAND_PASS, 1000,   4, 0.7f},
+    {6, EQ_IIR_TYPE_BAND_PASS, 2000,   0, 0.7f},
+    {7, EQ_IIR_TYPE_BAND_PASS, 4000,   2, 0.7f},
+    {8, EQ_IIR_TYPE_BAND_PASS, 8000,   3, 0.7f},
+    {9, EQ_IIR_TYPE_BAND_PASS, 16000,  4, 0.7f},
 };
 
-static void EQ_run(short *in, short *out, int ch, int len)
+typedef struct _EQ_TYPE_TAB_ {
+    u32 eq_seg;//EQ系数表指针
+    float global_gain;//对应系数总增益
+} EQ_TYPE_TAB;
+/* 添加需要参与切换的系数表 */
+const EQ_TYPE_TAB eq_type_tab[] = {
+    /* EQ系数表          总增益 */
+    {(u32)eq_tab_normal,    0},
+    {(u32)eq_tab_rock,      0},
+    {(u32)eq_tab_pop,       0},
+    {(u32)eq_tab_classic,  -8},
+    {(u32)eq_tab_country,   0},
+    {(u32)eq_tab_jazz,     -2},
+};
+
+u8 eq_mode;//EQ模式参数由应用层管理
+void *link_eq_sound(void *p_sound_out, void *p_dac_cbuf, void **pp_effect, u32 sr, u8 ch)
 {
-    JL_EQ->CON1 = 0;
-    JL_EQ->CON2 = 0;
-    JL_EQ->CON3 = 0;
-    /* SEQUENCE_DAT_IN */
-    JL_EQ->CON1 = sizeof(short);
-    JL_EQ->CON2 = (ch - 1) * sizeof(short);
-    JL_EQ->CON3 = ch * sizeof(short);
-    /* SEQUENCE_DAT_OUT */
-    JL_EQ->CON1 |= (sizeof(short)) << 16;
-    JL_EQ->CON2 |= ((ch - 1)  * sizeof(short)) << 16;
-    JL_EQ->CON3 |= (ch * sizeof(short)) << 16;
-
-    JL_EQ->DATAI_ADR = (u32)in;
-    JL_EQ->DATAO_ADR = (u32)out;
-    JL_EQ->DATA_LEN = len - 1;
-    /* log_info("points_per_ch:%d", len); */
-
-    JL_EQ->CON0 |= BIT(30);//clr pnd
-    JL_EQ->CON0 |= BIT(1) | BIT(0);
-    while ((JL_EQ->CON0 & BIT(31)) == 0);
-    JL_EQ->CON0 |= BIT(30);
-}
-
-static void HWEQ_FILT_OPEN(char *newGAIN, int ch)
-{
-    float *tptr = (float *)EQ_COEFF_BASE;
-    int i, j, k;
-    for (j = 0; j < ch; j++) {
-        for (i = 0; i < EQ_SECTION_MAX; i++) {
-            if (eq_freq[i] >= (g_eq_info.sample_rate / 2 * 29491) >> 15) {//0.9 * sr / 2
-                tptr[0] = 1;
-                for (k = 1; k < 5; k++) {
-                    tptr[k] = 0;
-                }
-            } else {
-                design_pe_for_int((int)(eq_freq[i]), (int)g_eq_info.sample_rate, (int)(newGAIN[i] * (1 << 20)), 11744051, (float *)tptr);
-            }
-#if 0
-            int *p = (int *)tptr;
-            printf("%dHz  ", eq_freq[i]);
-            for (int l = 0; l < 5; l++) {
-                printf("0x%x, ", p[l]);
-            }
-            putchar('\n');
-#endif
-            tptr += 8;
-        }
-    }
-}
-
-static void EQ_init(char *newGAIN, int ch)
-{
-    JL_EQ->CON0 = 0;
-    __asm__ volatile("csync");//避免以上写动作，总线未写完，就操作eq mem导致死机的问题
-
-    float *tptr = (float *)(int)EQ_COEFF_BASE;
-    memset((void *)EQ_COEFF_BASE, 0, 20 * 8 * sizeof(float));
-
-    HWEQ_FILT_OPEN(newGAIN, ch);
-
-    /* printf_buf((u8 *)EQ_COEFF_BASE, (sizeof(int) * 5 * EQ_SECTION_MAX)); */
-
-    JL_EQ->CON0 = 1 << 1;
-    JL_EQ->CON0 |= ((EQ_RUN_MODE << 2) | \
-                    (EQ_IN_FORMAT << 4) | \
-                    (EQ_OUT_FORMAT << 6) | \
-                    ((ch - 1) << 8) | \
-                    (EQ_SECTION_MAX - 1) << 16);
-}
-
-void audio_eq_run_api(void *data_in, void *data_out, u32 len, bool stereo)
-{
-    AUDIO_EQ_INFO *eq_info = &g_eq_info;
-    if (!(eq_info->eq_enable & B_EQ_START)) {
-        return;
+    sound_out_obj *p_next_sound = 0;
+    sound_out_obj *p_curr_sound = p_sound_out;
+    if (NULL == pp_effect) {
+        log_info("eq init err\n");
+        return p_curr_sound;
     }
 
-    u8 ch = eq_info->output_ch;
-    u16 sp_len = len / 2 / ch;
-    EQ_run((short *)data_in,    \
-           (short *)data_out,  \
-           ch,                 \
-           sp_len);
+    /* EQ参数配置 */
+    eq_mode = 0;
+    EQ_PARA_STRUCT para;
+    para.sample_rate = sr;
+    para.ch = ch;
+    para.seg = (struct eq_seg_info *)(eq_type_tab[eq_mode].eq_seg);
+    para.global_gain = eq_type_tab[eq_mode].global_gain;
+    para.max_nsection = EQ_SECTION_MAX;
 
-    if (eq_info->eq_enable & B_EQ_FADE_OUT) {
-        if (!sound_fade_out(&g_sound_fade, data_out, len, stereo)) {
-            /* putchar('S'); */
-            local_irq_disable();
-            EQ_init((char *)eq_type_tab[eq_info->eq_mode], eq_info->output_ch);
-            eq_info->eq_enable &= ~B_EQ_FADE_OUT;
-            eq_info->eq_enable |= B_EQ_FADE_IN;
-            local_irq_enable();
-        }
-        /* putchar('-'); */
-    } else if (eq_info->eq_enable & B_EQ_FADE_IN) {
-        if (sound_fade_in(&g_sound_fade, data_out, len, stereo)) {
-            /* putchar('E'); */
-            local_irq_disable();
-            eq_info->eq_enable &= ~B_EQ_FADE_IN;
-            local_irq_enable();
-        }
-        /* putchar('+'); */
+    p_curr_sound->effect = eq_api(p_curr_sound->p_obuf, &para, (void **)&p_next_sound);
+    if (NULL != p_curr_sound->effect) {
+        *pp_effect = p_curr_sound->effect;
+        p_curr_sound->enable |= B_DEC_EFFECT;
+        p_curr_sound = p_next_sound;
+        p_curr_sound->p_obuf = p_dac_cbuf;
+        /* log_info("eq init succ\n"); */
+    } else {
+        log_info("eq init fail\n");
+    }
+    return p_curr_sound;
+}
+
+int eq_mode_sw(void *parm)
+{
+    EFFECT_OBJ *e_obj = (EFFECT_OBJ *)parm;
+    if (NULL == e_obj) {
+        return -1;
+    }
+
+    eq_mode++;
+    if (eq_mode >= ARRAY_SIZE(eq_type_tab)) {
+        eq_mode = 0;
+    }
+
+    log_info("eq_mode : %d\n", eq_mode);
+
+    EQ_UPDATE update_parm;
+    update_parm.eq_mode = eq_mode;
+    update_parm.seg = (void *)(eq_type_tab[eq_mode].eq_seg);
+    update_parm.global_gain = (eq_type_tab[eq_mode].global_gain);
+
+    sound_in_obj *p_src_si = e_obj->p_si;
+    EQ_STUCT_API *p_ops =  p_src_si->ops;
+    p_ops->config(p_src_si->p_dbuf, EQ_CMD_SWITCH_TAB, (void *)&update_parm);
+    return eq_mode;
+}
+
+
+/***************************phy***************************************************************/
+void *eq_hld_malloc(u32 malloc_size)
+{
+    return my_malloc(malloc_size, MM_EQ);
+}
+void eq_reless(void **ppeffect)
+{
+    EFFECT_OBJ *p_eobj = *ppeffect;
+    log_info("eq free : 0x%x", (u32) p_eobj);
+    if (NULL != p_eobj) {
+        *ppeffect = my_free(p_eobj);
     }
 }
-
-AUDIO_EQ_INFO *audio_eq_open_api(u8 ch, u16 sr)
+static int eq_run_api(void *hld, short *inbuf, int len)
 {
-    AUDIO_EQ_INFO *eq_info = &g_eq_info;
-    if (eq_info->eq_enable & B_EQ_START) {
-        return NULL;
+    sound_in_obj *p_si = (sound_in_obj *)hld;
+    EQ_STUCT_API *ops = (EQ_STUCT_API *)p_si->ops;
+    return ops->run(p_si->p_dbuf, inbuf, len);
+}
+
+static void *eq_api(void *obuf, EQ_PARA_STRUCT *p_para, void **ppsound)
+{
+    u32 buff_len, i;
+    EQ_STUCT_API *ops = (EQ_STUCT_API *)get_eq_context();
+    buff_len = ops->need_buf(p_para->max_nsection, p_para->ch);
+    EQ_HDL *p_eq_hdl = eq_hld_malloc(buff_len);
+    if (NULL == p_eq_hdl) {
+        log_error("eq malloc fail, need buff_len:%d\n", buff_len);
+        return 0;
     }
-    eq_info->sample_rate = sr;
-    eq_info->output_ch = ch;
-    log_info("eq:%d\n", eq_info->eq_mode);
+    log_info("eq malloc succ, hdl:0x%x len:%d\n", (u32)p_eq_hdl, buff_len);
 
-    local_irq_disable();
-    EQ_init((char *)eq_type_tab[eq_info->eq_mode], eq_info->output_ch);
-    local_irq_enable();
+    memset((void *)p_eq_hdl, 0, buff_len);
+    ops->open((unsigned int *)&p_eq_hdl->buff, p_para, (void *)&p_eq_hdl->io);
 
-    sound_fade_init(&g_sound_fade, 128);
-    eq_info->eq_enable |= B_EQ_START;
-    return eq_info;
+    EFFECT_OBJ *p_eq_obj = &p_eq_hdl->obj;
+    p_eq_hdl->io.priv = &p_eq_obj->sound;
+    p_eq_hdl->io.output = sound_output;
+    p_eq_hdl->si.ops = ops;
+    p_eq_hdl->si.p_dbuf = &p_eq_hdl->buff;
+    p_eq_hdl->obj.p_si = &p_eq_hdl->si;
+    p_eq_hdl->obj.run = eq_run_api;
+    p_eq_hdl->obj.sound.p_obuf = obuf;
+
+    *ppsound = &p_eq_obj->sound;
+    return p_eq_obj;
 }
-
-void audio_eq_switch_tab(void)
-{
-    AUDIO_EQ_INFO *eq_info = &g_eq_info;
-    if (++eq_info->eq_mode >= ARRAY_SIZE(eq_type_tab)) {
-        eq_info->eq_mode = 0;
-    }
-    log_info("eq:%d\n", eq_info->eq_mode);
-
-#if 1//淡入淡出
-    eq_info->eq_enable |= B_EQ_FADE_OUT;
-#else//直接切换
-    local_irq_disable();
-    EQ_init((char *)eq_type_tab[eq_info->eq_mode], eq_info->output_ch);
-    local_irq_enable();
-#endif
-}
-
-void audio_eq_init_api(void)
-{
-    AUDIO_EQ_INFO *eq_info = &g_eq_info;
-    memset((void *)eq_info, 0, sizeof(AUDIO_EQ_INFO));
-}
-
-void audio_eq_close_api(void)
-{
-    AUDIO_EQ_INFO *eq_info = &g_eq_info;
-    eq_info->eq_enable = 0;
-}
-
-#endif

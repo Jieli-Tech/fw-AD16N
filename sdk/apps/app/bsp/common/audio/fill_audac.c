@@ -55,8 +55,6 @@ void dac_kick(void *sound_hld, void *pkick)
     }
 }
 
-
-
 AT(.audio_isr_text)
 u32 fill_dac_fill_phy(u8 *buf, u32 len)
 {
@@ -153,11 +151,15 @@ u32 fill_dac_fill_phy(u8 *buf, u32 len)
         }
 #endif
         t_sp += sp_buf[sp_cnt];
+#ifdef __PI32V2__
+        L_sat(t_sp, t_sp);
+#else
         if (t_sp > 32767) {
             t_sp = 32767;
         } else if (t_sp < -32768) {
             t_sp = -32768;
         }
+#endif
         sp_buf[sp_cnt] = t_sp;
         all_cnt++;
         /* if (0 == active_flag) { */

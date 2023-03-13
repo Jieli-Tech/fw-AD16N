@@ -103,9 +103,11 @@ u8 p33_buf(u8 buf);
 #define P33_SET_ANA_KEEP(keep)	p33_fast_access(P3_ANA_KEEP, BIT(0), keep)
 
 /**************************P3_IVS_SET*******************************/
-#define WVDD_SHORT_DVDD()				p33_fast_access(P3_IVS_SET, BIT(4), 1)
+#define WVDD_SHORT_DVDD()			p33_fast_access(P3_IVS_SET, BIT(4), 1)
 
-#define WVDD_SHORT_DVDD_DISABLE()		p33_fast_access(P3_IVS_CLR, BIT(4), 1)
+#define WVDD_SHORT_DVDD_DISABLE()	p33_fast_access(P3_IVS_CLR, BIT(4), 1)
+
+#define MSYS_TO_P33_RST_MASK(en)	p33_fast_access(P3_IVS_SET,  BIT(5), en)
 
 /**************************P3_ANA_FLOW1*******************************/
 #define DVD_POR_EN(en)				p33_fast_access(P3_ANA_FLOW1, BIT(5), en)
@@ -318,7 +320,6 @@ enum {
 #define VLVD_FLT(flt)				P33_CON_SET(P3_VLVD_FLT,  0, 2, flt)
 
 /**************************P3_RST_CON0*******************************/
-#define MSYS_TO_P33_RST_MASK(en)	p33_fast_access(P3_RST_CON0,  BIT(5), en)
 
 #define VLVD_WKUP_EN(en)			p33_fast_access(P3_RST_CON0,  BIT(3), en)
 

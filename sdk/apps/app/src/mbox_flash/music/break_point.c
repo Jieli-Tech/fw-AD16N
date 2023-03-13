@@ -8,7 +8,7 @@
 #include "break_point.h"
 #include "music_play.h"
 #include "device_app.h"
-#include "vm.h"
+#include "vm_api.h"
 /* #include "mbox_memory.h" */
 /* #include "device_memory.h" */
 /* #include "memory.h" */
@@ -18,7 +18,6 @@
 #define LOG_TAG             "[music]"
 #include "log.h"
 
-#if MBOX_USE_VM_MEMORY
 static const u8 playpoint_table[MAX_DEVICE][2] = {
     /* findex                   breakpoint */
     {VM_INDEX_UDISK_INDEX,   VM_INDEX_UDISK_BP},
@@ -26,7 +25,7 @@ static const u8 playpoint_table[MAX_DEVICE][2] = {
     {VM_INDEX_INRFLSH_INDEX, VM_INDEX_INRFLSH_BP},
 };
 
-void clear_music_break_point(u8 dindex)
+void clear_music_break_point_phy(u8 dindex)
 {
     u32 ret;
     dp_buff tmp_dp;
@@ -43,7 +42,7 @@ void clear_music_break_point(u8 dindex)
     }
 }
 
-bool save_music_break_point(u8 dindex, u8 mode)
+bool save_music_break_point_phy(u8 dindex, u8 mode)
 {
     u32 res = 0;
     if (0 == mode) {
@@ -71,7 +70,7 @@ bool save_music_break_point(u8 dindex, u8 mode)
     return true;
 }
 
-bool load_music_break_point(u8 dindex, u8 mode)
+bool load_music_break_point_phy(u8 dindex, u8 mode)
 {
     u32 res;
     if (0 == mode) {
@@ -105,4 +104,3 @@ bool load_music_break_point(u8 dindex, u8 mode)
 
     return true;
 }
-#endif

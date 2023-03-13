@@ -11,7 +11,7 @@
 #include "play_file.h"
 #include "device_app.h"
 #include "vfs.h"
-#include "vm.h"
+#include "vm_api.h"
 #include "msg.h"
 #include "jiffies.h"
 #include "tick_timer_driver.h"
@@ -26,12 +26,15 @@
 #include "decoder_api.h"
 #include "decoder_msg_tab.h"
 
+#include "audio_dac_fade.h"
 #include "audio_dac_api.h"
 
 #include "usb/host/usb_host.h"
 #include "usb/device/usb_stack.h"
 #include "usb/otg.h"
-#include "audio_eq_api.h"
+#if AUDIO_EQ_ENABLE
+#include "audio_eq.h"
+#endif
 
 #define LOG_TAG_CONST       APP
 #define LOG_TAG             "[music]"
@@ -76,7 +79,7 @@ static void music_info_init(u8 *p_dev)
 #endif
     key_table_sel(music_key_msg_filter);
     decoder_init();
-
+    dac_fade_out_api();
     err_device = 0;
     fsn_music = 0;
     err_device = 0;
@@ -87,7 +90,7 @@ static void music_info_init(u8 *p_dev)
 
     pctl[0].pdp = &breakpoint[0];
     pctl[0].dev_index = NO_DEVICE;
-    pctl[0].dec_type = BIT_WAV | BIT_MP3_ST | BIT_F1A1 | BIT_A | BIT_UMP3;  //播放需要使用的解码器
+    pctl[0].dec_type = BIT_WAV | BIT_MP3_ST | BIT_F1A1 | BIT_A | BIT_UMP3 | BIT_EQ;  //播放需要使用的解码器
 #if HAS_SYDFS_EN
     pctl[0].pdir = (void *)&dir_inr_tab[0];
     pctl[0].dir_index = 0;
@@ -113,7 +116,7 @@ void music_app(void)
 
     while (1) {
         err = get_msg(2, &msg[0]);
-        /* bsp_loop(); */
+        bsp_loop();
 
         if (MSG_NO_ERROR != err) {
             msg[0] = NO_MSG;
@@ -123,7 +126,7 @@ void music_app(void)
         switch (msg[0]) {
 #if AUDIO_EQ_ENABLE
         case MSG_EQ_SW:
-            audio_eq_switch_tab();
+            eq_mode_sw((void *)((pctl[0].p_dec_obj)->eq_effect));
             UI_menu(MENU_EQ);
             break;
 #endif
@@ -248,6 +251,7 @@ __find_last_device:
             UI_menu(MENU_MAIN);
             UI_menu(MENU_HALF_SEC_REFRESH);
             if (MUSIC_PLAY != get_decoder_status(pctl[0].p_dec_obj)) {
+                vm_pre_erase();
                 app_powerdown_deal(0);
             } else {
                 app_powerdown_deal(1);
@@ -267,9 +271,7 @@ __out_music_mode:
 #endif
     SET_UI_MAIN(MENU_POWER_UP);
     UI_menu(MENU_POWER_UP);
-#if AUDIO_EQ_ENABLE
-    audio_eq_init_api();
-#endif
     key_table_sel(NULL);
     dac_sr_api(dac_sr);
+    dac_fade_in_api();
 }

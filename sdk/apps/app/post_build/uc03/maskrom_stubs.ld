@@ -172,5 +172,5 @@
   msd_unregister_disk = ABSOLUTE(0xfff4);
   msd_desc_config = ABSOLUTE(0xfff8);
   USB_MassStorage = ABSOLUTE(0xfffc);
-  _MASK_MEM_BEGIN = ABSOLUTE(0x109b00);
+  _MASK_MEM_BEGIN = ABSOLUTE(0x10a000);
 

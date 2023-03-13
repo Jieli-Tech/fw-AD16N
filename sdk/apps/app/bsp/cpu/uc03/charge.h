@@ -119,6 +119,7 @@ extern u8 get_lvcmp_det(void);
 extern u8 charge_get_vpwr_online_hw(void);
 extern u8 charge_get_lvcmp_det(void);
 extern u8 charge_check_is_idle(void);
+extern u8 charge_check_is_full(void);
 extern void charge_timer_handle(void);
 extern void charge_start(void);
 extern void charge_close(void);

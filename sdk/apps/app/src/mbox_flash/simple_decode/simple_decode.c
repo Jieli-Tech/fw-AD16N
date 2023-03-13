@@ -9,8 +9,8 @@
 #include "msg.h"
 #include "app.h"
 #include "vfs.h"
-#include "vm.h"
 #include "hot_msg.h"
+#include "vm_api.h"
 #include "circular_buf.h"
 #include "jiffies.h"
 #include "tick_timer_driver.h"
@@ -81,7 +81,7 @@ void simple_decode_app(void)
     dec_pctl[0].pdir        = (void *)&dir_inr_tab[0];
     dec_pctl[0].dir_total   = sizeof(dir_inr_tab) / 4;
     simple_dev_fs_mount(&dec_pctl[0]);
-#if MUSIC_BREAK_POINT_EN
+#if SIMPLE_DEC_BP_ENABLE
     if (sizeof(dp_buff) == vm_read(dec_pctl[0].p_vm_tab[dec_pctl[0].dir_index], dec_pctl[0].pdp, sizeof(dp_buff))) {
         dp_buff *pdp = (dp_buff *)dec_pctl[0].pdp;
         dec_pctl[0].findex = pdp->findex;
@@ -101,6 +101,7 @@ void simple_decode_app(void)
 
     while (1) {
         err = get_msg(2, &msg[0]);
+        bsp_loop();
         if (MSG_NO_ERROR != err) {
             msg[0] = NO_MSG;
             log_info("get msg err 0x%x\n", err);
@@ -115,7 +116,7 @@ __simple_dec_play_file_entry:
                 dp_buff *dp = (dp_buff *)dec_pctl[0].pdp;
                 dp->findex = dec_pctl[0].findex;
                 clear_dp(dp);
-#if MUSIC_BREAK_POINT_EN
+#if SIMPLE_DEC_BP_ENABLE
                 vm_write(dec_pctl[0].p_vm_tab[dec_pctl[0].dir_index], \
                          dec_pctl[0].pdp, \
                          sizeof(dp_buff));
@@ -194,6 +195,9 @@ __simple_dec_play_file_entry:
             UI_menu(MENU_MAIN);
             if ((MUSIC_PLAY != get_decoder_status(dec_pctl[0].p_dec_obj)) && \
                 (MUSIC_PLAY != get_decoder_status(dec_pctl[1].p_dec_obj))) {
+#if SIMPLE_DEC_BP_ENABLE
+                vm_pre_erase();
+#endif
                 app_powerdown_deal(0);
             } else {
                 app_powerdown_deal(1);
@@ -205,7 +209,7 @@ __simple_dec_play_file_entry:
     }
 __simple_decode_exit:
     decoder_stop(dec_pctl[0].p_dec_obj, NEED_WAIT, dec_pctl[0].pdp);
-#if MUSIC_BREAK_POINT_EN
+#if SIMPLE_DEC_BP_ENABLE
     vm_write(dec_pctl[0].p_vm_tab[dec_pctl[0].dir_index], dec_pctl[0].pdp, sizeof(dp_buff));
 #endif
     simple_dev_fs_close(&dec_pctl[0]);
@@ -221,7 +225,7 @@ __simple_decode_exit:
 static bool simple_switch_device(play_control *ppctl)
 {
     decoder_stop(ppctl->p_dec_obj, NEED_WAIT, ppctl->pdp);//记录音乐断点
-#if MUSIC_BREAK_POINT_EN
+#if SIMPLE_DEC_BP_ENABLE
     vm_write(ppctl->p_vm_tab[ppctl->dir_index], ppctl->pdp, sizeof(dp_buff));
 #endif
     simple_dev_fs_close(ppctl);
@@ -249,7 +253,7 @@ static bool simple_switch_device(play_control *ppctl)
     if (simple_dev_fs_mount(ppctl)) {
         return false;
     }
-#if MUSIC_BREAK_POINT_EN
+#if SIMPLE_DEC_BP_ENABLE
     u32 ret = vm_read(ppctl->p_vm_tab[ppctl->dir_index], \
                       ppctl->pdp, \
                       sizeof(dp_buff));
@@ -266,7 +270,7 @@ static bool simple_switch_device(play_control *ppctl)
 static bool simple_next_dir(play_control *ppctl)
 {
     decoder_stop(ppctl->p_dec_obj, NEED_WAIT, ppctl->pdp);//记录音乐断点
-#if MUSIC_BREAK_POINT_EN
+#if SIMPLE_DEC_BP_ENABLE
     vm_write(ppctl->p_vm_tab[ppctl->dir_index], ppctl->pdp, sizeof(dp_buff));
 #endif
     ppctl->dir_index++;
@@ -281,7 +285,7 @@ static bool simple_next_dir(play_control *ppctl)
     {
         ppctl->pdp = &inr_dec_dp[ppctl->dir_index];
     }
-#if MUSIC_BREAK_POINT_EN
+#if SIMPLE_DEC_BP_ENABLE
     vm_read(ppctl->p_vm_tab[ppctl->dir_index], ppctl->pdp, sizeof(dp_buff));
 #endif
     dp_buff *dp = (dp_buff *)ppctl->pdp;

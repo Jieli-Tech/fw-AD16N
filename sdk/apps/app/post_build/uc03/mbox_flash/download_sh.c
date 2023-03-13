@@ -19,4 +19,4 @@ ${OBJCOPY} -O binary -j .data $1.elf  data.bin
 ${OBJDUMP} -section-headers  $1.elf
 cat $1.bin data.bin > app.bin
 
-host-client -project ${NICKNAME} -mode flash_debug -f app.bin $1.elf isd_config.ini uboot.boot uc03loader.bin uc03loader.uart
+host-client -project ${NICKNAME} -mode flash_debug -f app.bin $1.elf isd_config.ini uboot.boot uc03loader.bin uc03loader.uart ota.bin ota_debug.bin

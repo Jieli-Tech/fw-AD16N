@@ -10,7 +10,7 @@
 #include "device.h"
 #include "vfs.h"
 #include "msg.h"
-#include "vm.h"
+#include "vm_api.h"
 #include "my_malloc.h"
 #include "init_app.h"
 #include "audio.h"
@@ -113,8 +113,8 @@ void vm_init_api(void)
     vfs_fs_close(&pvfs);
 
     syscfg_vm_init(eeprom_attr.sclust, eeprom_attr.fsize);
-    // extern void nvm_demo(u32 start, u32 size);
-    // nvm_demo(eeprom_attr.sclust, eeprom_attr.fsize);
+    /* extern void nvm_demo(u32 start, u32 size); */
+    /* nvm_demo(eeprom_attr.sclust, eeprom_attr.fsize); */
     /*
      *demo
     u8 data_buf[10];

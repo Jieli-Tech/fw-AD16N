@@ -19,6 +19,41 @@
 #define     CPU_NAME    'U','C','0','3'
 #endif
 
+static const u8 EX_SCSIInquiryData[] = {
+    0x00,//  // Peripheral Device Type: direct access devices  0x05,//
+    0x80,   // Removable: UFD is removable
+    0x02,   // iso ecma ANSI version
+    0x02,   // Response Data Format: compliance with UFI
+    0x20,   // Additional Length (Number of UINT8s following this one): 31, totally 36 UINT8s
+    0x00, 0x00, 0x00,   // reserved
+    CPU_NAME,    //-- Vender information start
+    ' ',
+    ' ',
+    ' ',
+    ' ',   //" " -- Vend Information end
+
+    'E',    //-- Production Identification start
+    'X',
+    'T',
+    ' ',
+    'F',
+    'L',
+    'A',
+    'S',
+    'H',
+    ' ',
+    ' ',
+    ' ',
+    ' ',
+    ' ',
+    ' ',
+    ' ',    //" " -- Production Identification end
+
+    0x32,   //"1" -- Production Revision Level start
+    0x2e,   //"."
+    0x30,   //"0"
+    0x30    //"0" -- Production Revision Level end
+};
 
 static const u8 SCSIInquiryData[] = {
     0x00,//  // Peripheral Device Type: direct access devices  0x05,//
@@ -103,28 +138,43 @@ void msd_init(void)
     memset((void *)&msd_var, 0, sizeof(msd_var));
     msd_var.msd_buf = msd_buf;
     msd_var.msd_buffer_size = MSD_BUFFER_SIZE;
-#if SD_CDROM_EN
-    msd_var.max_lun = 2;
-    msd_var.cdrom_enable = 1;
-#else
-    msd_var.max_lun = 1;
-    msd_var.cdrom_enable = 0;
-#endif
-    msd_var.inquiry[0] = NULL;
-    msd_var.inquiry[1] = NULL;
-
     msd_var.ep_in_buffer = usb_get_ep_buffer(0, MSD_BULK_EP_IN | USB_DIR_IN);
     msd_var.ep_out_buffer  = usb_get_ep_buffer(0, MSD_BULK_EP_OUT);
+
 #if SD_CDROM_EN
+
+    msd_var.max_lun = 2;
+    msd_var.cdrom_enable = 1;
     msd_var.inquiry[0]  = CD_SCSIInquiryData;
     msd_var.inquiry[1]  = SCSIInquiryData;
-    msd_register_disk("sd_cdrom", NULL);
-    msd_register_disk("sd_enc", NULL);
+
 #else
+
+    msd_var.max_lun = 1;
     msd_var.inquiry[0]  = SCSIInquiryData;
-    msd_register_disk("sd0", NULL);
+#if TCFG_USB_EXFLASH_UDISK_ENABLE
+    msd_var.max_lun = 2;
+    msd_var.inquiry[1]  = EX_SCSIInquiryData;
 #endif
 
+#endif
+}
+
+void msd_register_disk_api(void)
+{
+#if SD_CDROM_EN
+
+    msd_register_disk("sd_cdrom", NULL);
+    msd_register_disk("sd_enc", NULL);
+
+#else
+
+    msd_register_disk("sd0", NULL);
+#if TCFG_USB_EXFLASH_UDISK_ENABLE
+    msd_register_disk("ext_flsh", NULL);
+#endif
+
+#endif
 }
 #endif
 

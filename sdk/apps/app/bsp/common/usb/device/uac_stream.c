@@ -201,6 +201,9 @@ void uac_spk_vol(u8 vol_l, u8 vol_r)
     stereo_dac_vol(0, vol_l, vol_r);
 }
 static u32 mic_stream_is_open;
+static u32 last_spk_l_vol       AT(.uac_var);
+static u32 last_spk_r_vol       AT(.uac_var);
+static u32 last_mic_vol         AT(.uac_var);
 void uac_mute_volume(u32 type, u32 l_vol, u32 r_vol)
 {
     /* struct sys_event event;                    */
@@ -208,8 +211,8 @@ void uac_mute_volume(u32 type, u32 l_vol, u32 r_vol)
     /* event.arg = (void *)DEVICE_EVENT_FROM_UAC; */
 
     int l_valsum, r_valsum;
-    static u32 last_spk_l_vol = (u32) - 1, last_spk_r_vol = (u32) - 1;
-    static u32 last_mic_vol = (u32) - 1;
+    /* static u32 last_spk_l_vol = (u32) - 1, last_spk_r_vol = (u32) - 1; */
+    /* static u32 last_mic_vol = (u32) - 1; */
 
     l_valsum = uac_vol_switch(l_vol);
     r_valsum = uac_vol_switch(r_vol);
@@ -401,6 +404,7 @@ void uac_mic_stream_close()
 #endif
 }
 
+#if 0
 struct uac_info_t uac_info = {
     .uac_speaker_stream_open = uac_speaker_stream_open,
     .uac_speaker_stream_write = uac_speaker_stream_write,
@@ -418,9 +422,32 @@ struct uac_info_t uac_info = {
     .mic_audio_rate = (u16)MIC_AUDIO_RATE,
     .mic_audio_res = MIC_AUDIO_RES,
 };
+#endif
+struct uac_info_t uac_info AT(.uac_var);
 
 void uac_init(void)
 {
+    last_spk_l_vol = (u32) - 1;
+    last_spk_r_vol = (u32) - 1;
+    last_mic_vol = (u32) - 1;
+
+    memset((void *)&uac_info, 0, sizeof(struct uac_info_t));
+    uac_info.uac_speaker_stream_open = uac_speaker_stream_open;
+    uac_info.uac_speaker_stream_write = uac_speaker_stream_write;
+    uac_info.uac_speaker_stream_close = uac_speaker_stream_close;
+    uac_info.uac_mute_volume = uac_mute_volume;
+    uac_info.uac_mic_stream_open = uac_mic_stream_open;
+    uac_info.uac_mic_stream_close = uac_mic_stream_close;
+    uac_info.uac_get_spk_vol = uac_get_spk_vol;
+    uac_info.uac_mic_stream_read = uac_mic_stream_read;
+    uac_info.spk_audio_rate = (u16)SPK_AUDIO_RATE;
+    uac_info.spk_channle = SPK_CHANNEL;
+    uac_info.spk_audio_res = SPK_AUDIO_RES;
+
+    uac_info.mic_channle = MIC_CHANNEL;
+    uac_info.mic_audio_rate = (u16)MIC_AUDIO_RATE;
+    uac_info.mic_audio_res = MIC_AUDIO_RES;
+
     uac_info.speaker_dma_buffer = usb_get_ep_buffer(0, SPK_ISO_EP_OUT);
     uac_info.mic_dma_buffer = usb_get_ep_buffer(0, MIC_ISO_EP_IN | USB_DIR_IN);
 }

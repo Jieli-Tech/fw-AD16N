@@ -108,17 +108,51 @@ define ENCODER_A_EN  0
 -
 ** MIO功能使能
 #ifdef HAS_MIO_PLAYER
-define HAS_MIO_EN  1
+define HAS_MIO_EN  0
 #else
 define HAS_MIO_EN  0
 #endif
 
 -
-** SPEED功能(变速变调)使能
+** 实时SPEED功能(用于扩音)使能
 #ifdef HAS_SPEED_EFFECT
 define HAS_SPEED_EN  1
 #else
 define HAS_SPEED_EN  0
+#endif
+
+-
+** 歌曲SPEED功能(用于解码)使能
+#ifdef HAS_SONG_SPEED_EFFECT
+define HAS_SONG_SPEED_EN  1
+#else
+define HAS_SONG_SPEED_EN  0
+#endif
+
+-
+** 陷波/移频啸叫抑制使能(二选一)
+#ifdef HAS_HOWLING_EFFECT
+define NOTCH_HOWLING_EN  1
+define PITCHSHIFT_HOWLING_EN 2
+define HOWLING_SEL   PITCHSHIFT_HOWLING_EN
+#else
+define NOTCH_HOWLING_EN  0
+define PITCHSHIFT_HOWLING_EN 0
+#endif
+
+** 变声功能使能
+#ifdef HAS_VOICE_PITCH_EFFECT
+define VO_PITCH_EN  1
+#else
+define VO_PITCH_EN  0
+#endif
+
+-
+** ECHO混响功能使能
+#ifdef HAS_ECHO_EFFECT
+define ECHO_EN   1
+#else
+define ECHO_EN   0
 #endif
 
 -
@@ -154,6 +188,19 @@ define SIMPLE_DEC_EN  1  -- 多路解码应用模式
 #else
 define SIMPLE_DEC_EN  0  -- 多路解码应用模式
 #endif
+
+#ifdef HAS_LOUDSPEAKER_MODE
+define LOUDSPEAKER_EN  1  -- 扩音应用模式
+#else
+define LOUDSPEAKER_EN  0  -- 扩音应用模式
+#endif
+
+#ifdef HAS_RTC_MODE
+define RTC_EN  0  -- RTC模式
+#else
+define RTC_EN  0  -- RTC模式
+#endif
+
 
 -
 #ifdef HAS_NEW_VM_MODE

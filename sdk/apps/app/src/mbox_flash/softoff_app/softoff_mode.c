@@ -18,7 +18,7 @@
 #include "simple_play_file.h"
 #include "device.h"
 #include "device_app.h"
-#include "vm.h"
+#include "vm_api.h"
 #include "app.h"
 #include "power_api.h"
 
@@ -58,6 +58,7 @@ void softoff_app(void)
 
     while (1) {
         err = get_msg(2, &msg[0]);
+        bsp_loop();
         if (MSG_NO_ERROR != err) {
             msg[0] = NO_MSG;
             log_info("get msg err 0x%x\n", err);

@@ -11,6 +11,7 @@
 #include "msg.h"
 #include "key.h"
 #include "app_config.h"
+#include "audio_dac_fade.h"
 #if KEY_IR_EN
 #include "irflt.h"
 #endif
@@ -31,6 +32,7 @@ void tick_timer_loop(void)
 #if KEY_IR_EN
         ir_timeout();
 #endif
+        dac_fade_api();
         key_scan();
         /* printf("+"); */
     }

@@ -50,6 +50,6 @@ u8 spi_send_recv_byte(spi_dev spi, u8 byte, int *err);
 int spi_set_baud(spi_dev spi, u32 baud);
 u32 spi_get_baud(spi_dev spi);
 void spi_close(spi_dev spi);
-
+void hw_spi_resume(spi_dev spi);
 #endif
 

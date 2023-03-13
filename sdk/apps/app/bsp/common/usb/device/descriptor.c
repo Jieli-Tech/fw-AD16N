@@ -114,17 +114,29 @@ const u8 *usb_get_string_desc(u32 id)
     return NULL;
 }
 
+#if 0
 static struct usb_device_descriptor_t desc_t = {
     .device_descriptor = sDeviceDescriptor,
     .language_str = LANGUAGE_STR,
     .manufacture_str = MANUFACTURE_STR,
     .product_str = product_string,
-    .iserialnumber_str = NULL,
-    /* .iserialnumber_str = serial_string, */
+    /* .iserialnumber_str = NULL, */
+    .iserialnumber_str = serial_string,
     .config_desc = sConfigDescriptor,
 };
+#endif
+static struct usb_device_descriptor_t desc_t AT(.usb_descriptor);
+
 const struct usb_device_descriptor_t *usb_get_desc_config()
 {
+    memset((void *)&desc_t, 0, sizeof(desc_t));
+    desc_t.device_descriptor = sDeviceDescriptor;
+    desc_t.language_str = LANGUAGE_STR;
+    desc_t.manufacture_str = MANUFACTURE_STR;
+    desc_t.product_str = product_string;
+    desc_t.iserialnumber_str = serial_string;
+    desc_t.config_desc = sConfigDescriptor;
+
     return &desc_t;
 }
 #endif

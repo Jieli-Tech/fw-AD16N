@@ -697,7 +697,11 @@ void lcd_seg4x8_init(const struct lcd_seg4x8_platform_data *_data)
     SFR(JL_LCDC->CON1, 6, 2, 3);				//clk div
     /* SFR(JL_CLOCK->CLK_CON3, 11, 3, 2);  //LCDC时钟源选择rtc 32k */
     /* SFR(JL_LCDC->CON1, 6, 2, 0);				//clk div */
-
+#if (UC03_LCD_COM_SEL == 'A')  //IO_PORT GROUP SEL
+    JL_IOMC->IOMC0 &= ~BIT(5); //GROUP A
+#else
+    JL_IOMC->IOMC0 |= BIT(5);  //GROUP B
+#endif
     lcd_seg4x8_seg_init();				//seg set
     lcd_seg4x8_com_init();				//com set
     //板级配置参数

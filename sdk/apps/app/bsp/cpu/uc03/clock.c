@@ -441,6 +441,7 @@ __change_clk:
     u32 spi_clk = sfc_baud_adjust();
     u32 otp_clk = otp_baud_adjust();
 
+
     PLL_96M_SEL(pll_96m);//std_clk config pll
     STD_48M_SEL(0);//sel pll_96 div2  -> std48_clk
     STD_12M_SEL(0);//std48 div2 -> std12m
@@ -454,6 +455,10 @@ __change_clk:
     SFR(JL_CLOCK->CLK_CON3, 9, 2, 0b01);
     //p33 clk div
     SFR(JL_CLOCK->CLK_CON0, 10, 3, 0b001);
+
+    u32 lsb_clk = lsb_clk_get();
+    u32 spi0_div = clk_limit(lsb_clk, 24 * MHz_UNIT, 255);
+    JL_SPI0->BAUD = spi0_div;
 
     local_irq_enable();
     if (clk_err_flag) { //>160M error

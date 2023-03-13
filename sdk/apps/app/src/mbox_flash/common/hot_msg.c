@@ -9,8 +9,10 @@
 #include "power_api.h"
 #include "ui_api.h"
 #include "tick_timer_driver.h"
-#include "vm.h"
+#include "vm_api.h"
 #include "app_power_mg.h"
+
+#include "device_app.h"
 
 #include "usb/usb_config.h"
 #include "usb/device/hid.h"
@@ -63,7 +65,8 @@ __app_vol_deal:
         log_info("VOL:%d \n", vol);
         UI_menu(MENU_MAIN_VOL);
         break;
-    //-------------设备上线
+        //-------------设备上线
+#if TCFG_UDISK_ENABLE
     case MSG_OTG_IN:
         if (0 != usb_host_mount(0, 3, 20, 200)) {
             log_info("mount err!\n");
@@ -75,6 +78,8 @@ __app_vol_deal:
         usb_host_unmount(0);
         post_event(EVENT_UDISK_OUT);
         break;
+#endif
+#if TCFG_PC_ENABLE
     case MSG_PC_IN:
         log_info("MSG_PC_IN\n");
         work_mode = USB_SLAVE_MODE;
@@ -84,6 +89,7 @@ __app_vol_deal:
         log_info("MSG_PC_OUT\n");
         usb_stop();
         break;
+#endif
 #if defined(TFG_DEV_UPGRADE_SUPPORT) && (1 == TFG_DEV_UPGRADE_SUPPORT)
     case MSG_USB_DISK_IN:
     case MSG_SDMMCA_IN:

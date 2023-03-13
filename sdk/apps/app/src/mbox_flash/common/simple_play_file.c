@@ -10,6 +10,7 @@
 #include "vfs.h"
 #include "errno-base.h"
 #include "sound_mge.h"
+#include "vm_api.h"
 
 #include "decoder_api.h"
 #include "decoder_msg_tab.h"
@@ -61,6 +62,8 @@ u32 simple_play_file_byindex(play_control *ppctl)
     u32 err;
     dp_buff *pdp = ppctl->pdp;
     decoder_stop(ppctl->p_dec_obj, NO_WAIT, 0);
+
+    vm_pre_erase();
 
     if (NULL != ppctl->pdir) {
         const char *dir = ((const char **)ppctl->pdir)[ppctl->dir_index];

@@ -31,9 +31,11 @@ enum {
     INDEX_MP3_ST,
 #endif
     INDEX_E_SPEED = 12,
+    INDEX_E_EQ = 13,
 };
 
 #define BIT_SPEED  BIT(INDEX_E_SPEED)
+#define BIT_EQ     BIT(INDEX_E_EQ)
 
 #if DECODER_MP3_ST_EN
 #include "mp3_standard_api.h"

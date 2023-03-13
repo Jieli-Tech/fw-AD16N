@@ -173,6 +173,11 @@ enum {
 
 typedef u32 UINT;
 
+#ifdef __PI32V2__
+/* pi32v2 r1饱和到s16指令，一个指令周期完成 */
+#define  L_sat(b,a)       __asm__ volatile("%0=sat16(%1)(s)":"=&r"(b) : "r"(a))
+#endif
+
 #endif
 
 

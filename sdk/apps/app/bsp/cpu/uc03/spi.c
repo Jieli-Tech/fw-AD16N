@@ -525,3 +525,11 @@ void spi_disable_for_ota()
     }
 }
 
+void hw_spi_resume(spi_dev spi)
+{
+    u8 id = spi_get_info_id(spi);
+    u8 mode = spi_get_info_mode(spi);
+    spi_set_bit_mode(spi, mode);
+    spi_enable(spi_regs[id]);
+}
+

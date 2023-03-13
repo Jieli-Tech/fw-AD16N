@@ -47,6 +47,10 @@
 <Add option="-DHAS_UMP3_ENCODER" />
 <Add option="-DHAS_A_ENCODER" />
 <Add option="-DHAS_SPEED_EFFECT" />
+<Add option="-DHAS_SONG_SPEED_EFFECT" />
+<Add option="-DHAS_HOWLING_EFFECT" />
+<Add option="-DHAS_ECHO_EFFECT" />
+<Add option="-DHAS_VOICE_PITCH_EFFECT" />
 <Add option="-DHAS_USB_EN=1" />
 <Add option="-DHAS_SDMMC_EN=1" />
 <Add option="-DHAS_EXTFLASH_EN=1" />
@@ -58,6 +62,9 @@
 <Add option="-DHAS_RECORD_MODE" />
 <Add option="-DHAS_MUSIC_MODE" />
 <Add option="-DHAS_USB_SLAVE_MODE" />
+<Add option="-DHAS_LOUDSPEAKER_MODE" />
+<Add option="-DHAS_RTC_MODE" />
+<Add option="-DHAS_NEW_VM_MODE" />
 <Add option="-DNOFLOAT" />
 <Add option="-Wno-format" />
 <Add directory="apps/include_lib/fs/sydf" />
@@ -111,6 +118,8 @@
 <Add directory="apps/app/src/mbox_flash/simple_decode" />
 <Add directory="apps/app/src/mbox_flash/midi_dec" />
 <Add directory="apps/app/src/mbox_flash/midi_keyboard" />
+<Add directory="apps/app/src/mbox_flash/loudspeaker" />
+<Add directory="apps/app/src/mbox_flash/rtc" />
 <Add directory="apps/app/src/mbox_flash/softoff_app" />
 <Add directory="apps/app/src/mbox_flash/test_dir" />
 <Add directory="apps/app/bsp/common/usb" />
@@ -143,6 +152,11 @@
 <Add option="apps/include_lib/liba/ARCH/pi32v2_lto_r1/ump2_enc_lib.a" />
 <Add option="apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_a_code.a" />
 <Add option="apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_speed_pitch.a" />
+<Add option="apps/include_lib/liba/ARCH/pi32v2_lto_r1/ps_song_lib.a" />
+<Add option="apps/include_lib/liba/ARCH/pi32v2_lto_r1/howling.a" />
+<Add option="apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_howling_fs.a" />
+<Add option="apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_echo_cal.a" />
+<Add option="apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_vopitch_cal.a" />
 <Add option="--start-group " />
 <Add option="apps/include_lib/liba/uc03/mbox_flash/decoder_mge_lib.a" />
 <Add option="apps/include_lib/liba/uc03/mbox_flash/cpu_lib.a" />
@@ -154,6 +168,7 @@
 <Add option="apps/include_lib/liba/uc03/mbox_flash/src_lib.a" />
 <Add option="apps/include_lib/liba/uc03/mbox_flash/update_lib.a" />
 <Add option="--end-group" />
+<Add option="apps/include_lib/liba/uc03/mbox_flash/new_vm_lib.a" />
 <Add option="--end-group " />
 <Add option="-Tapps/app/post_build/uc03/app.ld" />
 <Add option="-M=apps/app/post_build/uc03/app.map" />
@@ -175,6 +190,7 @@
 <Unit filename="apps/app/bsp/common/audio/audac_basic.h" />
 <Unit filename="apps/app/bsp/common/audio/audio_adc_api.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/audio/audio_dac_api.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/common/audio/audio_dac_fade.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/audio/fill_audac.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/audio_eq/audio_eq_api.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/decoder/decoder_api.c"><Option compilerVer="CC"/></Unit>
@@ -221,7 +237,13 @@
 <Unit filename="apps/app/bsp/common/norflash/norflash.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/power_manage/app_power_mg.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/power_manage/app_power_mg.h" />
+<Unit filename="apps/app/bsp/common/sound_effect_list/echo_api.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/common/sound_effect_list/notch_howling_api.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/common/sound_effect_list/pitchshift_howling_api.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/common/sound_effect_list/song_speed_api.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/sound_effect_list/speed_api.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/common/sound_effect_list/vo_pitch_api.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/common/speaker/speak_api.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/tab_read.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/usb/device/descriptor.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/usb/device/hid.c"><Option compilerVer="CC"/></Unit>
@@ -243,6 +265,7 @@
 <Unit filename="apps/app/bsp/common/usb/usr/usb_audio_interface.h" />
 <Unit filename="apps/app/bsp/common/usb/usr/usb_mic_interface.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/usb/usr/usb_mic_interface.h" />
+<Unit filename="apps/app/bsp/common/vm/nvm_api.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/vm/vm_api.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/audio_dac_cpu.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/charge.c"><Option compilerVer="CC"/></Unit>
@@ -255,15 +278,19 @@
 <Unit filename="apps/app/bsp/cpu/uc03/power_api.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/power_api.h" />
 <Unit filename="apps/app/bsp/cpu/uc03/power_port.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/cpu/uc03/rtc_api.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/saradc_isr.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/sd.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/spi.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/tick_timer_sys.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/cpu/uc03/timer_drv.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/timer_pwm.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/uart.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/device/device_app.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/device/device_app.h" />
 <Unit filename="apps/app/bsp/device/device_list.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/start/bsp_loop.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/start/bsp_loop.h" />
 <Unit filename="apps/app/bsp/start/flash_init.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/start/flash_init.h" />
 <Unit filename="apps/app/bsp/start/init.c"><Option compilerVer="CC"/></Unit>
@@ -291,6 +318,9 @@
 <Unit filename="apps/app/src/mbox_flash/linein/linein_mode.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/src/mbox_flash/linein/linein_mode.h" />
 <Unit filename="apps/app/src/mbox_flash/linein/linein_mode_key.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/src/mbox_flash/loudspeaker/loudspk_mode.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/src/mbox_flash/loudspeaker/loudspk_mode.h" />
+<Unit filename="apps/app/src/mbox_flash/loudspeaker/loudspk_mode_key.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/src/mbox_flash/midi_dec/midi_dec_mode.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/src/mbox_flash/midi_dec/midi_dec_mode.h" />
 <Unit filename="apps/app/src/mbox_flash/midi_dec/midi_dec_mode_key.c"><Option compilerVer="CC"/></Unit>
@@ -312,6 +342,9 @@
 <Unit filename="apps/app/src/mbox_flash/record/record_mode.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/src/mbox_flash/record/record_mode.h" />
 <Unit filename="apps/app/src/mbox_flash/record/record_mode_key.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/src/mbox_flash/rtc/rtc_mode.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/src/mbox_flash/rtc/rtc_mode.h" />
+<Unit filename="apps/app/src/mbox_flash/rtc/rtc_mode_key.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/src/mbox_flash/simple_decode/simple_decode.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/src/mbox_flash/simple_decode/simple_decode.h" />
 <Unit filename="apps/app/src/mbox_flash/simple_decode/simple_decode_key.c"><Option compilerVer="CC"/></Unit>
@@ -326,8 +359,9 @@
 <Unit filename="apps/include_lib/audio/audio_adc_api.h" />
 <Unit filename="apps/include_lib/audio/audio_analog.h" />
 <Unit filename="apps/include_lib/audio/audio_dac_api.h" />
+<Unit filename="apps/include_lib/audio/audio_dac_fade.h" />
 <Unit filename="apps/include_lib/audio/audio_energy_detect.h" />
-<Unit filename="apps/include_lib/audio_eq/audio_eq_api.h" />
+<Unit filename="apps/include_lib/audio_eq/audio_eq.h" />
 <Unit filename="apps/include_lib/audio_eq/hw_eq.h" />
 <Unit filename="apps/include_lib/common/boot.h" />
 <Unit filename="apps/include_lib/common/circular_buf.h" />
@@ -339,12 +373,15 @@
 <Unit filename="apps/include_lib/common/jiffies.h" />
 <Unit filename="apps/include_lib/common/log.h" />
 <Unit filename="apps/include_lib/common/my_malloc.h" />
+<Unit filename="apps/include_lib/common/new_vm.h" />
 <Unit filename="apps/include_lib/common/printf.h" />
 <Unit filename="apps/include_lib/common/tab_read.h" />
 <Unit filename="apps/include_lib/common/vm.h" />
+<Unit filename="apps/include_lib/common/vm_api.h" />
 <Unit filename="apps/include_lib/cpu/src_api.h" />
 <Unit filename="apps/include_lib/cpu/src_para.h" />
 <Unit filename="apps/include_lib/cpu/tick_timer_driver.h" />
+<Unit filename="apps/include_lib/cpu/timer_drv.h" />
 <Unit filename="apps/include_lib/cpu/uart.h" />
 <Unit filename="apps/include_lib/cpu/uc03/asm/debug.h" />
 <Unit filename="apps/include_lib/cpu/uc03/asm/power/p33.h" />
@@ -370,6 +407,8 @@
 <Unit filename="apps/include_lib/cpu/uc03/irflt.h" />
 <Unit filename="apps/include_lib/cpu/uc03/irq.h" />
 <Unit filename="apps/include_lib/cpu/uc03/lcd_seg4x8_driver.h" />
+<Unit filename="apps/include_lib/cpu/uc03/mcpwm.h" />
+<Unit filename="apps/include_lib/cpu/uc03/rtc.h" />
 <Unit filename="apps/include_lib/cpu/uc03/saradc.h" />
 <Unit filename="apps/include_lib/cpu/uc03/saradc_isr.h" />
 <Unit filename="apps/include_lib/cpu/uc03/spi.h" />
@@ -429,10 +468,19 @@
 <Unit filename="apps/include_lib/liba/ARCH/pi32v2_lto_r1/header/MIDI_DEC_API.h" />
 <Unit filename="apps/include_lib/liba/ARCH/pi32v2_lto_r1/header/a_encode_lib.h" />
 <Unit filename="apps/include_lib/liba/ARCH/pi32v2_lto_r1/header/audio_enc_api.h" />
+<Unit filename="apps/include_lib/liba/ARCH/pi32v2_lto_r1/header/howling_pitchshifter_api.h" />
 <Unit filename="apps/include_lib/liba/ARCH/pi32v2_lto_r1/header/lib_speed_api.h" />
 <Unit filename="apps/include_lib/liba/ARCH/pi32v2_lto_r1/header/mp2_encode_api.h" />
+<Unit filename="apps/include_lib/liba/ARCH/pi32v2_lto_r1/header/notch_howling_api.h" />
+<Unit filename="apps/include_lib/liba/ARCH/pi32v2_lto_r1/header/ps_for69_api.h" />
+<Unit filename="apps/include_lib/liba/ARCH/pi32v2_lto_r1/header/reverb_api.h" />
 <Unit filename="apps/include_lib/liba/ARCH/pi32v2_lto_r1/header/ump2_encode_api.h" />
+<Unit filename="apps/include_lib/liba/ARCH/pi32v2_lto_r1/header/vo_pitch_api.h" />
 <Unit filename="apps/include_lib/msg/msg.h" />
+<Unit filename="apps/include_lib/sound_effect_list/echo_api.h" />
+<Unit filename="apps/include_lib/sound_effect_list/howling_api.h" />
+<Unit filename="apps/include_lib/sound_effect_list/midi_file0_h.h" />
+<Unit filename="apps/include_lib/sound_effect_list/song_speed_api.h" />
 <Unit filename="apps/include_lib/sound_effect_list/speed_api.h" />
 <Unit filename="apps/include_lib/sound_mge/sound_mge.h" />
 <Unit filename="apps/include_lib/sound_mge/stream_frame.h" />

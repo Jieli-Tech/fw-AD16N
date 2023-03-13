@@ -12,7 +12,7 @@
 #include "circular_buf.h"
 #include "jiffies.h"
 #include "pa_mute.h"
-#include "vm.h"
+#include "vm_api.h"
 
 #include "sound_mge.h"
 #include "audio_dac_api.h"
@@ -70,11 +70,12 @@ void linein_app(void)
     u8 mute = 0;
     while (1) {
         err = get_msg(2, &msg[0]);
+        bsp_loop();
+
         if (MSG_NO_ERROR != err) {
             msg[0] = NO_MSG;
             log_info("get msg err 0x%x\n", err);
         }
-
         switch (msg[0]) {
         case MSG_PP:
             if (mute == 0) {

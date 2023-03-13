@@ -33,7 +33,7 @@ typedef struct _dec_obj {
     u32 sr;
     sound_out_obj sound;
     void *src_effect;
-    void *eq;
+    void *eq_effect;
     u8 loop;
     u8 type; // DECOER_TYPE
     u8 function;		// 解码器支持的功能

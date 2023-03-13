@@ -19,7 +19,7 @@ NEW_FLASH_FS=YES;
 CHIP_NAME=AD16N;//8
 ENTRY=0x4000100;//程序入口地址
 PID=UC03;//长度16byte,示例：芯片封装_应用方向_方案名称
-CHECK_OTA_BIN=NO;//可不检测ota.bin
+CHECK_OTA_BIN=YES;//可不检测ota.bin
 
 RESERVED_OPT=0;//入口地址为0x1E00120需要定义该配置项
 
@@ -86,7 +86,6 @@ EX_FLASH_IO=CAT5(1,TFG_SPI_CLK_PORT,TFG_SPI_DO_PORT,TFG_SPI_DI_PORT,NULL_NULL); 
 //####################################################
 //烧写器配置项
 //OTP_BOOT 0,FLASH模式 1,OTP模式
-//LIGHTING2TYPEC 0,uboot启动 1,快速启动
 //####################################################
 [BURNER_PASSTHROUGH_CFG]
 LIGHTING2TYPEC=0    //uboot_start
@@ -97,7 +96,7 @@ OTP_BOOT=0
 //2.078v 2.188v 2.297v 2.406v 2.515v 2.624v 2.733v 2.840v
 //####################################################
 [BURNER_OPTIONS]
-LVD=2.515v
+LVD=2.624v
 
 //########flash空间使用配置区域###############################################
 //#PDCTNAME:    产品名，对应此代码，用于标识产品，升级时可以选择匹配产品名

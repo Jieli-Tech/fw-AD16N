@@ -25,6 +25,8 @@
 #include "efuse.h"
 #include "audio_energy_detect.h"
 #include "circular_buf.h"
+#include "audio_dac_fade.h"
+#include "app_config.h"
 
 #if HAS_MIO_EN
 #include "mio_api.h"
@@ -58,11 +60,6 @@ _OTP_CONST_  DAC_CTRL_HDL audio_dac_ops = {
 };
 
 /* #define sound_out_obj void */
-
-
-#define B_DAC_MUTE		BIT(0)
-#define B_DAC_FADE_EN   BIT(1)
-#define B_DAC_FADE_OUT  BIT(2)
 
 
 const u16 vol_tab[] = {
@@ -313,150 +310,4 @@ bool dac_cbuff_active(void *sound_hld)
     /*     return true; */
     /* } */
 }
-
-#if 0
-
-u16 dac_single_fade(u16 vol, u16 vol_phy, u16 *p_cnt)
-{
-    u16 target_vol = 0;
-    u16 curr_vol = vol_phy;
-    u16 t_fade_step;
-
-    if (curr_vol > 100) {
-        t_fade_step = (curr_vol + 1000) / 60;
-    } else {
-        t_fade_step =  10;
-    }
-
-    if (dac_mge.flag & B_DAC_FADE_OUT) {
-        if (curr_vol > t_fade_step) {
-            curr_vol -= t_fade_step;
-        } else {
-            curr_vol = 0;
-        }
-    } else {
-        target_vol = vol_tab[vol];
-        if (target_vol > curr_vol) {
-            if (curr_vol < (target_vol - t_fade_step)) {
-                curr_vol += t_fade_step;
-            } else {
-                curr_vol = target_vol;
-            }
-
-        } else {
-            if (curr_vol > (target_vol + t_fade_step)) {
-                curr_vol -= t_fade_step;
-            } else {
-                curr_vol = target_vol;
-            }
-        }
-
-    }
-    if (target_vol == curr_vol) {
-        *p_cnt = 0;
-    }
-    return curr_vol;
-}
-/* #define DAC_FADE_STEP (16384 / 1638) */
-void dac_fade(void)
-{
-    if (0 == (dac_mge.flag & B_DAC_FADE_EN)) {
-        return;
-    }
-    if (dac_mge.flag & B_DAC_MUTE) {
-        return;
-    }
-    /*
-    static u16 cnt = 0;
-    cnt++;
-    u16 target_vol = 0;
-    u16 curr_vol = dac_mge.vol_phy;
-    u16 t_fade_step;
-    if (curr_vol > 100) {
-        t_fade_step = (curr_vol + 1000) / 60;
-    } else {
-        t_fade_step =  10;
-    }
-
-    if (dac_mge.flag & B_DAC_FADE_OUT) {
-        if (curr_vol > t_fade_step) {
-            curr_vol -= t_fade_step;
-        } else {
-            curr_vol = 0;
-        }
-    } else {
-        target_vol = vol_tab[dac_mge.vol];
-        if (target_vol > curr_vol) {
-            if (curr_vol < (target_vol - t_fade_step)) {
-                curr_vol += t_fade_step;
-            } else {
-                curr_vol = target_vol;
-            }
-
-        } else {
-            if (curr_vol > (target_vol + t_fade_step)) {
-                curr_vol -= t_fade_step;
-            } else {
-                curr_vol = target_vol;
-            }
-        }
-
-    }
-    dac_mge.vol_phy = curr_vol;
-
-    [> log_info(" fade  %d %d \n",dac_mge.vol_phy, cnt); <]
-    if (target_vol == dac_mge.vol_phy) {
-        dac_mge.flag &= ~B_DAC_FADE_EN;
-        cnt = 0;
-    }
-    */
-    static u16 cnt_l = 0;
-    static u16 cnt_r = 0;
-    cnt_l++;
-    dac_mge.vol_l_phy = dac_single_fade(dac_mge.vol_l, dac_mge.vol_l_phy, &cnt_l);
-    cnt_r++;
-    dac_mge.vol_r_phy = dac_single_fade(dac_mge.vol_r, dac_mge.vol_r_phy, &cnt_r);
-    if ((0 == cnt_r) && (0 == cnt_l)) {
-        dac_mge.flag &= ~B_DAC_FADE_EN;
-    }
-}
-void dac_fade_in(void)
-{
-#if 0
-    CPU_INT_DIS();
-    /* log_info(" fade in  %d \n",dac_mge.vol_phy); */
-    dac_mge.flag &= ~B_DAC_FADE_OUT;
-    dac_mge.flag |= B_DAC_FADE_EN;
-    CPU_INT_EN();
-#endif
-}
-
-void dac_fade_out(u32 delay)
-{
-#if 0
-    CPU_INT_DIS();
-    /* log_info(" fade out  %d \n",dac_mge.vol_phy); */
-    dac_mge.flag |= B_DAC_FADE_OUT;
-    dac_mge.flag |= B_DAC_FADE_EN;
-    CPU_INT_EN();
-    u32 to_cnt = 0;
-    while (dac_mge.flag & B_DAC_FADE_EN) {
-        wdt_clear();
-        delay_10ms(1);
-        to_cnt++;
-        if (to_cnt > delay) {
-            break;
-        }
-    }
-#endif
-}
-
-#endif
-
-
-
-
-
-
-
 

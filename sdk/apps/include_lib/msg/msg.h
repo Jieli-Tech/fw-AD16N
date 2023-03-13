@@ -140,6 +140,16 @@ enum {
     MSG_DECODE_USER_END,
     MSG_DECODE_FILE_END,
     MSG_DECODE_DISK_ERR,
+
+    /* rtc_msg */
+    MSG_READ_CLOCK,
+    MSG_WRITE_CLOCK,
+    MSG_READ_ALARM,
+    MSG_WRITE_ALARM,
+    MSG_TIME_WAKEUP,
+    MSG_ALARM,
+    MSG_POWER_DOWN,
+
     MSG_USB_DISK_IN,          //以下顺序不可随意调整
     MSG_SDMMCA_IN,
     MSG_SDMMCB_IN,

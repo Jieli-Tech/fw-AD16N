@@ -15,7 +15,9 @@
 #include "ui_api.h"
 #include "app.h"
 #include "msg.h"
-#include "vm.h"
+#include "vm_api.h"
+#include "audio_dac_fade.h"
+
 
 #define LOG_TAG_CONST       APP
 #define LOG_TAG             "[music]"
@@ -59,6 +61,7 @@ dec_obj *decoder_by_sclust(void *pvfs, play_control *ppctl)
 
     obj = decoder_io(ppctl->pfile, ppctl->dec_type, p_dp, 0);
     if (NULL != obj) {
+        dac_fade_in_api();
         /* 启动解码成功清除断点，并将簇号存入断点 */
         ppctl->flag &= ~BIT_FDEC_DP;
         /* clear_dp_buff(ppctl->pdp); */
@@ -91,6 +94,7 @@ dec_obj *decoder_by_index(void *pvfs, play_control *ppctl)
 
     obj = decoder_io(ppctl->pfile, ppctl->dec_type, NULL, 0);
     if (NULL != obj) {
+        dac_fade_in_api();
         /* 启动解码成功清除断点，并将文件序号存入断点 */
         dp_buff *p_dp = ppctl->pdp;
         if (NULL != p_dp) {
@@ -296,6 +300,7 @@ __mpc_device_control_part:
     }
 
     decoder_stop(pctl[0].p_dec_obj, mode, pctl[0].pdp);
+    dac_fade_out_api();
     fs_dev_close(&pctl[0]);
     if (err_device > MAX_DEVICE) {
 __mpc_no_effetive_dev_deal:
@@ -362,6 +367,7 @@ __mpc_pick_one:
     /*--------------- 文件选择操作 ---------------*/
 __mpc_file_control_part:
     decoder_stop(pctl[0].p_dec_obj, mode, pctl[0].pdp);
+    dac_fade_out_api();
     clear_dp_buff(pctl[0].pdp);
 
     err = device_status(pctl[0].dev_index, 0);
@@ -384,6 +390,7 @@ __mpc_play_file:
     }
 
     music_vol_update();
+    vm_pre_erase();
 
     SET_UI_MAIN(MENU_MUSIC_MAIN);
     UI_menu(MENU_FILENUM);//解码前显示文件号
