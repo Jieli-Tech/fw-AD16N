@@ -43,6 +43,12 @@ AD16N 系列通用MCU SDK 固件程序
 
 * SDK 结构文档 : [SDK 模块结构](./doc/)
 
+
+SDK 培训视频
+------------
+[AD16N FLASH SDK 培训视频链接](https://www.bilibili.com/video/BV15T411a7YE/?spm_id_from=333.337.search-card.all.click&vd_source=254273a14d3e073e6006d61b2acafb16)
+
+
 编译工程
 -------------
 请选择以下一个工程进行编译，下列目录包含了便于开发的工程文件：
