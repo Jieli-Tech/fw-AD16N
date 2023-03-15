@@ -607,13 +607,18 @@ enum {
 #define ALM_ALMEN(a)	P33_CON_SET(R3_ALM_CON, 0, 1, a)
 
 //Macro for CLK_SEL
-enum RTC_CLK {
-    CLK_SEL_32K = 1,
-    CLK_SEL_XOSC_DIV1,
-    CLK_SEL_XOSC_DIV2,
-    CLK_SEL_LRC,
-};
+// enum RTC_CLK {
+//     CLK_SEL_32K = 1,
+//     CLK_SEL_XOSC_DIV1,
+//     CLK_SEL_XOSC_DIV2,
+//     CLK_SEL_LRC,
+// };
 
+//RTC_CLK_SEL
+#define CLK_SEL_32K         1
+#define CLK_SEL_XOSC_DIV1   2
+#define CLK_SEL_XOSC_DIV2   3
+#define CLK_SEL_LRC         4
 
 
 /*
