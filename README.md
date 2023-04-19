@@ -43,6 +43,9 @@ AD16N 系列通用MCU SDK 固件程序
 
 * SDK 结构文档 : [SDK 模块结构](./doc/)
 
+* 视频资源 : [视频链接](https://space.bilibili.com/3493277347088769/dynamic)
+
+* FAE 支持文档 : [FAE支持](https://gitee.com/jieli-tech_fae/fw-jl)
 
 SDK 培训视频
 ------------

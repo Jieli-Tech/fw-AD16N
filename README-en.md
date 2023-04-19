@@ -45,6 +45,10 @@ Documentation
 
 * SDK architure : [SDK module architure ](./doc/architure)
 
+* Video resource: [Video resource](https://space.bilibili.com/3493277347088769/dynamic)
+
+* FAE support document: [FAE support](https://gitee.com/jieli-tech_fae/fw-jl)
+
 SDK explanation video
 ------------
 [AD16N FLASH SDK explanation video link](https://www.bilibili.com/video/BV15T411a7YE/?spm_id_from=333.337.search-card.all.click&vd_source=254273a14d3e073e6006d61b2acafb16)
