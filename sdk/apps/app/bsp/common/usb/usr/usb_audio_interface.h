@@ -17,6 +17,7 @@ void usb_slave_sound_close(sound_out_obj *p_sound);
 void usb_slave_sound_open(sound_out_obj *p_sound, u32 sr);
 void usb_slave_sound_write(const u8 *obuf, u32 len);
 
+void *get_usb_eq_handle(void);
 EFFECT_OBJ *uac_spk_percent(u32 *p_percent);
 #if  0//TCFG_PC_ENABLE
 

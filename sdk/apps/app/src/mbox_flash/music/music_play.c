@@ -11,7 +11,7 @@
 #include "play_file.h"
 #include "device_app.h"
 #include "vfs.h"
-#include "vm_api.h"
+#include "sys_memory.h"
 #include "msg.h"
 #include "jiffies.h"
 #include "tick_timer_driver.h"
@@ -96,7 +96,7 @@ static void music_info_init(u8 *p_dev)
     pctl[0].dir_index = 0;
 #endif
     u8 device;
-    if (sizeof(u8) == vm_read(VM_INDEX_ACTIVE_DEV, &device, sizeof(u8))) {
+    if (sizeof(u8) == sysmem_read_api(SYSMEM_INDEX_ACTIVE_DEV, &device, sizeof(u8))) {
         *p_dev = device;
     } else {
         *p_dev = 0;
@@ -105,7 +105,7 @@ static void music_info_init(u8 *p_dev)
 
 void music_app(void)
 {
-    vm_write(VM_INDEX_SYSMODE, &work_mode, sizeof(work_mode));
+    sysmem_write_api(SYSMEM_INDEX_SYSMODE, &work_mode, sizeof(work_mode));
     u32 dac_sr = dac_sr_read();
     dac_sr_api(48000);
     u8 music_vol, dindex, used_device;
@@ -251,7 +251,7 @@ __find_last_device:
             UI_menu(MENU_MAIN);
             UI_menu(MENU_HALF_SEC_REFRESH);
             if (MUSIC_PLAY != get_decoder_status(pctl[0].p_dec_obj)) {
-                vm_pre_erase();
+                sysmem_pre_erase_api();
                 app_powerdown_deal(0);
             } else {
                 app_powerdown_deal(1);

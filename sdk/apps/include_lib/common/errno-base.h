@@ -101,6 +101,7 @@
 #define E_NVM_CRC_ERR          (0x8300 + 0x0c)
 #define E_NVM_DATA_TOO_LONG    (0x8300 + 0x0d)
 #define E_NVM_DATA_ADDR        (0x8300 + 0x0e)
+#define E_NVM_WRITE			   (0x8300 + 0x0f)
 
 
 

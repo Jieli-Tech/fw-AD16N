@@ -17,7 +17,22 @@
 #define LOG_TAG             "[a_enc]"
 #include "log.h"
 
+/* ------------------------------------------------------------- */
+/* |A编码 码率（BR）/采样率（SR）对应关系                      | */
+/* ------------------------------------------------------------- */
+/* |采样率(SR)  |   8k      12k     16k     24k     32k        | */
+/* |码率(BR)    |   32kbps  48kbps  64kbps  96kbps  128kbps    | */
+/* ------------------------------------------------------------- */
+/* |注：A格式编码码率与采样率保持4：1的关系                    | */
+/* ------------------------------------------------------------- */
 
+const u16 a_enc_sr_tab[] = {
+    8000,
+    12000,
+    16000,
+    24000,
+    32000
+};
 
 
 cbuffer_t cbuf_ima_o AT(.enc_a_data);
@@ -55,9 +70,21 @@ u32 a_encode_api(void *p_file)
     enc_a_hdl.p_dbuf = &a_encode_buff[0];
     enc_a_hdl.enc_ops = ops;
     enc_a_hdl.info.sr = read_audio_adc_sr();
-    enc_a_hdl.info.br = 256;
+    for (i = 0; i < ARRAY_SIZE(a_enc_sr_tab); i++) {
+        if (enc_a_hdl.info.sr == a_enc_sr_tab[i]) {
+            break;
+        }
+    }
+    if (i == ARRAY_SIZE(a_enc_sr_tab)) {
+        log_error("a encode sample rate is not matched!\n");
+        return 0;
+    }
+    enc_a_hdl.info.br = enc_a_hdl.info.sr / 1000 * 4;
     enc_a_hdl.info.nch = 1;
 
+    log_info("a encode info:");
+    log_info("sr : %d", enc_a_hdl.info.sr);
+    log_info("br : %dk\n", enc_a_hdl.info.br);
 
     /* debug_puts("D\n"); */
     /******************************************/

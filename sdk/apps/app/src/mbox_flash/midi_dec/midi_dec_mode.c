@@ -18,7 +18,7 @@
 #include "device_app.h"
 #include "vfs.h"
 #include "simple_play_file.h"
-#include "vm_api.h"
+#include "sys_memory.h"
 #include "app.h"
 
 #include "decoder_api.h"
@@ -41,7 +41,7 @@ static const char *const dir_tab_a[] = {
 
 void midi_decode_app(void)
 {
-    vm_write(VM_INDEX_SYSMODE, &work_mode, sizeof(work_mode));
+    sysmem_write_api(SYSMEM_INDEX_SYSMODE, &work_mode, sizeof(work_mode));
     int msg[2], err;
     key_table_sel(midi_dec_key_msg_filter);
     decoder_init();

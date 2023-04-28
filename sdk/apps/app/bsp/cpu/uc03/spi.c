@@ -142,11 +142,13 @@ static void spi0_iomc_config(spi_dev spi)
     u8 *port = spi_get_info_port(spi);
     u8 mode = spi_get_info_mode(spi);
     gpio_set_fun_output_port(port[0], FO_SPI0_CLK, 1, 1);
-    gpio_set_fun_output_port(port[1], FO_SPI0_DA0, 1, 1);
-    gpio_set_fun_output_port(port[2], FO_SPI0_DA1, 1, 1);
     gpio_set_fun_input_port(port[0], PFI_SPI0_CLK);
+    gpio_set_fun_output_port(port[1], FO_SPI0_DA0, 1, 1);
     gpio_set_fun_input_port(port[1], PFI_SPI0_DA0);
-    gpio_set_fun_input_port(port[2], PFI_SPI0_DA1);
+    if (mode != SPI_MODE_UNIDIR_1BIT) {
+        gpio_set_fun_output_port(port[2], FO_SPI0_DA1, 1, 1);
+        gpio_set_fun_input_port(port[2], PFI_SPI0_DA1);
+    }
 }
 
 static void spi1_iomc_config(spi_dev spi)
@@ -154,11 +156,13 @@ static void spi1_iomc_config(spi_dev spi)
     u8 *port = spi_get_info_port(spi);
     u8 mode = spi_get_info_mode(spi);
     gpio_set_fun_output_port(port[0], FO_SPI1_CLK, 1, 1);
-    gpio_set_fun_output_port(port[1], FO_SPI1_DA0, 1, 1);
-    gpio_set_fun_output_port(port[2], FO_SPI1_DA1, 1, 1);
     gpio_set_fun_input_port(port[0], PFI_SPI1_CLK);
+    gpio_set_fun_output_port(port[1], FO_SPI1_DA0, 1, 1);
     gpio_set_fun_input_port(port[1], PFI_SPI1_DA0);
-    gpio_set_fun_input_port(port[2], PFI_SPI1_DA1);
+    if (mode != SPI_MODE_UNIDIR_1BIT) {
+        gpio_set_fun_output_port(port[2], FO_SPI1_DA1, 1, 1);
+        gpio_set_fun_input_port(port[2], PFI_SPI1_DA1);
+    }
     if (mode == SPI_MODE_UNIDIR_4BIT) {
         gpio_set_fun_output_port(port[3], FO_SPI1_DA2, 1, 1);
         gpio_set_fun_output_port(port[4], FO_SPI1_DA3, 1, 1);
@@ -356,6 +360,8 @@ void spi_set_bit_mode(spi_dev spi, int mode)
     if (mode == SPI_MODE_BIDIR_1BIT) {
         spi_io_port_init(port[1], 0);
         spi_io_port_init(port[2], 1);
+    } else if (mode == SPI_MODE_UNIDIR_1BIT) {
+        spi_io_port_init(port[1], role == SPI_ROLE_MASTER ? 0 : 1);
     } else if (mode == SPI_MODE_UNIDIR_2BIT) {
         spi_io_port_init(port[1], role == SPI_ROLE_MASTER ? 0 : 1);
         spi_io_port_init(port[2], role == SPI_ROLE_MASTER ? 0 : 1);

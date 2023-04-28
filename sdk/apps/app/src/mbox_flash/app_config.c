@@ -16,6 +16,8 @@ const int IRQ_USB_IP	 = 3;
 const int IRQ_SD_IP		 = 3;
 const int IRQ_STREAM_IP  = 4;
 const int IRQ_SPEAKER_IP = 1;
+const int IRQ_LEDC_IP    = 1;
+const int IRQ_SLCD_IP    = 2;
 //系统还未使用到的
 const int IRQ_UART0_IP   = 3;
 const int IRQ_UART1_IP   = 3;
@@ -51,11 +53,17 @@ const int MAX_DEC_PLAYER_CNT = 8;   //midi乐谱解码最大同时发声的key�
 const int MAX_CTR_PLAYER_CNT = 15;  //midi琴最大同时发声的key数,范围[1,31]
 const int NOTE_OFF_TRIGGER = 0;     //midi琴note_off time传0时，是否产生回调音符结束 1：不回调 0：回调
 #endif
+#if RTC_EN
 const int config_rtc_enable = 1;
+#else
+const int config_rtc_enable = 0;
+#endif
 /*********************usb slave config************************************/
 const bool config_usbslave_ctl_mic = 1;
 /*********************usb slave config end********************************/
 
+/*********************set cache way num********************************/
+const u8 cache_way_num = CPU_USE_CACHE_WAY_NUMBER;
 
 /*************audio analog config****************************************
  * 以下配置，作用为系统音频 模块开机默认配置
@@ -156,14 +164,12 @@ AUDIO_MICPGA_G const audio_adc_aux_pga_g = AUMIC_M2db;
 /*************docoder mge aechite****************************************/
 bool const config_decoder_auto_mutex = 1;
 
-/*************choose VM old or new version  1:new  0:old***************************************/
-#if NEW_VM_EN
-const char config_use_new_vm = 1;
+/***************低功耗保持LCD显示**********************/
+#if POWERDOWN_KEEP_LCD
+const u8 powerdown_lcd_on = 1;
 #else
-const char config_use_new_vm = 0;
+const u8 powerdown_lcd_on = 0;
 #endif
-
-
 /**
  * @brief Bluetooth Controller Log
  */

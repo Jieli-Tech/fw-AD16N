@@ -64,6 +64,8 @@ extern const int IRQ_SD_IP;
 extern const int IRQ_PPM_IP;
 extern const int IRQ_PPS_IP;
 extern const int IRQ_STREAM_IP;
+extern const int IRQ_LEDC_IP;
+extern const int IRQ_SLCD_IP;
 //系统还未使用到的
 extern const int IRQ_UART0_IP;
 extern const int IRQ_UART1_IP;

@@ -42,9 +42,9 @@ typedef enum {
 } EQ_IIR_TYPE;
 
 struct eq_seg_info {
-    unsigned char index;	//eq段序号
-    unsigned char iir_type; //滤波器类型EQ_IIR_TYPE
-    unsigned short freq;   	//中心截止频率
+    unsigned short index;	//eq段序号
+    unsigned short iir_type; //滤波器类型EQ_IIR_TYPE
+    int freq;   	//中心截止频率
     float gain;             //增益（-12 ~12 db）
     float q;                //q值（0.3~30）
 };

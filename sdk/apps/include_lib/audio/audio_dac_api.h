@@ -12,9 +12,18 @@
 #define DAC_DECODER_BUF_SIZE     (DAC_PACKET_SIZE * 5)
 
 
+void audac_clr_buf(void);
+void dac_trim_api(void);
+void dac_phy_init(u32 sr_sel);
+u32 dac_sr_lookup(u32 sr);
+void audac_analog_open_api(u32 delay_flag);
+u32 dac_sr_set(u32 sr);
+void dac_phy_off(void);
+void dac_phy_vol(u16 dac_l, u16 dac_r);
 
 bool dac_mute(bool mute);
 void dac_mode_init(u16 vol);
+void dac_init(u32 sr, u32 delay_flag);
 void dac_init_api(u32 sr);
 void dac_sr_api(u32 sr);
 void dac_off_api(void);

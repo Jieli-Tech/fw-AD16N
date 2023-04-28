@@ -14,6 +14,7 @@
 void audio_variate_init(void);
 
 void audio_init(void);
+void audio_off_phy(u32 delay_flag);
 void audio_off(void);
 void audio_lookup(void);
 

@@ -12,7 +12,7 @@
 #include "circular_buf.h"
 #include "jiffies.h"
 #include "pa_mute.h"
-#include "vm_api.h"
+#include "sys_memory.h"
 
 #include "sound_mge.h"
 #include "audio_dac_api.h"
@@ -36,7 +36,7 @@ sound_out_obj digital_linein_sound     AT(.digital_linein_data);
 
 void linein_app(void)
 {
-    vm_write(VM_INDEX_SYSMODE, &work_mode, sizeof(work_mode));
+    sysmem_write_api(SYSMEM_INDEX_SYSMODE, &work_mode, sizeof(work_mode));
     SET_UI_MAIN(MENU_AUX_MAIN);
     UI_menu(MENU_AUX_MAIN);
     key_table_sel(linein_key_msg_filter);
@@ -112,7 +112,7 @@ __linein_app_exit:
     audio_adc_off_api();
     dac_sr_api(sr);
 #else
-    audac_analog_open();
+    audac_analog_open(1);
 #endif
     SET_UI_MAIN(MENU_POWER_UP);
     UI_menu(MENU_POWER_UP);

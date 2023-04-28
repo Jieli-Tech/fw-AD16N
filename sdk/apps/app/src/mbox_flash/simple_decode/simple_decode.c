@@ -10,7 +10,7 @@
 #include "app.h"
 #include "vfs.h"
 #include "hot_msg.h"
-#include "vm_api.h"
+#include "sys_memory.h"
 #include "circular_buf.h"
 #include "jiffies.h"
 #include "tick_timer_driver.h"
@@ -39,11 +39,11 @@ static const char *const dir_inr_tab[INR_DIR_NUM] = {
 };
 static dp_buff inr_dec_dp[INR_DIR_NUM] AT(.mode_smpl_dec_data);
 static const u8 dir_inr_vm_tab[INR_DIR_NUM] = {
-    VM_INDEX_SONG,
-    VM_INDEX_ENG,
-    VM_INDEX_POETRY,
-    VM_INDEX_STORY,
-    VM_INDEX_F1X,
+    SYSMEM_INDEX_SONG,
+    SYSMEM_INDEX_ENG,
+    SYSMEM_INDEX_POETRY,
+    SYSMEM_INDEX_STORY,
+    SYSMEM_INDEX_F1X,
 };
 static const char *const dir_tab_a[] = {
     "/dir_a",
@@ -56,13 +56,13 @@ static const char *const dir_ext_tab[EXT_DIR_NUM] = {
 };
 static dp_buff ext_dec_dp[EXT_DIR_NUM] AT(.mode_smpl_dec_data);
 static const char dir_ext_vm_tab[EXT_DIR_NUM] = {
-    VM_INDEX_EXT_SONG,
+    SYSMEM_INDEX_EXT_SONG,
 };
 #endif
 
 void simple_decode_app(void)
 {
-    vm_write(VM_INDEX_SYSMODE, &work_mode, sizeof(work_mode));
+    sysmem_write_api(SYSMEM_INDEX_SYSMODE, &work_mode, sizeof(work_mode));
     int msg[2], err;
     key_table_sel(simple_dec_key_msg_filter);
     decoder_init();
@@ -75,6 +75,7 @@ void simple_decode_app(void)
 
     dec_pctl[0].dev_index   = INNER_FLASH_RO;
     dec_pctl[0].findex      = 1;
+    dec_pctl[0].loop        = 0;
     dec_pctl[0].dec_type    = BIT_F1A1 | BIT_UMP3;
     dec_pctl[0].pdp         = &inr_dec_dp[0];
     dec_pctl[0].p_vm_tab    = (void *)&dir_inr_vm_tab[0];
@@ -82,9 +83,11 @@ void simple_decode_app(void)
     dec_pctl[0].dir_total   = sizeof(dir_inr_tab) / 4;
     simple_dev_fs_mount(&dec_pctl[0]);
 #if SIMPLE_DEC_BP_ENABLE
-    if (sizeof(dp_buff) == vm_read(dec_pctl[0].p_vm_tab[dec_pctl[0].dir_index], dec_pctl[0].pdp, sizeof(dp_buff))) {
-        dp_buff *pdp = (dp_buff *)dec_pctl[0].pdp;
-        dec_pctl[0].findex = pdp->findex;
+    if (NULL != dec_pctl[0].pdp) {
+        if (sizeof(dp_buff) == sysmem_read_api(dec_pctl[0].p_vm_tab[dec_pctl[0].dir_index], dec_pctl[0].pdp, sizeof(dp_buff))) {
+            dp_buff *pdp = (dp_buff *)dec_pctl[0].pdp;
+            dec_pctl[0].findex = pdp->findex;
+        }
     }
 #endif
 
@@ -114,13 +117,17 @@ __simple_dec_play_file_entry:
             err = simple_play_file_byindex(&dec_pctl[0]);
             if (0 == err) {
                 dp_buff *dp = (dp_buff *)dec_pctl[0].pdp;
-                dp->findex = dec_pctl[0].findex;
-                clear_dp(dp);
+                if (NULL != dp) {
+                    dp->findex = dec_pctl[0].findex;
+                    if (0 == dec_pctl[0].loop) {
+                        clear_dp(dp);
+                    }
 #if SIMPLE_DEC_BP_ENABLE
-                vm_write(dec_pctl[0].p_vm_tab[dec_pctl[0].dir_index], \
-                         dec_pctl[0].pdp, \
-                         sizeof(dp_buff));
+                    sysmem_write_api(dec_pctl[0].p_vm_tab[dec_pctl[0].dir_index], \
+                                     dec_pctl[0].pdp, \
+                                     sizeof(dp_buff));
 #endif
+                }
             } else {
                 post_msg(1, MSG_NEXT_FILE);
             }
@@ -196,7 +203,7 @@ __simple_dec_play_file_entry:
             if ((MUSIC_PLAY != get_decoder_status(dec_pctl[0].p_dec_obj)) && \
                 (MUSIC_PLAY != get_decoder_status(dec_pctl[1].p_dec_obj))) {
 #if SIMPLE_DEC_BP_ENABLE
-                vm_pre_erase();
+                sysmem_pre_erase_api();
 #endif
                 app_powerdown_deal(0);
             } else {
@@ -210,7 +217,7 @@ __simple_dec_play_file_entry:
 __simple_decode_exit:
     decoder_stop(dec_pctl[0].p_dec_obj, NEED_WAIT, dec_pctl[0].pdp);
 #if SIMPLE_DEC_BP_ENABLE
-    vm_write(dec_pctl[0].p_vm_tab[dec_pctl[0].dir_index], dec_pctl[0].pdp, sizeof(dp_buff));
+    sysmem_write_api(dec_pctl[0].p_vm_tab[dec_pctl[0].dir_index], dec_pctl[0].pdp, sizeof(dp_buff));
 #endif
     simple_dev_fs_close(&dec_pctl[0]);
 
@@ -226,7 +233,9 @@ static bool simple_switch_device(play_control *ppctl)
 {
     decoder_stop(ppctl->p_dec_obj, NEED_WAIT, ppctl->pdp);//记录音乐断点
 #if SIMPLE_DEC_BP_ENABLE
-    vm_write(ppctl->p_vm_tab[ppctl->dir_index], ppctl->pdp, sizeof(dp_buff));
+    if (NULL != ppctl->pdp) {
+        sysmem_write_api(ppctl->p_vm_tab[ppctl->dir_index], ppctl->pdp, sizeof(dp_buff));
+    }
 #endif
     simple_dev_fs_close(ppctl);
     if (EXT_FLASH_RW == ppctl->dev_index) {
@@ -254,12 +263,14 @@ static bool simple_switch_device(play_control *ppctl)
         return false;
     }
 #if SIMPLE_DEC_BP_ENABLE
-    u32 ret = vm_read(ppctl->p_vm_tab[ppctl->dir_index], \
-                      ppctl->pdp, \
-                      sizeof(dp_buff));
-    if (sizeof(dp_buff) == ret) {
-        dp_buff *dp = (dp_buff *)ppctl->pdp;
-        ppctl->findex = dp->findex;
+    if (NULL != ppctl->pdp) {
+        u32 ret = sysmem_read_api(ppctl->p_vm_tab[ppctl->dir_index], \
+                                  ppctl->pdp, \
+                                  sizeof(dp_buff));
+        if (sizeof(dp_buff) == ret) {
+            dp_buff *dp = (dp_buff *)ppctl->pdp;
+            ppctl->findex = dp->findex;
+        }
     }
     log_info("next dev findex : %d\n", ppctl->findex);
 #endif
@@ -271,7 +282,9 @@ static bool simple_next_dir(play_control *ppctl)
 {
     decoder_stop(ppctl->p_dec_obj, NEED_WAIT, ppctl->pdp);//记录音乐断点
 #if SIMPLE_DEC_BP_ENABLE
-    vm_write(ppctl->p_vm_tab[ppctl->dir_index], ppctl->pdp, sizeof(dp_buff));
+    if (NULL != ppctl->pdp) {
+        sysmem_write_api(ppctl->p_vm_tab[ppctl->dir_index], ppctl->pdp, sizeof(dp_buff));
+    }
 #endif
     ppctl->dir_index++;
     if (ppctl->dir_index >= ppctl->dir_total) {
@@ -285,13 +298,17 @@ static bool simple_next_dir(play_control *ppctl)
     {
         ppctl->pdp = &inr_dec_dp[ppctl->dir_index];
     }
+    if (NULL != ppctl->pdp) {
 #if SIMPLE_DEC_BP_ENABLE
-    vm_read(ppctl->p_vm_tab[ppctl->dir_index], ppctl->pdp, sizeof(dp_buff));
+        sysmem_read_api(ppctl->p_vm_tab[ppctl->dir_index], ppctl->pdp, sizeof(dp_buff));
 #endif
-    dp_buff *dp = (dp_buff *)ppctl->pdp;
-    /* log_info("dp->findex : %d\n", dp->findex); */
-    if (0 != dp->findex) {
-        ppctl->findex = dp->findex;
+        dp_buff *dp = (dp_buff *)ppctl->pdp;
+        /* log_info("dp->findex : %d\n", dp->findex); */
+        if (0 != dp->findex) {
+            ppctl->findex = dp->findex;
+        } else {
+            ppctl->findex = 1;
+        }
     } else {
         ppctl->findex = 1;
     }

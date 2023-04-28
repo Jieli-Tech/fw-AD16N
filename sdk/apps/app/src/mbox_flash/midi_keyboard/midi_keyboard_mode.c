@@ -22,7 +22,7 @@
 #include "play_file.h"
 #include "music_device.h"
 #include "MIDI_DEC_API.h"
-#include "vm_api.h"
+#include "sys_memory.h"
 #include "app.h"
 
 #include "decoder_api.h"
@@ -62,7 +62,7 @@ const u8 Channal_Prog_Tab[CTRL_CHANNEL_NUM] = {
 
 void midi_keyboard_app(void)
 {
-    vm_write(VM_INDEX_SYSMODE, &work_mode, sizeof(work_mode));
+    sysmem_write_api(SYSMEM_INDEX_SYSMODE, &work_mode, sizeof(work_mode));
     int msg[2], err;
     u8 scale = 5;
     u8 key_offset = 0;

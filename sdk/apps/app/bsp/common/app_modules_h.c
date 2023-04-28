@@ -203,11 +203,6 @@ define RTC_EN  0  -- RTC模式
 
 
 -
-#ifdef HAS_NEW_VM_MODE
-define NEW_VM_EN  1  -- NVM使能
-#else
-define NEW_VM_EN  0  -- NVM使能
-#endif
 
 -
 -

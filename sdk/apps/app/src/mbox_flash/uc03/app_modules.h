@@ -76,7 +76,6 @@
 #define LOUDSPEAKER_EN 1 //  扩音应用模式
 #define RTC_EN 0 //  RTC模式
 
-#define NEW_VM_EN 1 //  NVM使能
 
 
 #endif

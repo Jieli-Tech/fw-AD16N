@@ -108,6 +108,13 @@ typedef struct {
 */
 //............. 0x0500 - 0x05ff............
 
+typedef struct {
+    __RO __u32 CHIP_ID;
+    __RO __u32 CHIP_VER;
+} JL_SYSTEM_TypeDef;
+
+#define JL_SYSTEM_BASE          (csfr_base + map_adr(0x05, 0x00))
+#define JL_SYSTEM               ((JL_SYSTEM_TypeDef *)JL_SYSTEM_BASE)
 //............. 0x0600 - 0x06ff............
 typedef struct {
     __RW __u32 WREN;

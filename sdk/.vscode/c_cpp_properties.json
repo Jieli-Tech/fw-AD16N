@@ -43,6 +43,7 @@
                 "HAS_USB_SLAVE_MODE",
                 "HAS_LOUDSPEAKER_MODE",
                 "HAS_RTC_MODE",
+                "HAS_VM_EN",
                 "HAS_NEW_VM_MODE",
                 "NOFLOAT",
                 "__PI32V2__"
@@ -86,6 +87,7 @@
                 "${workspaceFolder}/apps/include_lib/device/usb/host",
                 "${workspaceFolder}/apps/include_lib/device/norflash",
                 "${workspaceFolder}/apps/include_lib/update",
+                "${workspaceFolder}/apps/include_lib/config",
                 "${workspaceFolder}/apps/app/bsp",
                 "${workspaceFolder}/apps/app/bsp/common/key",
                 "${workspaceFolder}/apps/include_lib/sound_effect_list",

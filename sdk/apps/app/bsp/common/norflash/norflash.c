@@ -507,13 +507,13 @@ __no_cache1:
         spi_dma_read(buf, len);
         spi_set_width(SPI_MODE_BIDIR_1BIT);
     } else if (_norflash.spi_r_width == SPI_MODE_UNIDIR_4BIT) {
-        log_error("flash write error!SPI1 don't support 4BIT!");
-        /* spi_write_byte(0x6b); */
-        /* _norflash_send_addr(addr); */
-        /* spi_write_byte(0); */
-        /* spi_set_width(SPI_MODE_UNIDIR_4BIT); */
-        /* spi_dma_read(buf, len); */
-        /* spi_set_width(SPI_MODE_BIDIR_1BIT);	 */
+        /* log_error("flash write error!SPI1 don't support 4BIT!"); */
+        spi_write_byte(0x6b);
+        _norflash_send_addr(addr);
+        spi_write_byte(0);
+        spi_set_width(SPI_MODE_UNIDIR_4BIT);
+        spi_dma_read(buf, len);
+        spi_set_width(SPI_MODE_BIDIR_1BIT);
     } else
 #endif
     {

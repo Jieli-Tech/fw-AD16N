@@ -29,6 +29,6 @@
 // void dacvdd_ldo(bool mode);
 
 void audio_analog_open(void);
-void audio_dac_analog_open(void);
+void audio_dac_analog_open(u32 delay_flag);
 
 #endif

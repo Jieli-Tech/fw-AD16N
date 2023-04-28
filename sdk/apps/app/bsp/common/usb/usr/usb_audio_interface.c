@@ -20,6 +20,7 @@
 #include "usb/device/uac_audio.h"
 #include "usb/usr/usb_audio_interface.h"
 #include "usb/usr/uac_sync.h"
+#include "audio_eq.h"
 
 #if  TCFG_PC_ENABLE
 
@@ -29,7 +30,13 @@
 #include "uart.h"
 
 EFFECT_OBJ *usb_src_obj;
-
+#if AUDIO_EQ_ENABLE
+EFFECT_OBJ *usb_eq_obj;
+void *get_usb_eq_handle(void)
+{
+    return usb_eq_obj;
+}
+#endif
 
 #if 0
 static bool uac_is_need_sync(void)
@@ -72,12 +79,20 @@ void usb_slave_sound_close(sound_out_obj *p_sound)
     log_info("usb slave sound off\n");
     p_sound->enable &= ~B_DEC_RUN_EN;
     unregist_dac_channel(p_sound);
-    usb_src_obj = NULL;
-    if (NULL != p_sound->effect) {
-        src_reless(&p_sound->effect);
+    /* usb_src_obj = NULL; */
+    if (NULL != usb_src_obj) {
+        src_reless((void **)&usb_src_obj);
     } else {
-        log_info("usb slave sound effect null\n");
+        log_info("usb slave sound src effect null\n");
     }
+    /* 释放eq句柄*/
+#if AUDIO_EQ_ENABLE
+    if (NULL != usb_eq_obj) {
+        eq_reless((void **)&usb_eq_obj);
+    } else {
+        log_info("usb slave sound eq effect null");
+    }
+#endif
 }
 uac_sync uac_spk_sync;
 void usb_slave_sound_open(sound_out_obj *p_sound, u32 sr)
@@ -89,9 +104,16 @@ void usb_slave_sound_open(sound_out_obj *p_sound, u32 sr)
         p_curr_sound = p_sound;
         void *cbuf_o = p_curr_sound->p_obuf;
 
-        /* p_curr_sound = link_src_sound(p_curr_sound, cbuf_o, (void **)&usb_src_obj, sr, dac_sr_read()); */
+#if AUDIO_EQ_ENABLE
+        p_curr_sound = link_eq_sound(
+                           p_curr_sound,
+                           cbuf_o,
+                           (void **)&usb_eq_obj,
+                           sr,
+                           2
+                       );
+#endif
 #if TCFG_SPK_SRC_ENABLE
-        ///*
         p_curr_sound = link_src_sound(
                            p_curr_sound,
                            cbuf_o,
@@ -100,12 +122,6 @@ void usb_slave_sound_open(sound_out_obj *p_sound, u32 sr)
                            sr,
                            2
                        ); //为了省代码，没有写成上一句的样子
-        //*/
-#endif
-#if (1 == DAC_TRACK_NUMBER)
-        /* DAC差分输出时双声道音源融合成单声道 */
-        p_curr_sound->info |= B_LR_COMB;
-#endif
         if ((NULL != usb_src_obj) && (NULL != usb_src_obj->p_si)) {
             sound_in_obj *p_src_si = usb_src_obj->p_si;
             SRC_STUCT_API *p_ops =  p_src_si->ops;
@@ -115,8 +131,12 @@ void usb_slave_sound_open(sound_out_obj *p_sound, u32 sr)
                               (void *)uac_spk_sync.uac_sync_parm);
             }
         }
-
-        usb_src_obj = p_sound->effect;
+#endif
+#if (1 == DAC_TRACK_NUMBER)
+        /* DAC差分输出时双声道音源融合成单声道 */
+        p_curr_sound->info |= B_LR_COMB;
+#endif
+        /* usb_src_obj = p_sound->effect; */
         regist_dac_channel(p_sound, NULL);//注册到DAC;
         p_sound->enable |=  B_DEC_RUN_EN;
     }
@@ -166,6 +186,7 @@ EFFECT_OBJ *uac_spk_percent(u32 *p_percent)
         return NULL;
     }
     *p_percent = uac_spk_all / uac_spk_cnt;
+    /* printf("%d = %d / %d\n", *p_percent, uac_spk_all, uac_spk_cnt); */
     uac_spk_all = 0;
     uac_spk_cnt = 0;
     if (NULL == usb_src_obj) {

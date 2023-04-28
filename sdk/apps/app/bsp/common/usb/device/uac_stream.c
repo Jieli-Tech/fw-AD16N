@@ -117,7 +117,7 @@ void uac_speaker_stream_open(u32 samplerate, u32 ch)
 #if (SPK_AUDIO_RATE >= 0xFFFF)   //88.2k, 96K
     samplerate = SPK_AUDIO_RATE;
 #endif
-
+#if (USB_DEVICE_CLASS_CONFIG & SPEAKER_CLASS) == SPEAKER_CLASS
     log_info(" uac_speaker_stream_open!\n");
     if (speaker_stream_is_open) {
         return;
@@ -142,6 +142,7 @@ void uac_speaker_stream_open(u32 samplerate, u32 ch)
     usb_slave_sound_open(&uac_spk_sound, uac_speaker.sr);
     post_event(EVENT_PC_SPK);
     speaker_stream_is_open = 1;
+#endif
 }
 
 void uac_speaker_stream_close()
@@ -454,8 +455,12 @@ void uac_init(void)
 
 void uac_release_api(void)
 {
+#if (USB_DEVICE_CLASS_CONFIG & SPEAKER_CLASS) == SPEAKER_CLASS
     uac_speaker_stream_close();
+#endif
+#if (USB_DEVICE_CLASS_CONFIG & MIC_CLASS) == MIC_CLASS
     uac_mic_stream_close();
+#endif
 }
 #endif
 

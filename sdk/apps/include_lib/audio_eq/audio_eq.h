@@ -72,11 +72,20 @@ enum EQ_CMD {
     EQ_GET_CURR_MODE,
 };
 
+struct music_eq_tool {
+    float global_gain;
+    int seg_num;
+    int enable_section;
+    struct eq_seg_info seg[EQ_SECTION_MAX];
+};
+extern struct music_eq_tool music_eq_tool_online;
 extern const EQ_STUCT_API *get_eq_context(void);
 void *link_eq_sound(void *p_sound_out, void *p_dac_cbuf, void **pp_effect, u32 sr, u8 ch);
-int eq_mode_sw(void *parm);
 void *eq_hld_malloc();
+void eq_online_sw(void *parm);
+void eq_mode_sw(void *parm);
 void eq_reless(void **ppeffect);
+extern u8 get_eq_mode_total_num();
 static int eq_run_api(void *hld, short *inbuf, int len);
 static void *eq_api(void *obuf, EQ_PARA_STRUCT *p_para, void **ppsound);
 #endif

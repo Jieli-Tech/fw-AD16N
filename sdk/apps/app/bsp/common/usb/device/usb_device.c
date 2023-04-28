@@ -4,6 +4,7 @@
 #include "usb/device/msd.h"
 #include "usb/scsi.h"
 #include "usb/device/hid.h"
+#include "usb/device/cdc.h"
 #include "usb/usb_config.h"
 #include "usb/device/uac_audio.h"
 #include "irq.h"
@@ -95,15 +96,26 @@ int usb_device_mode(const usb_dev usb_id, const u32 class)
             B_USB_DM_DIE
         );
 
+#if (USB_DEVICE_CLASS_CONFIG & MASSSTORAGE_CLASS) == MASSSTORAGE_CLASS
         msd_release(usb_id);
+#endif
         /* uac_release(usb_id); */
+#if (USB_DEVICE_CLASS_CONFIG & AUDIO_CLASS) == AUDIO_CLASS
         uac_release_api();
+#endif
         usb_device_hold(usb_id);
         otg_prevent_detect = 0;
         return 0;
     }
 
     usb_add_desc_config(usb_id, MAX_INTERFACE_NUM, NULL);
+    if ((class & CDC_CLASS) == CDC_CLASS) {
+#if (USB_DEVICE_CLASS_CONFIG & CDC_CLASS)
+        usb_add_desc_config(usb_id, class_index++, audio_asso_desc_config);
+        log_info("add desc audio_association");
+#endif
+    }
+
     if ((class & AUDIO_CLASS) == AUDIO_CLASS) {
 #if (USB_DEVICE_CLASS_CONFIG & AUDIO_CLASS) == AUDIO_CLASS
         uac_register(&uac_info);
@@ -161,6 +173,15 @@ int usb_device_mode(const usb_dev usb_id, const u32 class)
 #endif
     }
 
+    if ((class & CDC_CLASS) == CDC_CLASS) {
+#if (USB_DEVICE_CLASS_CONFIG & CDC_CLASS)
+        cdc_register(usb_id);
+        usb_add_desc_config(usb_id, class_index++, cdc_desc_config);
+        log_info("add desc cdc");
+#else
+        log_error("cdc class not enable");
+#endif
+    }
 
     usb_device_init(usb_id);
 #if ((USB_DEVICE_CLASS_CONFIG & IAP_CLASS) || (SPK_AUDIO_RATE > 0XFFFF) || (MIC_AUDIO_RATE > 0XFFFF))

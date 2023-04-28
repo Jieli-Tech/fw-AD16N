@@ -297,7 +297,7 @@ const u16 iokey_msg_usb_slave_table[][IO_KEY_MAX_NUM] = {
 							/*02*/		MSG_NEXT_FILE,\
 							/*03*/		MSG_VOL_DOWN,\
 							/*04*/		MSG_VOL_UP,\
-							/*05*/		NO_MSG,\
+							/*05*/		MSG_EQ_SW,\
 							/*06*/		NO_MSG,\
 							/*07*/		NO_MSG,\
 							/*08*/		NO_MSG,\

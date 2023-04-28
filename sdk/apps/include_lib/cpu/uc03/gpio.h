@@ -415,7 +415,9 @@ u32 gpio_set_fun_input_port(u32 gpio, enum PFI_TABLE pfun);
 u32 gpio_disable_fun_input_port(enum PFI_TABLE pfun);
 
 int gpio_och_sel_output_signal(u32 gpio, enum OUTPUT_CH_SIGNAL signal);
+int gpio_och_disable_output_signal(u32 gpio, enum OUTPUT_CH_SIGNAL signal);
 int gpio_ich_sel_input_signal(u32 gpio, enum INPUT_CH_SIGNAL signal, enum INPUT_CH_TYPE type);
+int gpio_ich_disable_input_signal(u32 gpio, enum INPUT_CH_SIGNAL signal, enum INPUT_CH_TYPE type);
 
 void gpio_clk_out(u8 gpio, enum CLK_OUT_SOURCE clk);
 void gpio_clk_out1(u8 gpio, enum CLK_OUT_SOURCE clk);

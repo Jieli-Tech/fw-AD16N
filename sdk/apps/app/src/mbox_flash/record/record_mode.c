@@ -16,7 +16,7 @@
 #include "play_file.h"
 #include "app.h"
 #include "jiffies.h"
-#include "vm_api.h"
+#include "sys_memory.h"
 
 #include "decoder_api.h"
 #include "decoder_msg_tab.h"
@@ -45,7 +45,7 @@ static Encode_Control record_obj;
 
 void record_app(void)
 {
-    vm_write(VM_INDEX_SYSMODE, &work_mode, sizeof(work_mode));
+    sysmem_write_api(SYSMEM_INDEX_SYSMODE, &work_mode, sizeof(work_mode));
     int msg[2];
     u32 err = 0;
     dec_obj *p_dec_obj = 0;

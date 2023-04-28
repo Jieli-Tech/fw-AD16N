@@ -40,6 +40,9 @@ u32 nvm_clear_cache(NVM_CACHE *cache);
 
 #define NVM_BUFF_SIZE   (NVM_MAX_LEN + BIT_MAP_SIZE)
 
+
+// #define NVM_MULTIPLE_READ
+
 typedef struct __new_vm_obj {
     void *device;
     NVM_CACHE *cache;
@@ -51,6 +54,10 @@ typedef struct __new_vm_obj {
     u32 w_offset;
     u16 pre_sec_a;
     u16 pre_sec_b;
+// #ifdef NVM_MULTIPLE_READ
+    u16 id;
+    u16 offset;
+// #endif
 } NEW_VM_OBJ;
 
 

@@ -135,6 +135,7 @@ DEFINES := \
 	-DHAS_USB_SLAVE_MODE \
 	-DHAS_LOUDSPEAKER_MODE \
 	-DHAS_RTC_MODE \
+	-DHAS_VM_EN \
 	-DHAS_NEW_VM_MODE \
 	-DNOFLOAT \
 
@@ -181,6 +182,7 @@ INCLUDES := \
 	-Iapps/include_lib/device/usb/host \
 	-Iapps/include_lib/device/norflash \
 	-Iapps/include_lib/update \
+	-Iapps/include_lib/config \
 	-Iapps/app/bsp \
 	-Iapps/app/bsp/common/key \
 	-Iapps/include_lib/sound_effect_list \
@@ -211,6 +213,7 @@ c_SRC_FILES := \
 	apps/app/bsp/common/audio/audio_dac_fade.c \
 	apps/app/bsp/common/audio/fill_audac.c \
 	apps/app/bsp/common/audio_eq/audio_eq_api.c \
+	apps/app/bsp/common/config/cfg_tools.c \
 	apps/app/bsp/common/decoder/decoder_api.c \
 	apps/app/bsp/common/decoder/decoder_msg_tab.c \
 	apps/app/bsp/common/decoder/decoder_point.c \
@@ -254,7 +257,9 @@ c_SRC_FILES := \
 	apps/app/bsp/common/sound_effect_list/speed_api.c \
 	apps/app/bsp/common/sound_effect_list/vo_pitch_api.c \
 	apps/app/bsp/common/speaker/speak_api.c \
+	apps/app/bsp/common/sys_memory/sys_memory.c \
 	apps/app/bsp/common/tab_read.c \
+	apps/app/bsp/common/usb/device/cdc.c \
 	apps/app/bsp/common/usb/device/descriptor.c \
 	apps/app/bsp/common/usb/device/hid.c \
 	apps/app/bsp/common/usb/device/msd.c \
@@ -271,13 +276,17 @@ c_SRC_FILES := \
 	apps/app/bsp/common/vm/nvm_api.c \
 	apps/app/bsp/common/vm/vm_api.c \
 	apps/app/bsp/cpu/uc03/audio_dac_cpu.c \
+	apps/app/bsp/cpu/uc03/audio_effect/effects_adj.c \
 	apps/app/bsp/cpu/uc03/charge.c \
 	apps/app/bsp/cpu/uc03/clock.c \
 	apps/app/bsp/cpu/uc03/irflt.c \
 	apps/app/bsp/cpu/uc03/lcd_seg4x8_driver.c \
+	apps/app/bsp/cpu/uc03/ledc.c \
 	apps/app/bsp/cpu/uc03/pl_cnt.c \
+	apps/app/bsp/cpu/uc03/port_wkup.c \
 	apps/app/bsp/cpu/uc03/power_api.c \
 	apps/app/bsp/cpu/uc03/power_port.c \
+	apps/app/bsp/cpu/uc03/put_float.c \
 	apps/app/bsp/cpu/uc03/rtc_api.c \
 	apps/app/bsp/cpu/uc03/saradc_isr.c \
 	apps/app/bsp/cpu/uc03/sd.c \
@@ -286,6 +295,7 @@ c_SRC_FILES := \
 	apps/app/bsp/cpu/uc03/timer_drv.c \
 	apps/app/bsp/cpu/uc03/timer_pwm.c \
 	apps/app/bsp/cpu/uc03/uart.c \
+	apps/app/bsp/cpu/uc03/uart_dev.c \
 	apps/app/bsp/device/device_app.c \
 	apps/app/bsp/device/device_list.c \
 	apps/app/bsp/start/bsp_loop.c \

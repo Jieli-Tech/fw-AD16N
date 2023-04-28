@@ -15,7 +15,7 @@
 #include "ui_api.h"
 #include "app.h"
 #include "msg.h"
-#include "vm_api.h"
+#include "sys_memory.h"
 #include "audio_dac_fade.h"
 
 
@@ -390,7 +390,7 @@ __mpc_play_file:
     }
 
     music_vol_update();
-    vm_pre_erase();
+    sysmem_pre_erase_api();
 
     SET_UI_MAIN(MENU_MUSIC_MAIN);
     UI_menu(MENU_FILENUM);//解码前显示文件号
@@ -410,7 +410,7 @@ __mpc_play_file:
         /* log_info("DEOCDE SUCCC\n"); */
         err_device = 0;
         /* 启动解码成功记录活跃设备 */
-        vm_write(VM_INDEX_ACTIVE_DEV, &pctl[0].dev_index, sizeof(pctl[0].dev_index));
+        sysmem_write_api(SYSMEM_INDEX_ACTIVE_DEV, &pctl[0].dev_index, sizeof(pctl[0].dev_index));
     } else {
         /* log_info("DECODE FAIL\n"); */
         if (file_cmd != FILE_CMD_PREV) {

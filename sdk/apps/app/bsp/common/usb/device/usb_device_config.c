@@ -69,7 +69,7 @@ void *usb_get_ep_buffer(const usb_dev usb_id, u32 ep)
             ep_buffer = ep0_dma_buffer;
             break;
         case 1:
-            ep_buffer = ep1_msd_dma_buffer[0];
+            ep_buffer = ep1_msd_dma_buffer[1];
             break;
         case 2:
             ep_buffer = NULL;

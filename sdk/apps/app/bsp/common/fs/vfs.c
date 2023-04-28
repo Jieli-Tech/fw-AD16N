@@ -411,7 +411,6 @@ int vfs_file_crc(void *pvfile)
     return  0;
 
 }
-
 #if 0
 #include "device.h"
 #define vfs_demo_show(ptr,err)              \
@@ -420,8 +419,49 @@ int vfs_file_crc(void *pvfile)
         return ;                            \
     }
 
-
 static u8 demo_buff[512];
+void vfs_demo_sydfs(void)
+{
+    void *pvfs = 0;
+    void *pvfile = 0;
+    u32 err = 0;
+    log_info("vfs init !!!\n");
+    vfs_init();
+    log_info("vfs init finish !!!\n");
+
+    err = vfs_mount(&pvfs, NULL, NULL);
+    vfs_demo_show("vfs_mount\n", err);
+
+    u32 findex;
+    err = vfs_openbypath(pvfs, &pvfile, "/dir_bin_01/file1.txt");
+    vfs_demo_show("vfs_openbypath\n", err);
+
+    while (1) {
+        err = vfs_read(pvfile, demo_buff, 512);
+        log_info("vfs read len : %d\n", err);
+        log_info_hexdump(demo_buff, 512);
+        if (err != 512) {
+            break;
+        }
+    }
+
+    err = vfs_openbypath(pvfs, &pvfile, "/dir_bin_01/file2.txt");
+    vfs_demo_show("vfs_openbypath\n", err);
+
+    while (1) {
+        err = vfs_read(pvfile, demo_buff, 512);
+        log_info("vfs read len : %d\n", err);
+        log_info_hexdump(demo_buff, err);
+        if (err != 512) {
+            break;
+        }
+    }
+
+}
+
+
+
+
 void vfs_demo(void)
 {
     void *pvfs = 0;

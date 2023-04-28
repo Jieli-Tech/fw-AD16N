@@ -4,11 +4,17 @@
 //config
 #define _ADDR_RAM0_END    0x109b00
 #define _ADDR_RAM0_START  (0x100000 + 64*4)
+
+#define _ADDR_CACHE_RAM_END     (0x300000 + 4 * 4096)
+#define _ADDR_CACHE_RAM_START   (0x300000 + CPU_USE_CACHE_WAY_NUMBER * 4096)
 MEMORY
 {
 	app_code(rx)        : ORIGIN = 0x4000100,           LENGTH = 32M-0x100
     ram0(rw)            : ORIGIN = _ADDR_RAM0_START,    LENGTH = _ADDR_RAM0_END - _ADDR_RAM0_START - 0x24
     boot_ram(rw)        : ORIGIN = _ADDR_RAM0_END - 0x24,       LENGTH = 0x24
+#if ((CPU_USE_CACHE_WAY_NUMBER > 1) && (CPU_USE_CACHE_WAY_NUMBER < 4))
+    cache_ram(rw)       : ORIGIN = _ADDR_CACHE_RAM_START,       LENGTH = _ADDR_CACHE_RAM_END - _ADDR_CACHE_RAM_START
+#endif
 }
 ENTRY(_start)
 
@@ -56,6 +62,20 @@ SECTIONS
 	    KEEP(*(.lp_target))
 	    lp_target_end = .;
 	    PROVIDE(lp_target_end = .);
+
+		. = ALIGN(4);
+	    cmd_interface_begin = .;
+	    PROVIDE(cmd_interface_begin = .);
+	    KEEP(*(.eff_cmd))
+	    cmd_interface_end = .;
+	    PROVIDE(cmd_interface_end  = .);
+
+		. = ALIGN(4);
+	    tool_interface_begin = .;
+	    PROVIDE(tool_interface_begin = .);
+	    KEEP(*(.tool_interface))
+	    PROVIDE(tool_interface_end = .);
+	    tool_interface_end = .;
 
         . = ALIGN(4);
         /* . = LENGTH(app_code) - SIZEOF(.data); */
@@ -124,6 +144,14 @@ SECTIONS
     __overlay_start = .;
     OVERLAY : AT(0xA00000)
     {
+        .startup_data
+        {
+            . = ALIGN(4);
+            PROVIDE(startup_data_start = .);
+            *(.cache_way_setting_text)
+            . = (. + 3) / 4 * 4;
+            PROVIDE(startup_data_end = .);
+        }
         .d_music_play
         {
             PROVIDE(mode_music_overlay_data_start = .);
@@ -249,6 +277,7 @@ SECTIONS
             *(.usb_msd_dma);
             *(.usb_hid_dma);
             *(.usb_iso_dma);
+            *(.usb_cdc_data);
             *(.usb_descriptor);
             *(.usb_config_var);
             PROVIDE(mode_pc_overlay_data_end = .);
@@ -333,6 +362,10 @@ SECTIONS
 	data_addr  = ADDR(.data) ;
 	data_begin = text_end ;
 	data_size =  SIZEOF(.data) + SIZEOF(.debug_data);
+
+	startup_data_addr  = ADDR(.startup_data);
+    startup_data_begin = data_begin + data_size;
+	startup_data_size =  SIZEOF(.startup_data);
 
     text_size       = SIZEOF(.app_code);
 

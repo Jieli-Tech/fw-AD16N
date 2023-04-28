@@ -34,11 +34,8 @@ static void timer0_isr(void)
 SET(interrupt(""))
 void timer1_isr(void)
 {
-    JL_PORTA->DIR &= ~BIT(4);
-    JL_PORTA->OUT |= BIT(4);
     TIMER_SFR(1)->CON |= BIT(14);
     log_char('1');
-    JL_PORTA->OUT &= ~BIT(4);
 }
 SET(interrupt(""))
 static void timer2_isr(void)

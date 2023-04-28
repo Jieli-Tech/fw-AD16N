@@ -149,6 +149,11 @@ void audio_adc_speaker_reless(void)
         /* if (NULL != aa_speaker.p_src) { */
         /*     src_reless((void **)&aa_speaker.p_src); */
         /* } */
+#if AUDIO_EQ_ENABLE
+        if (NULL != aa_speaker.p_eq) {
+            eq_reless((void **)&aa_speaker.p_eq);
+        }
+#endif
 
         memset(&aa_speaker, 0, sizeof(aa_speaker));
     }

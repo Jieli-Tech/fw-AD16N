@@ -139,25 +139,19 @@ extern AUDIO_DAC_ANA_VOL const audio_dac_analog_vol_r;
 
 void audio_dac_isr(void);
 void dac_resource_init(const DAC_CTRL_HDL *ops);
-void dac_phy_init(u32 sr_sel);
-void dac_phy_off(void);
-u32 dac_sr_lookup(u32 sr);
 u32 dac_sr_read(void);
-void dac_phy_vol(u16 dac_l, u16 dac_r);
-u32 dac_sr_set(u32 sr);
 
 //模拟通道函数
 void amux1_analog_open(void);
-void audac_analog_open(void);
+void audac_analog_open(u32 delay_flag);
 //模拟增益函数
 void audio_dac_analog_vol(AUDIO_DAC_ANA_VOL vol_l, AUDIO_DAC_ANA_VOL vol_r);
 void audio_dac_get_analog_vol(AUDIO_DAC_ANA_VOL *vol_l, AUDIO_DAC_ANA_VOL *vol_r);
 void audio_amux_analog_vol(AUDIO_DAC_AUMX_VOL vol_l, AUDIO_DAC_AUMX_VOL vol_r);
 
-void audac_analog_off_first_step(void);
+void audac_analog_off_first_step(u32 delay_flag);
 void audac_analog_off_last_step(void);
 
-void audac_analog_open(void);
 void audac_analog_variate_init(void);
 
 typedef enum __AUDIO_VCMO_VOLTAGE {
@@ -201,3 +195,4 @@ extern bool const audio_dac_lpf_rmute;
 extern u32 fifo_dac_fill(u8 *buf, u32 len, AUDIO_TYPE type);
 
 #endif
+

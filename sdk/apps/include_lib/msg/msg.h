@@ -204,7 +204,7 @@ enum {
     MSG_ECHO_EFF,
     MSG_EQ_SW,
 
-
+    MSG_CFG_RX_DATA,
     MSG_COMMON_MAX,//common最大消息
     NO_MSG = 0x0fff,
 };

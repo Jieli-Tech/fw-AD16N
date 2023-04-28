@@ -101,7 +101,9 @@ enum {
     FLASH_SIZE_ERROR,
 };
 
+u32 check_ufw_file(char *dev_name, char *up_file_path);
 u32 try_to_upgrade(char *dev_name, char *up_file_path);
+u32 try_to_upgrade_api(char *dev_name, char *up_file_path, bool check);
 
 // u32 get_up_suc_flag(void);
 #endif

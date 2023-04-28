@@ -25,6 +25,7 @@
 #include "gpio.h"
 #include "power_api.h"
 #include "asm/power_interface.h"
+#include "effects_adj.h"
 
 #define LOG_TAG_CONST       NORM
 #define LOG_TAG             "[init]"
@@ -65,6 +66,11 @@ void app_system_init(void)
 #endif
 
     flash_system_init();
+
+    /* EQ */
+#if AUDIO_EQ_ENABLE
+    effect_eq_parm_init();
+#endif
 }
 
 void sd_debug(u32 idx)

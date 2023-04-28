@@ -5,10 +5,8 @@
 #include "asm/power/p33_app.h"
 #include "asm/power/power_reset.h"
 #include "asm/power/power_wakeup.h"
-#include "vm_api.h"
 #include "gpio.h"
 #include "irq.h"
-
 
 #define LOG_TAG_CONST       NORM
 #define LOG_TAG             "[RTC]"

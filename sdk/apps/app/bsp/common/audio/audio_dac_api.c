@@ -4,6 +4,7 @@
   Email: liujie@zh-jieli.com
   date : 2019-1-14
 ********************************************************************************************/
+#define __AUDIO_DAC_API
 
 #pragma bss_seg(".audio_dac_api.data.bss")
 #pragma data_seg(".audio_dac_api.data")
@@ -22,7 +23,7 @@
 /* #include "decoder_api.h" */
 #include "audio_analog.h"
 #include "clock.h"
-#include "efuse.h"
+/* #include "efuse.h" */
 #include "audio_energy_detect.h"
 #include "circular_buf.h"
 #include "audio_dac_fade.h"
@@ -38,28 +39,9 @@
 #include "log.h"
 
 /* #include "printf.h" */
-u16 audio_dac_buf[DAC_PACKET_SIZE * 2];
 
-#define DAC_MAX_SP  (sizeof(audio_dac_buf) / (DAC_TRACK_NUMBER * (AUDAC_BIT_WIDE / 8)))
 
-#define DAC_PNS     (DAC_MAX_SP/3)
-
-#if (TCFG_DAC_VOL_FADE_EN == 0)
-#define A_DAC_FADE   A_DAC_FADE_DIS
-#else
-#define A_DAC_FADE   0
-#endif
-
-_OTP_CONST_  DAC_CTRL_HDL audio_dac_ops = {
-    .buf         = audio_dac_buf,
-    .sp_total    = DAC_MAX_SP,
-    .sp_max_free = (DAC_MAX_SP - DAC_PNS) / 2,
-    .sp_size     = DAC_TRACK_NUMBER * (AUDAC_BIT_WIDE / 8),
-    .con         = DAC_CON0_DEFAULT | A_DAC_FADE,
-    .pns         = DAC_PNS,
-};
-
-/* #define sound_out_obj void */
+extern _OTP_CONST_  DAC_CTRL_HDL audio_dac_ops;
 
 
 const u16 vol_tab[] = {
@@ -131,30 +113,27 @@ void dac_mode_init(u16 vol)
     stereo_dac_vol(0, vol, vol);
 #endif
 
-    memset(&audio_dac_buf[0], 0, sizeof(audio_dac_buf));
+    audac_clr_buf();
     /* u32 con = dac_mode_check(DAC_DEFAULT); */
     dac_resource_init((void *)&audio_dac_ops);
 }
 
-static void dac_trim_api(void)
+
+void dac_init(u32 sr, u32 delay_flag)
 {
-    u32 dac_trim_value = efuse_get_audio_rdac_trim();
-    /* log_info("dac_trim_value : 0x%x\n", dac_trim_value); */
-    if (dac_trim_value != 0xffffffff) {
-        JL_AUDIO->DAC_TM0 = dac_trim_value;
-    } else {
-        /* default */
-        JL_AUDIO->DAC_TM0 = ((-1024 & 0xffff) << 16) | (-1024 & 0xffff);
+    dac_phy_init(dac_sr_lookup(sr));
+    if (delay_flag) {
+        udelay(2000);
     }
+    dac_trim_api();
+    /* audio_dac_analog_open(delay_flag); */
+    /* audio_dac_analog_vol(audio_dac_analog_vol_l, audio_dac_analog_vol_r); */
+    audac_analog_open_api(delay_flag);
 }
 
 void dac_init_api(u32 sr)
 {
-    dac_phy_init(dac_sr_lookup(sr));
-    udelay(2000);
-    dac_trim_api();
-    audio_dac_analog_open();
-    audio_dac_analog_vol(audio_dac_analog_vol_l, audio_dac_analog_vol_r);
+    dac_init(sr, 1);
 }
 
 void dac_sr_api(u32 sr)

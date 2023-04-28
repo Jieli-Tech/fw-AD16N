@@ -18,6 +18,10 @@
 #include "app_config.h"
 #include "stream_frame.h"
 
+#include "clock.h"
+#include "cfg_tools.h"
+#include "effects_adj.h"
+#include "usb_audio_interface.h"
 #if TCFG_PC_ENABLE
 
 #define LOG_TAG_CONST       APP
@@ -37,9 +41,12 @@ static void hid_key_api(u32 key, u8 flag)
 extern void USB_MassStorage(const struct usb_device_t *usb_device);
 void usb_slave_app(void)
 {
+    pll_sel(PLL_D1p5_128M, PLL_DIV1, HSB_DIV1);
     u32 dac_sr = dac_sr_read();
     u8 temp_vol = dac_vol('r', 0);
     key_table_sel(usb_slave_key_msg_filter);
+
+    /* #if TCFG_CFG_TOOL_ENABLE */
 
     stream_frame_init(IRQ_STREAM_IP);
     SET_UI_MAIN(MENU_PC_MAIN);
@@ -77,6 +84,18 @@ void usb_slave_app(void)
             break;
         case MSG_SDMMCA_OUT:
             log_info("MSG_SDMMCA_OUT");
+            break;
+#endif
+
+#if AUDIO_EQ_ENABLE
+        case MSG_EQ_SW:
+            eq_mode_sw(get_usb_eq_handle());
+            break;
+#endif
+            /* #if TCFG_CFG_TOOL_ENABLE */
+#if (USB_DEVICE_CLASS_CONFIG & CDC_CLASS) && TCFG_CFG_TOOL_ENABLE
+        case MSG_CFG_RX_DATA:
+            cfg_tool_rx_data();
             break;
 #endif
 #if (USB_DEVICE_CLASS_CONFIG & HID_CLASS)
@@ -134,5 +153,6 @@ __out_t_usb_slave:
     UI_menu(MENU_POWER_UP);
     key_table_sel(NULL);
     stream_frame_uninit();
+    pll_sel(TCFG_PLL_SEL, TCFG_PLL_DIV, TCFG_HSB_DIV);
 }
 #endif

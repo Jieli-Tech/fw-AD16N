@@ -27,6 +27,7 @@ void *nvm_buf_for_lib(NEW_VM_OBJ *p_nvm, u32 *p_len)
 
 #define NVM_CACHE_ENABLE    1
 #define NVM_CACHE_NUMBER    6
+const bool config_vm_multiple_read_en = 0;
 
 #if NVM_CACHE_ENABLE
 

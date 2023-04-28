@@ -95,4 +95,28 @@
 #define     TCFG_USB_APPLE_DOCK_EN      0
 #endif
 
+////////////CDC Class
+#ifndef CDC_DATA_EP_IN
+#define CDC_DATA_EP_IN              1
+#endif
+#ifndef CDC_DATA_EP_OUT
+#define CDC_DATA_EP_OUT             1
+#endif
+#ifndef CDC_INTR_EP_IN
+#define CDC_INTR_EP_IN              5
+#endif
+#ifndef MAXP_SIZE_CDC_BULKIN
+#define MAXP_SIZE_CDC_BULKIN        64
+#endif
+#ifndef MAXP_SIZE_CDC_BULKOUT
+#define MAXP_SIZE_CDC_BULKOUT       64
+#endif
+#ifndef MAXP_SIZE_CDC_INTRIN
+#define MAXP_SIZE_CDC_INTRIN        8
+#endif
+#ifndef CDC_INTR_EP_ENABLE
+#define CDC_INTR_EP_ENABLE          0
+#endif
+
+
 #endif  /*USB_STD_CLASS_DEF_H*/

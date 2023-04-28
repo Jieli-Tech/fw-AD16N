@@ -1,0 +1,83 @@
+package.path = package.path .. ';' .. cfg.dir .. '/?.lua'
+
+local lang_en = {
+    ["AD16N"]="",
+    ["调音工具"]="Audio Config Tool",
+    ["混响调音"]="Echo Config Tool",
+    ["检查依赖的软件包是否更新"]="Check Update",
+    ["配置工具"]="Config Tool",
+    ["生成配置\n(生成 cfg_tool.bin)"]="Generate Config\n(generate cfg_tool.bin)",
+    ["配置音效\n(生成 eq_cfg.bin)"]="Generate Audio Effect\n(generate eq_cfg.bin)",
+    ["配置混响\n(生成 effects_cfg.bin)"]="Generate Echo Config\n(generate effects_cfg.bin)",
+    ["打开"]="Open",
+    ["路径"]="Path",
+};
+
+cfg:setTranslate("en", lang_en);
+
+local rootDir = cfg.rootDir;
+
+local pkgman = rootDir .. "/pkgman.exe";
+-- 依赖的软件包
+local req_pkgs = {"efftool"};
+local check_prog = {pkgman};
+
+local missing_pkgs = {};
+for k, v in pairs(req_pkgs) do
+	if cfg:utilsGetPkg(v) == nil then
+		-- 检查是否缺失依赖的软件
+		table.insert(missing_pkgs, v)
+	end
+end
+
+for k, v in pairs(missing_pkgs) do table.insert(check_prog, v) end
+
+if #missing_pkgs ~= 0 then
+	if (cfg:runProg(check_prog) ~= 0) then
+		cfg:msgBox("warn", "软件包不是最新，可能会出现问题");
+	end
+end
+
+local projdir  = cfg.dir .. '/download/';
+local efftool = rootDir .. '/' .. cfg:utilsGetPkg("efftool").run;
+local title = "AD16N-SDK";
+
+local efftool_entry_view = cfg:stEntry(":/uires/icon_eq.png",
+	"调音工具", "配置音效\n(生成 eq_cfg.bin)",
+	nil,
+	cfg:stButton2("打开", "", "main", function ()
+		cfg:runProgNoWait({efftool, '--type', 'atk', '--load-config', 'eq_cfg.bin'});
+	end))
+
+
+local check_allupdate_btn = cfg:stButton2("检查依赖的软件包是否更新", "", "secondary", function ()
+		local check_prog = {pkgman};
+		for k, v in pairs(req_pkgs) do table.insert(check_prog, v) end
+		if (cfg:runProg(check_prog) ~= 0) then
+			if(cfg.lang == "zh") then
+				cfg:msgBox("warn", "软件包不是最新，可能会出现问题");
+			else
+				cfg:msgBox("warn", "software Packages are not up-to-date and may have problems");
+			end
+		else
+			if(cfg.lang == "zh") then
+				cfg:msgBox("info", "已经是最新");
+			else
+				cfg:msgBox("info", "software Packages are up-to-date");
+			end
+		end
+end);
+
+local layout = cfg:vBox{ cfg:stGroup(title, cfg:stHScroll ( cfg:vBox {
+	efftool_entry_view,
+})),
+
+check_allupdate_btn,
+};
+
+
+cfg:addKeyInfo("jlxproj.width", "600");
+cfg:addKeyInfo("jlxproj.height", "300");
+cfg:addKeyInfo("jlxproj.title", title);
+
+cfg:setLayout(layout)

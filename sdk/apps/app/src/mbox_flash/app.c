@@ -8,7 +8,7 @@
 #include "common.h"
 #include "app.h"
 #include "msg.h"
-#include "vm_api.h"
+#include "sys_memory.h"
 
 #include "music_play.h"
 #include "usb_slave_mode.h"
@@ -107,24 +107,25 @@ void app_timer_loop(void)
 u32 get_up_suc_flag();
 void mbox_flash_main(void)
 {
-    log_info("Mbox Flash App\n");
+    log_info("Mbox-Flash App\n");
     if (get_up_suc_flag()) {
         log_info("----device update end----\n");
         wdt_close();
         while (1);
     }
 
+    vm_isr_response_index_register(IRQ_TICKTMR_IDX);//vm擦写flash时响应tick_timer_ram_loop()函数
     delay_10ms(50);//等待系统稳定
     pa_mute(0);
 
     u8 vol = 0;
-    u32 res = vm_read(VM_INDEX_VOL, &vol, sizeof(vol));
+    u32 res = sysmem_read_api(SYSMEM_INDEX_VOL, &vol, sizeof(vol));
     if ((vol <= 31) && (res == sizeof(vol))) {
         dac_vol(0, vol);
         log_info("powerup set vol : %d\n", vol);
     }
 
-    vm_read(VM_INDEX_SYSMODE, &work_mode, sizeof(work_mode));
+    sysmem_read_api(SYSMEM_INDEX_SYSMODE, &work_mode, sizeof(work_mode));
     /* work_mode = MUSIC_MODE; */
     /* work_mode = RECORD_MODE; */
     /* work_mode = AUX_MODE; */
@@ -135,7 +136,7 @@ void mbox_flash_main(void)
     /* work_mode = RTC_MODE; */
     while (1) {
         clear_all_message();
-        vm_pre_erase();
+        sysmem_pre_erase_api();
         switch (work_mode) {
 #if MUSIC_MODE_EN
         case MUSIC_MODE:

@@ -9,7 +9,7 @@
 #include "power_api.h"
 #include "ui_api.h"
 #include "tick_timer_driver.h"
-#include "vm_api.h"
+#include "sys_memory.h"
 #include "app_power_mg.h"
 
 #include "device_app.h"
@@ -25,10 +25,10 @@
 void music_vol_update(void)
 {
     u8 vol = 0;
-    vm_read(VM_INDEX_VOL, &vol, sizeof(vol));
+    sysmem_read_api(SYSMEM_INDEX_VOL, &vol, sizeof(vol));
     if (vol != dac_vol('r', 0)) {
         vol = dac_vol('r', 0);
-        vm_write(VM_INDEX_VOL, &vol, sizeof(vol));
+        sysmem_write_api(SYSMEM_INDEX_VOL, &vol, sizeof(vol));
         /* log_info("vol update to vm : %d\n", vol); */
     }
 }

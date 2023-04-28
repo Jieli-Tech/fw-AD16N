@@ -69,6 +69,7 @@ typedef enum _mm_type {
     MM_SCAN_BUF,
     MM_FF_APIS_BUF,
     MM_EQ,
+    MM_CFG,
 } mm_type;
 
 

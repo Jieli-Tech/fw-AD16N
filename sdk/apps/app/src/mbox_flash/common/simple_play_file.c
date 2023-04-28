@@ -10,7 +10,7 @@
 #include "vfs.h"
 #include "errno-base.h"
 #include "sound_mge.h"
-#include "vm_api.h"
+#include "sys_memory.h"
 
 #include "decoder_api.h"
 #include "decoder_msg_tab.h"
@@ -63,7 +63,7 @@ u32 simple_play_file_byindex(play_control *ppctl)
     dp_buff *pdp = ppctl->pdp;
     decoder_stop(ppctl->p_dec_obj, NO_WAIT, 0);
 
-    vm_pre_erase();
+    sysmem_pre_erase_api();
 
     if (NULL != ppctl->pdir) {
         const char *dir = ((const char **)ppctl->pdir)[ppctl->dir_index];
@@ -79,6 +79,9 @@ u32 simple_play_file_byindex(play_control *ppctl)
         log_info("fs_openbyindex err:0x%x index:%d\n", err, ppctl->findex);
         return E_OPENBYINDEX;
     }
+    if (0 != ppctl->loop) {
+        clear_dp(pdp);
+    }
     ppctl->p_dec_obj = decoder_io(ppctl->pfile, \
                                   ppctl->dec_type, \
                                   pdp, \
@@ -88,7 +91,7 @@ u32 simple_play_file_byindex(play_control *ppctl)
     }
 
     fs_ioctl(ppctl->pfile, FS_IOCTL_DIR_FILE_TOTAL, (int)&ppctl->ftotal);
-    log_info("dev:0x%x findex:%d ftotal:%d\n", ppctl->dev_index, ppctl->findex, ppctl->ftotal);
+    log_info("dev:0x%x findex:%d ftotal:%d loop:%d\n", ppctl->dev_index, ppctl->findex, ppctl->ftotal, ppctl->loop);
 
     return 0;
 }

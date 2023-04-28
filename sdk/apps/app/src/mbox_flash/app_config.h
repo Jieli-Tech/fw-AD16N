@@ -16,6 +16,9 @@
 #define TCFG_PLL_DIV                        PLL_DIV2
 #define TCFG_HSB_DIV                        HSB_DIV1
 
+/*---------Cache Configuration--------------*/
+#define CPU_USE_CACHE_WAY_NUMBER            4//cache_way范围:2~4
+
 /*---------UART Configuration---------------*/
 #define TCFG_UART_TX_PORT  				    IO_PORTA_06     //串口打印发送脚配置
 #define TCFG_UART_BAUDRATE  				1000000         //串口打印波特率配置
@@ -84,6 +87,11 @@
 
 /*---------EQ Configuration-----------------*/
 #define AUDIO_EQ_ENABLE                     ENABLE//eq总使能
+#define TCFG_CFG_TOOL_ENABLE                DISABLE//配置工具使能,需要在线调试eq时打开,默认关闭
+#define TCFG_NULL_COMM                      0//不支持通信
+#define TCFG_UART_COMM                      1//串口通信
+#define TCFG_USB_COMM                       2//USB通信
+#define TCFG_COMM_TYPE                      TCFG_USB_COMM//暂时只支持USB通信调音
 
 /*---------------UPDATE---------------------*/
 #define TFG_DEV_UPGRADE_SUPPORT             ENABLE
@@ -98,15 +106,25 @@
 #else
 #define UI_ENABLE                           DISABLE
 #endif
-
+#if LCD_4X8_EN
+#define POWERDOWN_KEEP_LCD                  ENABLE
+#else
+#define POWERDOWN_KEEP_LCD                  DISABLE
+#endif
 /*---------VM_SFC Configuration----------------*/
 #define VM_SFC_ENABLE                       ENABLE
 
 /*---------FLASH Configuration--------------*/
 #define TFG_EXT_FLASH_EN				    ENABLE
 #define TFG_SPI_HW_NUM					    1
+#define TFG_SPI_UNIDIR_MODE_EN              DISABLE//外挂flash单线模式
+#if TFG_SPI_UNIDIR_MODE_EN
+#define TFG_SPI_WORK_MODE				    SPI_MODE_UNIDIR_1BIT
+#define TFG_SPI_READ_DATA_WIDTH			    1
+#else
 #define TFG_SPI_WORK_MODE				    SPI_MODE_BIDIR_1BIT
 #define TFG_SPI_READ_DATA_WIDTH			    2
+#endif
 #define TFG_SPI_CS_PORT_SEL				    IO_PORTB_00
 #define TFG_SPI_CS_PORT         		    PB00
 #define TFG_SPI_CLK_PORT_SEL			    IO_PORTB_01
@@ -157,7 +175,11 @@
 
 #if TCFG_PC_ENABLE || TCFG_UDISK_ENABLE
 #undef USB_DEVICE_CLASS_CONFIG
+#if TCFG_CFG_TOOL_ENABLE
+#define  USB_DEVICE_CLASS_CONFIG            (CDC_CLASS|AUDIO_CLASS|HID_CLASS)  //配置usb从机模式支持的class
+#else
 #define  USB_DEVICE_CLASS_CONFIG            (MASSSTORAGE_CLASS|AUDIO_CLASS|HID_CLASS)  //配置usb从机模式支持的class
+#endif
 #endif
 
 #endif

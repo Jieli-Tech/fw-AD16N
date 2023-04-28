@@ -18,7 +18,7 @@
 #include "simple_play_file.h"
 #include "device.h"
 #include "device_app.h"
-#include "vm_api.h"
+#include "sys_memory.h"
 #include "app.h"
 #include "power_api.h"
 

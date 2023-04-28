@@ -12,7 +12,7 @@
 #include "circular_buf.h"
 #include "jiffies.h"
 #include "pa_mute.h"
-#include "vm_api.h"
+#include "sys_memory.h"
 
 #include "sound_mge.h"
 #include "audio_dac_api.h"
@@ -27,7 +27,7 @@
 
 void loudspeaker_app(void)
 {
-    vm_write(VM_INDEX_SYSMODE, &work_mode, sizeof(work_mode));
+    sysmem_write_api(SYSMEM_INDEX_SYSMODE, &work_mode, sizeof(work_mode));
     key_table_sel(loudspk_key_msg_filter);
 
     u32 dac_sr = dac_sr_read();
@@ -68,6 +68,10 @@ void loudspeaker_app(void)
         }
     }
 __loudspk_app_exit:
+    if (0 != mute) {
+        dac_mute(0);
+        pa_mute(0);
+    }
     audio_adc_speaker_reless();
     dac_sr_api(dac_sr);
     key_table_sel(NULL);

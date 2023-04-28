@@ -17,12 +17,12 @@ extern void wait_cache_idle();
 #include "log.h"
 
 #define     SPI_TSHSL        80
-static u32 LSB_MAX_CLK = 80 * MHz_UNIT;
+static u32 LSB_MAX_CLK = 96 * MHz_UNIT;
 static u32 SPI_MAX_CLK = 50 * MHz_UNIT;
 static u32 OTP_MAX_CLK = 21 * MHz_UNIT;
 
 static u32 sys_clock = 16000000;
-
+#define     MAX_RANGE   3
 const u32 pll_clock_tab0[4][6] = {
     //0  d3p5        d2p5        d2p0        d1p5        d1p0
     {0,  27400000L,  38400000L,  48000000L,  64000000L,  96000000L},
@@ -30,11 +30,11 @@ const u32 pll_clock_tab0[4][6] = {
     {0,  54800000L,  76800000L,  96000000L,  128000000L, 192000000L},
     {0,  68600000L,  96000000L,  120000000L, 160000000L, 240000000L}
 };
-const u32 pll_max_clock_tab[3][4] = {
+const u32 pll_max_clock_tab[MAX_RANGE][4] = {
     //dvdd                sys max     lsb max     otp max
-    {SYSVDD_VOL_SEL_108V, 96000000L,  48000000L,  19200000L},//1.08v
     {SYSVDD_VOL_SEL_120V, 128000000L, 64000000L,  21333334L},//1.20v
-    {SYSVDD_VOL_SEL_132V, 160000000L, 80000000L,  20000000L} //1.32v
+    {SYSVDD_VOL_SEL_132V, 160000000L, 80000000L,  20000000L},//1.32v
+    {SYSVDD_VOL_SEL_138V, 192000000L, 96000000L,  19200000L} //1.38v
 };
 
 const u8 div_taba[] = {
@@ -175,7 +175,10 @@ void sfc_baud_set(u32 baud)
 {
     /* local_irq_disable(); */
     sfc_suspend(0);
-    const u32 tshsl = SPI_TSHSL * (sfc_clk / 1000000) / 1000 + 1;
+    u32 tshsl = SPI_TSHSL * (sfc_clk / 1000000) / 1000 + 1;
+    if (tshsl > 0xf) {
+        tshsl = 0xf;
+    }
     // see https://gitee.com/Jieli-Tech/fw-AD15N/issues/I41WDD
     /* const u32 tshsl = 0x7; */
     SFR(JL_SFC->CON, 20, 4, tshsl);
@@ -406,13 +409,13 @@ __change_clk:
     lsb_clk_div(0);
 
     u32 pll_sys_clk = get_sys_pll_clk();
-    u8 i = 0;
-    for (i = 0; i < 3; i++) {
-        if (pll_sys_clk <= pll_max_clock_tab[i][1]) {
+    u8 dvdd_range = 0;
+    for (dvdd_range = 0; dvdd_range < MAX_RANGE; dvdd_range++) {
+        if (pll_sys_clk <= pll_max_clock_tab[dvdd_range][1]) {
             break;
         }
     }
-    if (i == 3) { //>160M error :改为160M
+    if (dvdd_range == MAX_RANGE) { //>192M error :改为160M
         clk_err_flag = 1;
         if (pll_vco == PLL_VCO_SEL_192M) {
             pll_clock = PLL_D1p5_160M;
@@ -423,12 +426,12 @@ __change_clk:
             pll_clock = 4;
             JL_CLOCK->CLK_CON1 &= ~((7 << 0) | (0xf << 4));
             JL_CLOCK->CLK_CON1 |= ((pll_clock << 0) | (pll_div << 4));
-            i = 2;
+            dvdd_range = MAX_RANGE - 1;
         }
     }
-    SYSVDD_VOL_SEL(pll_max_clock_tab[i][0]);//1.32v default:1.11v RV:1.2v
-    LSB_MAX_CLK = pll_max_clock_tab[i][2];
-    OTP_MAX_CLK = pll_max_clock_tab[i][3];
+    SYSVDD_VOL_SEL(pll_max_clock_tab[dvdd_range][0]);//1.32v default:1.11v RV:1.2v
+    LSB_MAX_CLK = pll_max_clock_tab[dvdd_range][2];
+    OTP_MAX_CLK = pll_max_clock_tab[dvdd_range][3];
 
     sys_clock = sys_clock_peration();
 
@@ -463,6 +466,9 @@ __change_clk:
     local_irq_enable();
     if (clk_err_flag) { //>160M error
         log_error("pll sys clock must be no larger than 160M. The clock is forcibly set to %d.", pll_sys_clk);
+        while (1) {
+            asm("idle");
+        }
     }
 }
 

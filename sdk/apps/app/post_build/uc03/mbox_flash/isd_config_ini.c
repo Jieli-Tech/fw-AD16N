@@ -72,14 +72,20 @@ UTBD=1000000;//uboot串口波特率
 //#WAIT_TIME=10;// * 100ms
 #if TFG_EXT_FLASH_EN
 EX_FLASH=CAT2(TFG_SPI_CS_PORT,1A_NULL);  //#cs,spi1,A,flashpower
+#if TFG_SPI_UNIDIR_MODE_EN
+//单线1bit
+EX_FLASH_IO=CAT5(0,TFG_SPI_CLK_PORT,TFG_SPI_DO_PORT,TFG_SPI_DI_PORT,NULL_NULL);  //#data_width,clk,do,di,d2,d3
+#else
+//双线1bit
 EX_FLASH_IO=CAT5(1,TFG_SPI_CLK_PORT,TFG_SPI_DO_PORT,TFG_SPI_DI_PORT,NULL_NULL);  //#data_width,clk,do,di,d2,d3
+#endif
 #endif
 //#############################################################################################################################################
 
 //####################################################
 [TOOL_CONFIG]
-1TO2_MIN_VER=2.27.1
-1TO8_MIN_VER=3.1.17
+1TO2_MIN_VER=2.27.4
+1TO8_MIN_VER=3.1.19
 //BTBOX_MIN_VER=1.2.4.f
 //####################################################
 

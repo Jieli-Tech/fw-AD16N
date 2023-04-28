@@ -3,6 +3,9 @@
 
 #include "typedef.h"
 
+#define MEM_OLD_RTC_TIME         0
+#define MEM_OLD_REAL_TIME        1
+#define MEM_RTC_ALARM_TIME       2
 
 struct sys_time {
     u16 year;

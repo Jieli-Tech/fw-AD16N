@@ -64,6 +64,7 @@
 <Add option="-DHAS_USB_SLAVE_MODE" />
 <Add option="-DHAS_LOUDSPEAKER_MODE" />
 <Add option="-DHAS_RTC_MODE" />
+<Add option="-DHAS_VM_EN" />
 <Add option="-DHAS_NEW_VM_MODE" />
 <Add option="-DNOFLOAT" />
 <Add option="-Wno-format" />
@@ -105,6 +106,7 @@
 <Add directory="apps/include_lib/device/usb/host" />
 <Add directory="apps/include_lib/device/norflash" />
 <Add directory="apps/include_lib/update" />
+<Add directory="apps/include_lib/config" />
 <Add directory="apps/app/bsp" />
 <Add directory="apps/app/bsp/common/key" />
 <Add directory="apps/include_lib/sound_effect_list" />
@@ -193,6 +195,7 @@
 <Unit filename="apps/app/bsp/common/audio/audio_dac_fade.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/audio/fill_audac.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/audio_eq/audio_eq_api.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/common/config/cfg_tools.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/decoder/decoder_api.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/decoder/decoder_msg_tab.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/decoder/decoder_point.c"><Option compilerVer="CC"/></Unit>
@@ -244,7 +247,11 @@
 <Unit filename="apps/app/bsp/common/sound_effect_list/speed_api.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/sound_effect_list/vo_pitch_api.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/speaker/speak_api.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/common/sys_memory/sys_memory.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/tab_read.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/common/usb/device/cdc.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/common/usb/device/cdc.h" />
+<Unit filename="apps/app/bsp/common/usb/device/cdc_defs.h" />
 <Unit filename="apps/app/bsp/common/usb/device/descriptor.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/usb/device/hid.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/usb/device/msd.c"><Option compilerVer="CC"/></Unit>
@@ -268,16 +275,21 @@
 <Unit filename="apps/app/bsp/common/vm/nvm_api.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/common/vm/vm_api.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/audio_dac_cpu.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/cpu/uc03/audio_effect/effects_adj.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/charge.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/charge.h" />
 <Unit filename="apps/app/bsp/cpu/uc03/clock.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/irflt.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/lcd_seg4x8_driver.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/cpu/uc03/ledc.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/pl_cnt.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/pl_cnt.h" />
+<Unit filename="apps/app/bsp/cpu/uc03/port_wkup.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/cpu/uc03/port_wkup.h" />
 <Unit filename="apps/app/bsp/cpu/uc03/power_api.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/power_api.h" />
 <Unit filename="apps/app/bsp/cpu/uc03/power_port.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/cpu/uc03/put_float.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/rtc_api.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/saradc_isr.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/sd.c"><Option compilerVer="CC"/></Unit>
@@ -286,6 +298,7 @@
 <Unit filename="apps/app/bsp/cpu/uc03/timer_drv.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/timer_pwm.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/cpu/uc03/uart.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/bsp/cpu/uc03/uart_dev.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/device/device_app.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/bsp/device/device_app.h" />
 <Unit filename="apps/app/bsp/device/device_list.c"><Option compilerVer="CC"/></Unit>
@@ -375,9 +388,10 @@
 <Unit filename="apps/include_lib/common/my_malloc.h" />
 <Unit filename="apps/include_lib/common/new_vm.h" />
 <Unit filename="apps/include_lib/common/printf.h" />
+<Unit filename="apps/include_lib/common/sys_memory.h" />
 <Unit filename="apps/include_lib/common/tab_read.h" />
 <Unit filename="apps/include_lib/common/vm.h" />
-<Unit filename="apps/include_lib/common/vm_api.h" />
+<Unit filename="apps/include_lib/config/cfg_tools.h" />
 <Unit filename="apps/include_lib/cpu/src_api.h" />
 <Unit filename="apps/include_lib/cpu/src_para.h" />
 <Unit filename="apps/include_lib/cpu/tick_timer_driver.h" />
@@ -398,6 +412,7 @@
 <Unit filename="apps/include_lib/cpu/uc03/cpu.h" />
 <Unit filename="apps/include_lib/cpu/uc03/crc16.h" />
 <Unit filename="apps/include_lib/cpu/uc03/csfr.h" />
+<Unit filename="apps/include_lib/cpu/uc03/effects_adj.h" />
 <Unit filename="apps/include_lib/cpu/uc03/efuse.h" />
 <Unit filename="apps/include_lib/cpu/uc03/fusb_pll_trim.h" />
 <Unit filename="apps/include_lib/cpu/uc03/gpio.h" />
@@ -407,6 +422,7 @@
 <Unit filename="apps/include_lib/cpu/uc03/irflt.h" />
 <Unit filename="apps/include_lib/cpu/uc03/irq.h" />
 <Unit filename="apps/include_lib/cpu/uc03/lcd_seg4x8_driver.h" />
+<Unit filename="apps/include_lib/cpu/uc03/ledc.h" />
 <Unit filename="apps/include_lib/cpu/uc03/mcpwm.h" />
 <Unit filename="apps/include_lib/cpu/uc03/rtc.h" />
 <Unit filename="apps/include_lib/cpu/uc03/saradc.h" />
@@ -415,6 +431,7 @@
 <Unit filename="apps/include_lib/cpu/uc03/src.h" />
 <Unit filename="apps/include_lib/cpu/uc03/timer.h" />
 <Unit filename="apps/include_lib/cpu/uc03/typedef.h" />
+<Unit filename="apps/include_lib/cpu/uc03/uart_dev.h" />
 <Unit filename="apps/include_lib/cpu/uc03/uc03.h" />
 <Unit filename="apps/include_lib/cpu/wdt.h" />
 <Unit filename="apps/include_lib/decoder/decoder_api.h" />

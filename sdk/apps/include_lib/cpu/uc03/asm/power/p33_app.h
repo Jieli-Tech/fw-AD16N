@@ -250,7 +250,7 @@ enum {
     SYSVDD_VOL_SEL_138V,
     SYSVDD_VOL_SEL_141V,
 };
-#define SYSVDD_VOL_SEL(sel)				P33_CON_SET(P3_DVD_CON0, 0, 3, sel)
+#define SYSVDD_VOL_SEL(sel)				P33_CON_SET(P3_DVD_CON0, 0, 4, sel)
 
 /**************************P3_PGSD_CON*******************************/
 #define PGSD_SSEL(sel)				P33_CON_SET(P3_PGSD_CON, 2, 2, sel)
