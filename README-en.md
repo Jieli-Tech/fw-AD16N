@@ -37,7 +37,7 @@ Documentation
 
 * Chipset brief : [SoC datasheet](./doc)
 
-* Product Select Guide : [SoC Select Guide](./doc/README.md)
+* Product Select Guide : [SoC Select Guide](./doc/README.md); [SoC Select Guide.pdf](./doc/杰理科技AD14_AD15_AD16_AD17系列语音MCU选型表.pdf)
 
 * SDK Version: [SDK History](doc/AD16N_FLASH_SDK_发布版本信息.pdf)
 
