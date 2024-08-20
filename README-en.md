@@ -80,7 +80,7 @@ Hardware
 
 * Production Tool : massive prodution and program the SoC, please accquire the tool from the [link](https://item.taobao.com/item.htm?spm=a1z10.1-c-s.w4004-22883854875.8.504d246bXKwyeH&id=620941819219) and check the releated [doc](./doc/stuff/烧写器使用说明文档.pdf)
 
-Packing tool & audio file conversion tool
+Packaging, audio file conversion, midi and other general audio tools
 -------------
 
 * [download link](https://pan.baidu.com/s/1ajzBF4BFeiRFpDF558ER9w#list/path=%2F) code: `3jey`

@@ -80,7 +80,7 @@ SDK 支持Codeblock编译环境，请确保编译前已经搭建好编译环境�
 
 * 生产烧写工具 : 为量产和裸片烧写而设计, 申请入口 [连接](https://item.taobao.com/item.htm?spm=a1z10.1-c-s.w4004-22883854875.8.504d246bXKwyeH&id=620941819219) 并仔细阅读相关 [文档](./doc/stuff/烧写器使用说明文档.pdf)
   
-打包工具&音频文件转换工具
+打包、音频文件转换、midi等通用音频工具
 -------------
 
 * [下载链接](https://pan.baidu.com/s/1ajzBF4BFeiRFpDF558ER9w#list/path=%2F) 提取码：`3jey` 
