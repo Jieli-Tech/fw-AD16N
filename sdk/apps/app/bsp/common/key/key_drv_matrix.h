@@ -9,24 +9,14 @@
 static u32 matrix_key_row_value = 0xffffffff;
 static u32 matrix_key_col_value = 0xffffffff;
 static u8 matrix_key_row[] = { //normal io
-    IO_PORTB_07,
-    IO_PORTB_08,
-    IO_PORTB_09,
-    IO_PORTB_10
+    IO_PORTA_05,
+    IO_PORTA_04,
+    IO_PORTA_03
 };
 static u8 matrix_key_col[] = { //normal io or reuse lcd seg io
-    IO_PORTA_00,
-    IO_PORTA_01,
-    IO_PORTA_02,
-    IO_PORTA_03,
-    IO_PORTA_04,
-    IO_PORTA_05,
-    IO_PORTA_06,
-    IO_PORTA_07,
-    IO_PORTA_08,
-    IO_PORTA_09,
-    IO_PORTA_10,
-    IO_PORTA_11
+    IO_PORTA_12,
+    IO_PORTA_13,
+    IO_PORTA_14
 };
 
 

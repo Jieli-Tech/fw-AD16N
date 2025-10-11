@@ -15,7 +15,7 @@ typedef enum {
     RISING_EDGE = 0,
     FALLING_EDGE,
     BOTH_EDGE,
-} POWER_WKUP_EDGE;
+} POWER_WKUP_EDGE, P33_IO_WKUP_EDGE;
 
 enum {
     P3_WKUP_SRC_PCNT_OVF = 0,

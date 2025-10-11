@@ -159,14 +159,8 @@ static u32 setup_device(struct usb_device_t *usb_device, struct usb_ctrlrequest 
     }
     return ret;
 }
-static struct usb_ctrlrequest request_1;
-void *usb_get_request()
-{
-    return &request_1;
-}
 static u32 user_setup_filter(struct usb_device_t *usb_device, struct usb_ctrlrequest *request)
 {
-    memcpy(&request_1, request, 8);
     // dump_setup_request(request);
     // log_debug_hexdump((u8 *)request, 8);
     u32 ret = 0;

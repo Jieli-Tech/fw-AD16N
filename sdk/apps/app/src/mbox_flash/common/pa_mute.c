@@ -1,7 +1,7 @@
 #include "pa_mute.h"
 #include "cpu.h"
 
-#define PA_MUTE_ENABLE  1
+#define PA_MUTE_ENABLE  0
 
 #define MUTE_PORT   JL_PORTA
 #define MUTE_BIT    BIT(4)

@@ -17,7 +17,7 @@
 								/*03*/    MSG_PP,\
 								/*04*/    MSG_PREV_FILE,\
 								/*05*/    MSG_NEXT_FILE,\
-								/*06*/    MSG_EQ_SW,\
+								/*06*/    MSG_HW_EQ_SW,\
 								/*07*/    MSG_VOL_DOWN,\
 								/*08*/    MSG_VOL_UP,\
 								/*09*/    MSG_0,\

@@ -18,7 +18,8 @@ enum {
     MENU_PLAY,
     MENU_PLAYMODE,
     MENU_MAIN_VOL,
-    MENU_EQ,
+    MENU_HW_EQ,
+    MENU_DEC_EQ,
     MENU_NOFILE,
     MENU_NODEVICE,
     MENU_PLAY_TIME,
@@ -47,17 +48,18 @@ typedef struct _UI_VAR {
     u8  bCurMenu;
     u8  bMainMenu;
     u8  bMenuReturnCnt;
+    int  bCurArg;
 } UI_VAR;
 
 #define UI_RETURN				3//n * 500ms
 
-void UI_menu_api(u8 menu);
+void UI_menu_api(u8 menu, int arg);
 void UI_init_api(void);
 
 #if UI_ENABLE
 extern UI_VAR UI_var;       /*UI 显示变量*/
 #define UI_init()	        UI_init_api()
-#define UI_menu(x)			UI_menu_api(x)
+#define UI_menu(x, y)		UI_menu_api(x, y)
 #define SET_UI_MAIN(x)	    UI_var.bMainMenu = x
 #else
 #define UI_init(...)

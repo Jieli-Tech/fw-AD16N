@@ -18,13 +18,6 @@
 
 
 
-extern struct vfs_operations vfs_ops_begin[];
-extern struct vfs_operations vfs_ops_end[];
-
-#define list_for_each_vfs_operation(ops) \
-	for (ops=vfs_ops_begin; ops<vfs_ops_end; ops++)
-
-
 
 void vfs_init(void)
 {
@@ -75,10 +68,13 @@ u32 vfs_mount(void **ppvfs, void *device, void *type)
                 }
 
             }
-            if (0 == ops->mount(&(pvfs->pfs), device)) {
+            /* log_info("%s\n", ops->fs_type); */
+            u32 err = ops->mount(&(pvfs->pfs), device);
+            if (0 == err) {
                 pvfs->ops = ops;
                 return 0;
             } else {
+                /* log_info("err 0x%x,", err); */
                 if (NULL != ops->close_fs) {
                     ops->close_fs(&pvfs->pfs);
                 }
@@ -411,6 +407,22 @@ int vfs_file_crc(void *pvfile)
     return  0;
 
 }
+
+int vfs_get_fsize(void *pvfile, void *parm)
+{
+    struct imount *p_vfile = pvfile;
+    struct vfs_operations *ops;
+    if ((void *)NULL == p_vfile) {
+        return 0;
+    }
+    ops = p_vfile->ops;
+    if (((void *)NULL != ops)  && ((void *)NULL !=  ops->flen)) {
+        u32 res;
+        return ops->flen(p_vfile->pfile, (u32 *)parm);
+    }
+    return 0;
+}
+
 #if 0
 #include "device.h"
 #define vfs_demo_show(ptr,err)              \
@@ -503,7 +515,7 @@ void vfs_demo(void)
     {
         err = vfs_read(pvfile, demo_buff, 512);
         if (err != 512) {
-            printf("error!!!!!!!!!!!!!!!!!!");
+            log_info("error!!!!!!!!!!!!!!!!!!");
             dev_close(device);
 
             while (1) {
@@ -533,7 +545,7 @@ void vfs_demo(void)
     while (1) {
         err = vfs_read(pvfile, demo_buff, 512);
         if (err != 512) {
-            printf("error!!!!!!!!!!!!!!!!!!");
+            log_info("error!!!!!!!!!!!!!!!!!!");
             dev_close(device);
             return;
             /* while (1); */
@@ -542,6 +554,102 @@ void vfs_demo(void)
         log_info_hexdump(demo_buff, 512);
     }
 }
+
+#if 0//nor_fs demo
+
+#include "device.h"
+#define TEST_LEN    256
+static u8 tmp_wbuf[TEST_LEN] ALIGNED(4);
+static u8 tmp_rbuf[TEST_LEN] ALIGNED(4);
+void norfs_test_demo(void)
+{
+    void *device = 0;
+    void *pfs = 0;
+    void *pfile = 0;
+    u32 file_index = 0;
+    u32 file_total = 0;
+    u32 wlen, rlen, err;
+
+    device = dev_open(__SFC_NANE, 0);
+    if (NULL == device) {
+        log_info("dev null!\n");
+        while (1);
+    }
+
+    err = vfs_mount(&pfs, device, "norfs");
+    if (err) {
+        log_info("vfs_mount err:0x%x\n", err);
+        while (1);
+    }
+
+    err = vfs_ioctl(pfs, FS_IOCTL_FS_TOTAL, (u32)&file_total);
+    if (err) {
+        log_info("vfs_ioctl err:0x%x\n", err);
+        while (1);
+    }
+
+    log_info("nor_fs total file : %d\n", file_total);
+
+    while (1) {
+
+        /* write */
+        err = vfs_mount(&pfs, device, "norfs");
+        if (err) {
+            log_info("vfs_mount err:0x%x\n", err);
+            while (1);
+        }
+        err = vfs_createfile(pfs, &pfile, &file_index);
+        if (err) {
+            log_info("vfs_createfile err:0x%x\n", err);
+            while (1);
+        }
+
+        log_info("nor_fs create new file : %d", file_index);
+
+        for (int i = 0; i < TEST_LEN; i++) {
+            tmp_wbuf[i] = JL_RAND->R64L & 0xff;
+        }
+        wlen = vfs_write(pfile, tmp_wbuf, TEST_LEN);
+        vfs_ioctl(pfile, FS_IOCTL_FILE_SYNC, 0);
+        vfs_file_close(&pfile);
+        vfs_fs_close(&pfs);
+
+        /* read */
+        err = vfs_mount(&pfs, device, "norfs");
+        if (err) {
+            log_info("vfs_mount err:0x%x\n", err);
+            while (1);
+        }
+        err = vfs_ioctl(pfs, FS_IOCTL_FS_INDEX, (u32)&file_index);
+        if (err) {
+            log_info("vfs_ioctl err:0x%x\n", err);
+            while (1);
+        }
+
+        log_info("nor_fs read file : %d", file_index);
+
+        err = vfs_openbyindex(pfs, &pfile, file_index, 0);
+        if (err) {
+            log_info("vfs_openbyindex err:0x%x\n", err);
+            while (1);
+        }
+        memset(tmp_rbuf, 0, sizeof(tmp_rbuf));
+        rlen = vfs_read(pfile, tmp_rbuf, TEST_LEN);
+        vfs_file_close(&pfile);
+        vfs_fs_close(&pfs);
+
+        if (0 != memcmp(tmp_rbuf, tmp_wbuf, rlen)) {
+            log_info("read write err! rlen:%d\n", rlen);
+            log_info("write:");
+            log_info_hexdump((u8 *)tmp_wbuf, TEST_LEN);
+            log_info("read:");
+            log_info_hexdump((u8 *)tmp_rbuf, TEST_LEN);
+            while (1);
+        }
+        log_char('\n');
+    }
+}
+#endif
 #endif
 
 

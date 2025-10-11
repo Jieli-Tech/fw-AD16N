@@ -159,5 +159,7 @@ int fat_get_free_space(FATFS *fat_fs, u32 *space);
 
 int f_opendir_by_name(FATFS *pFatHdler, const char *path, DIR *dj);
 
+FRESULT f_write_vol(FATFS *fs,  char *vol_name);
+
 #endif
 

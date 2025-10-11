@@ -6,6 +6,7 @@
 
 #include "midi_dec_mode.h"
 #include "midi_api.h"
+#include "lib_midi.h"
 
 #include "common.h"
 #include "msg.h"
@@ -27,6 +28,8 @@
 #define LOG_TAG_CONST       NORM
 #define LOG_TAG             "[midi_dec]"
 #include "log.h"
+
+#if DECODER_MIDI_EN
 
 static play_control midi_pctl[2]    AT(.midi_buf);
 static u8 app_midi_mode             AT(.midi_buf);
@@ -147,9 +150,10 @@ __midi_dec_play_file_entry:
         case MSG_CHANGE_WORK_MODE:
             goto __midi_decode_app_exit;
         case MSG_500MS:
-            UI_menu(MENU_MAIN);
+            UI_menu(MENU_MAIN, 0);
             if ((MUSIC_PLAY != get_decoder_status(midi_pctl[0].p_dec_obj)) && \
                 (MUSIC_PLAY != get_decoder_status(midi_pctl[1].p_dec_obj))) {
+                sysmem_pre_erase_api();
                 app_powerdown_deal(0);
             } else {
                 app_powerdown_deal(1);
@@ -199,7 +203,7 @@ static u32 midi_melody_trigger(void *priv, u8 key, u8 vel)
 {
     return 0;
 }
-static u32 midi_melody_stop_trigger(void *priv, u8 key)
+static u32 midi_melody_stop_trigger(void *priv, u8 key, u8 chn)
 {
     return 0;
 }
@@ -219,6 +223,7 @@ static u32 wdt_clear_trigger(void *priv)
     return 64;
 }
 
+extern const int MIDI_OUT_CHANNEL;
 void midi_init_info(MIDI_INIT_STRUCT *init_parm, u8 sr_index, u32 spi_pos_addr, int max_cnt)
 {
     log_info(">>>>>>>>>midi_dec information init<<<<<<<<<<\n");
@@ -226,8 +231,14 @@ void midi_init_info(MIDI_INIT_STRUCT *init_parm, u8 sr_index, u32 spi_pos_addr, 
 
     ///初始化参数
     init_parm->init_info.sample_rate = sr_index;
-    init_parm->init_info.spi_pos = (unsigned char *)spi_pos_addr;
+    init_parm->init_info.spi_pos = (MIDI_DEC_POS_TYPE)spi_pos_addr;
     init_parm->init_info.player_t = (short)max_cnt;
+//for_4byte
+#if defined(MIDI_VER_4BYTE) && (MIDI_VER_SELECT == MIDI_VER_4BYTE)
+    init_parm->init_info.bitwidth = 16;
+    init_parm->init_info.OutdataBit = 0;
+    init_parm->init_info.out_channel = MIDI_OUT_CHANNEL;
+#endif
     /* log_info("sr:%d addr:0x%x, max_cnt:%d\n", init_parm->init_info.sample_rate, (u32)init_parm->init_info.spi_pos, init_parm->init_info.player_t); */
 
     ///控制模式
@@ -239,6 +250,7 @@ void midi_init_info(MIDI_INIT_STRUCT *init_parm, u8 sr_index, u32 spi_pos_addr, 
         init_parm->tempo_info.decay_val[i] = ((u16)31 << 11) | 1024;
     }
     init_parm->tempo_info.mute_threshold = (u16)1L << 29;
+
 
     ///midi外部音量初始化,置上EX_VOL_ENABLE生效
     for (int i = 0; i < CTRL_CHANNEL_NUM; i++) {
@@ -278,6 +290,7 @@ void midi_init_info(MIDI_INIT_STRUCT *init_parm, u8 sr_index, u32 spi_pos_addr, 
 
     ///melody_stop回调函数,置上MELODY_STOP_ENABLE生效
     init_parm->moledy_stop_info.priv = NULL;
+    init_parm->moledy_stop_info.main_chn_enable = 1;
     init_parm->moledy_stop_info.melody_stop_trigger = midi_melody_stop_trigger;
 
     ///每拍回调参数,置上BEAT_TRIG_ENABLE生效
@@ -293,3 +306,4 @@ void midi_init_info(MIDI_INIT_STRUCT *init_parm, u8 sr_index, u32 spi_pos_addr, 
 
     app_midi_mode = init_parm->mode_info.mode;
 }
+#endif

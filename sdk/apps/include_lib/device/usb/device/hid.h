@@ -2,7 +2,7 @@
 #define __USB_HID_H__
 
 #include "typedef.h"
-#include "usb/usb.h"
+#include "usb.h"
 #include "usb/device/usb_stack.h"
 
 //do not add brace to the macro outside
@@ -116,9 +116,10 @@
 #define USB_AUDIO_STOP          BIT(5)
 #define USB_AUDIO_FASTFORWARD   BIT(6)
 #define USB_AUDIO_REWIND        BIT(7)
-#define USB_AUDIO_REDIAL        BIT(8)
-#define USB_AUDIO_HOOKSWITCH    BIT(9)
-#define USB_AUDIO_PHONEMUTE     BIT(10)
+#define USB_AUDIO_MUTE          BIT(8)
+#define USB_AUDIO_REDIAL        BIT(9)
+#define USB_AUDIO_HOOKSWITCH    BIT(10)
+#define USB_AUDIO_PHONEMUTE     BIT(11)
 
 
 #define     HID_EP_OUT_EN   0
@@ -126,7 +127,7 @@
 struct hid_device_var_t {
     void *ep_in_buffer;
     u32(*output_report)(struct usb_device_t *, struct usb_ctrlrequest *);
-#if HID_EP_OUT_EN
+#if 1//HID_EP_OUT_EN
     void *ep_out_buffer;
     u32(*rx_data_wakeup)(struct usb_device_t *, u32 ep);
 #endif
@@ -137,11 +138,12 @@ struct hid_device_var_t {
 };
 
 
-extern struct hid_device_var_t hid_var;
+extern struct hid_device_var_t _hid_var;
 void hid_init(void);
 
 u32 hid_desc_config(const usb_dev usb_id, u8 *ptr, u32 *cur_itf_num);
 void hid_register(const usb_dev usb_id, void *p);
 void hid_key_handler(u32 hid_key, u32 event_type);
-u32 usb_hid_control(u32 value);
+void usb_write_hid_key(u8 *data, u16 len);
+u8 usb_get_hidkey_report_id(void);
 #endif

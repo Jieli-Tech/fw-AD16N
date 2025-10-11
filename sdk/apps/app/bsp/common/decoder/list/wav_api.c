@@ -1,6 +1,6 @@
 
-#pragma bss_seg(".wav_data")
-#pragma data_seg(".wav_data")
+#pragma bss_seg(".wav_data.data.bss")
+#pragma data_seg(".wav_data.data")
 #pragma const_seg(".wav_api.text.const")
 #pragma code_seg(".wav_api.text")
 #pragma str_literal_override(".wav_api.text.const")
@@ -18,13 +18,15 @@
 #include "audio_dac_api.h"
 #include "decoder_msg_tab.h"
 #include "app_config.h"
+#include "lib_wav.h"
+#include "app_modules.h"
 
 /* #define LOG_TAG_CONST       NORM */
 #define LOG_TAG_CONST       OFF
 #define LOG_TAG             "[wav]"
 #include "log.h"
 
-#if DECODER_WAV_EN
+#if defined(DECODER_WAV_EN) && (DECODER_WAV_EN)
 
 dec_obj dec_wav_hld AT(.wav.data.bss);
 
@@ -37,8 +39,8 @@ dec_obj dec_wav_hld AT(.wav.data.bss);
 
 cbuffer_t cbuf_wav;
 u16 obuf_wav[WAV_OBUF_SIZE / 2]AT(.wav_data);
-u32 wav_decode_buff[0x5a4 / 4]AT(.wav_data);
-static AUDIO_DECODE_PARA modevalue AT(.wav_data);
+u32 wav_decode_buff[WAV_DBUF_SIZE / 4]AT(.wav_data);
+/* static AUDIO_DECODE_PARA modevalue AT(.wav_data); */
 
 
 
@@ -46,17 +48,19 @@ static AUDIO_DECODE_PARA modevalue AT(.wav_data);
 
 
 
-const struct if_decoder_io wav_dec_io0 = {
-    &dec_wav_hld,      //input跟output函数的第一个参数，解码器不做处理，直接回传，可以为NULL
-    mp_input,
-    0,
-    mp_output,
-    decoder_get_flen,
-    0
-};
+struct if_decoder_io wav_dec_io0 AT(.wav_data);
+/* const struct if_decoder_io wav_dec_io0 = { */
+/*     &dec_wav_hld,      //input跟output函数的第一个参数，解码器不做处理，直接回传，可以为NULL */
+/*     mp_input, */
+/*     0, */
+/*     mp_output, */
+/*     decoder_get_flen, */
+/*     0 */
+/* }; */
 
-u32 wav_decode_api(void *p_file, void **p_dec, void *p_dp_buf)
+u32 wav_decode_api(void *strm, void **p_dec, void *p_dp_buf)
 {
+    dec_data_stream *p_strm = strm;
     u32 buff_len, i;
     /* void *name; */
     /* char name[VFS_FILE_NAME_LEN] = {0}; */
@@ -76,11 +80,15 @@ u32 wav_decode_api(void *p_file, void **p_dec, void *p_dp_buf)
     }
     /* log_info("wav file dbuff : 0x%x 0x%x\n", buff_len, (u32)sizeof(wav_decode_buff)); */
     /******************************************/
+    memcpy(&wav_dec_io0, p_strm->io, sizeof(struct if_decoder_io));
+    wav_dec_io0.priv      = &dec_wav_hld;
+
     cbuf_init(&cbuf_wav, &obuf_wav[0], sizeof(obuf_wav));
-    dec_wav_hld.p_file       = p_file;
+    sound_stream_obj *psound_strm = p_strm->strm_source;
+    dec_wav_hld.p_file       = psound_strm;
     dec_wav_hld.sound.p_obuf = &cbuf_wav;
     dec_wav_hld.sound.para = WAV_KICK_SIZE;
-    dec_wav_hld.sound.info |= B_STEREO;
+    dec_wav_hld.sound.info |= WAV_TRACK;
     dec_wav_hld.p_dbuf       = WAV_CAL_BUF;
     dec_wav_hld.dec_ops      = ops;
     dec_wav_hld.event_tab    = (u8 *)&wav_evt[0];
@@ -97,16 +105,18 @@ u32 wav_decode_api(void *p_file, void **p_dec, void *p_dp_buf)
     /* log_info(" -wav open\n"); */
     ops->open(WAV_CAL_BUF, &wav_dec_io0, p_dp_buf);         //传入io接口，说明如下
     /* log_info(" -wav open over\n"); */
-    if (ops->format_check(WAV_CAL_BUF)) {                  //格式检查
-        log_info(" wav format err : %s\n", g_file_sname);
-        return E_WAV_FORMAT;
+    if (!(B_DEC_NO_CHECK & p_strm->strm_ctl)) {
+        if (ops->format_check(WAV_CAL_BUF)) {                  //格式检查
+            log_info(" wav format err : %s\n", g_file_sname);
+            return E_WAV_FORMAT;
+        }
     }
 
-    modevalue.mode = 1;          //output是否判断返回值
-    ops->dec_confing(WAV_CAL_BUF, SET_DECODE_MODE, &modevalue);
+    /* modevalue.mode = 1;          //output是否判断返回值 */
+    /* ops->dec_confing(WAV_CAL_BUF, SET_DECODE_MODE, &modevalue); */
     /* parm_nchv.ch_value = FAST_LR_OUT; */
     /* ops->dec_confing(WAV_CAL_BUF, CMD_SET_DECODE_CH, &parm_nchv);  //配置解码输出通道 */
-
+    wav_dconfig(ops, WAV_CAL_BUF);
     /* regist_dac_channel(&dec_wav_hld.sound, kick_decoder);//注册到DAC; */
     /* i = ops->get_dec_inf(WAV_CAL_BUF)->sr;                //获取采样率 */
     /* dec_wav_hld.sr = i; */

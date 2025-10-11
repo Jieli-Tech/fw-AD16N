@@ -5,9 +5,12 @@
 #include "decoder_api.h"
 #include "app_config.h"
 #include "audio_dac_api.h"
+#include "app_modules.h"
+
+#if defined(DECODER_WAV_EN) && (DECODER_WAV_EN)
 
 #define LOG_TAG_CONST       NORM
-#define LOG_TAG             "[normal]"
+#define LOG_TAG             "[mio_phy]"
 #include "log.h"
 
 sound_mio_obj *g_mio_obj[2];
@@ -237,7 +240,4 @@ void mio_close(void **pp_obj)
         *pp_obj = unregist_mio_channel(*pp_obj);
     }
 }
-
-
-
-
+#endif

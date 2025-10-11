@@ -26,7 +26,7 @@
 #include "audio_eq.h"
 
 #define LOG_TAG_CONST       NORM
-#define LOG_TAG             "[normal]"
+#define LOG_TAG             "[led5x7_driver]"
 #include "log.h"
 
 LED5X7_VAR LED5X7_var;
@@ -364,13 +364,17 @@ void LED5X7_show_string_menu(u8 menu)
    @note    void LED5X7_show_dev(void)
 */
 /*----------------------------------------------------------------------------*/
-void LED5X7_show_dev(void)
+void LED5X7_show_dev(int arg)
 {
+    if (0 == arg) {
+        return;
+    }
+    play_control *tmp_dec_pctl = (play_control *)arg;
     /*Music Device type*/
     LED_STATUS &= ~(LED_SD | LED_USB);
-    if (pctl[0].dev_index == SD0_INDEX) {
+    if (tmp_dec_pctl->dev_index == SD0_INDEX) {
         LED_STATUS |= LED_SD;
-    } else if (pctl[0].dev_index == UDISK_INDEX) {
+    } else if (tmp_dec_pctl->dev_index == UDISK_INDEX) {
         LED_STATUS |= LED_USB;
     }
 }
@@ -383,12 +387,16 @@ void LED5X7_show_dev(void)
    @note    void LED5X7_show_filenumber(void)
 */
 /*----------------------------------------------------------------------------*/
-void LED5X7_show_filenumber(void)
+void LED5X7_show_filenumber(int arg)
 {
+    if (0 == arg) {
+        return;
+    }
+    play_control *tmp_dec_pctl = (play_control *)arg;
     /*Music File Number info*/
-    itoa4(pctl[0].findex);
+    itoa4(tmp_dec_pctl->findex);
     LED5X7_show_string((u8 *)bcd_number);
-    LED5X7_show_dev();
+    LED5X7_show_dev((int)tmp_dec_pctl);
 }
 
 void LED5X7_show_IR_number(void)
@@ -407,12 +415,16 @@ void LED5X7_show_IR_number(void)
    @note    void LED5X7_show_music_main(void)
 */
 /*----------------------------------------------------------------------------*/
-void LED5X7_show_music_main(void)
+void LED5X7_show_music_main(int arg)
 {
+    if (0 == arg) {
+        return;
+    }
+    play_control *tmp_dec_pctl = (play_control *)arg;
     u16 play_time;
 
     /*Music Play time info*/
-    play_time = decoder_time(pctl[0].p_dec_obj);
+    play_time = decoder_time(tmp_dec_pctl->p_dec_obj);
     /* play_time = get_music_play_time(); */
 
     itoa2(play_time / 60);
@@ -421,9 +433,9 @@ void LED5X7_show_music_main(void)
     itoa2(play_time % 60);
     LED5X7_show_string((u8 *)bcd_number);
 
-    LED5X7_show_dev();
+    LED5X7_show_dev((int)tmp_dec_pctl);
     LED_STATUS |= LED_2POINT | LED_MP3;
-    u32 status = decoder_status(pctl[0].p_dec_obj);
+    u32 status = decoder_status(tmp_dec_pctl->p_dec_obj);
     if (status & B_DEC_PAUSE) {
         LED_STATUS |= LED_PAUSE;
     } else {
@@ -431,21 +443,40 @@ void LED5X7_show_music_main(void)
     }
 }
 /*----------------------------------------------------------------------------*/
-/**@brief   EQ显示函数
+/**@brief   DEC_EQ显示函数
    @param   void
    @return  void
    @author  Change.tsai
-   @note    void LED5X7_show_volume(void)
+   @note    void LED5X7_show_dec_eq(u32 arg)
 */
 /*----------------------------------------------------------------------------*/
-#if AUDIO_EQ_ENABLE
-void LED5X7_show_eq(void)
+void LED5X7_show_dec_eq(u32 arg)
+{
+    if (0 == arg) {
+        return;
+    }
+    u32 ui_eq_mode = arg;
+    /* log_info("c_eq_mode %d; %d\n", ui_eq_mode, arg % 10); */
+    LED5X7_show_string((u8 *)"Eq ");
+    LED5X7_show_char(ui_eq_mode % 10 + '0');
+}
+
+/*----------------------------------------------------------------------------*/
+/**@brief   硬件EQ显示函数
+   @param   void
+   @return  void
+   @author  Change.tsai
+   @note    void LED5X7_show_hw_eq(void)
+*/
+/*----------------------------------------------------------------------------*/
+void LED5X7_show_hw_eq(void)
 {
     LED5X7_show_string((u8 *)"Eq ");
+#if defined(AUDIO_HW_EQ_EN) && (AUDIO_HW_EQ_EN)
     extern u8 eq_mode;
     LED5X7_show_char(eq_mode % 10 + '0');
-}
 #endif
+}
 /*----------------------------------------------------------------------------*/
 /**@brief   循环模式显示函数
    @param   void
@@ -454,9 +485,13 @@ void LED5X7_show_eq(void)
    @note    void LED5X7_show_volume(void)
 */
 /*----------------------------------------------------------------------------*/
-void LED5X7_show_playmode(void)
+void LED5X7_show_playmode(int arg)
 {
-    LED5X7_show_string((u8 *)&playmodestr[pctl[0].play_mode][0]);
+    if (0 == arg) {
+        return;
+    }
+    play_control *tmp_dec_pctl = (play_control *)arg;
+    LED5X7_show_string((u8 *)&playmodestr[tmp_dec_pctl->play_mode][0]);
 }
 
 /*----------------------------------------------------------------------------*/

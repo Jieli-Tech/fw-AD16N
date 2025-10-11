@@ -69,14 +69,21 @@
 #define E_OPENBYSCLUST  (0x8010 + 13)
 #define E_OPENBYFILE    (0x8010 + 14)
 #define E_MOUNT         (0x8010 + 15)
+#define E_SCLUST_CRC    (0x8010 + 16)
+#define E_SCLUST_OVER   (0x8010 + 17)
 
-#define E_DECODER       (0X8100 + 1)
-#define E_PARG_NULL     (0x8100 + 2)
-#define E_ENC_FORMAT    (0x8100 + 3)
+#define E_DECODER           (0X8100 + 1)
+#define E_PARG_NULL         (0x8100 + 2)
+#define E_ENC_FORMAT        (0x8100 + 3)
+#define E_ENC_NOHDL         (0x8100 + 4)
+#define E_ENC_FUNC_NULL     (0x8100 + 5)
+#define E_ENC_CHN_HAD       (0x8100 + 6)
+#define E_ENC_CHN_FULL      (0x8100 + 7)
+#define E_ENC_CHN_NOFIND    (0x8100 + 8)
 
-#define E_AMEM_OVERFLOW    (0x8140 + 1)
-#define E_AMEM_NOINDEX     (0x8140 + 2)
-#define E_AMEM_BUFF_NULL   (0x8140 + 3)
+#define E_AMEM_OVERFLOW     (0x8140 + 1)
+#define E_AMEM_NOINDEX      (0x8140 + 2)
+#define E_AMEM_BUFF_NULL    (0x8140 + 3)
 
 #define E_MIO_NO_MEN    (0x8200 + 1)
 #define E_MIO_READ      (0x8200 + 2)
@@ -102,8 +109,38 @@
 #define E_NVM_DATA_TOO_LONG    (0x8300 + 0x0d)
 #define E_NVM_DATA_ADDR        (0x8300 + 0x0e)
 #define E_NVM_WRITE			   (0x8300 + 0x0f)
+#define E_NVM_ID_OUTRANGED 	   (0x8300 + 0x10)
+#define E_NVM_NO_IGNORE        (0x8300 + 0x11)
+#define E_NVM_WRITE_AREA_HEAD  (0x8300 + 0x12)
+#define E_NVM_READ_DATA        (0x8300 + 0x13)
+
+#define E_BUSYBUF_NULL         (0X8340 + 0)
+#define E_BUSYBUF_BUSY         (0X8340 + 1)
+#define E_BUSYBUF_SIZE         (0X8340 + 2)
+
+#define E_USBMIC_NO_FUNC       (0x8400 + 0x00)
+#define E_USBMIC_SOUND_NULL    (0x8400 + 0x01)
+
+#define E_AU2RF_OBJ_NULL       (0x8500 + 0x00)
+#define E_AU2RF_RF_OFFLINE     (0x8500 + 0x01)
+#define E_AU2RF_RF_BUSY        (0x8500 + 0x02)
+#define E_AU2RF_SNED_HEAD_ERR  (0x8500 + 0x03)
+#define E_AU2RF_SNED_DATA_ERR  (0x8500 + 0x04)
+#define E_AU2RF_SNED_QUEUE_FULL  (0x8500 + 0x05)
+#define E_AU2RF_CAN_NOT_IN       (0x8500 + 0x06)
+
+#define E_PACKET_FULL      (0x8520 + 0x01)
+#define E_PACKET_WRITE     (0x8520 + 0x02)
+#define E_PACKET_NULL      (0x8520 + 0x03)
+
+#define E_RFQUE_OBJ_NULL   (0x8530 + 0x01)
+#define E_RFQUE_OPS_NULL   (0x8530 + 0x02)
+#define E_RFQUE_CHN_FULL   (0x8530 + 0x03)
 
 
+#define E_REMAIN_OPS_NULL      (0x8600 + 0x00)
+#define E_REMAIN_NOT_EMPTY     (0x8600 + 0x01)
+#define E_REMAIN_OVER_SIZE     (0x8600 + 0x02)
 
 #define E_F1A_INDEX	    (0X9000 + 0)
 #define E_F1A_DBUF	    (0X9000 + 1)
@@ -146,9 +183,30 @@
 #define E_F1X_U2LONG    (0X9060 + 5)
 #define E_F1X_FORMAT    (0X9060 + 6)
 
+#define E_OPUS_INDEX    (0X9070 + 0)
+#define E_OPUS_DBUF     (0X9070 + 1)
+#define E_OPUS_FORMAT   (0X9070 + 2)
+#define E_OPUS_TYPE     (0X9070 + 3)
+
+#define E_IMA_INDEX		(0X9080 + 0)
+#define E_IMA_DBUF		(0X9080 + 1)
+#define E_IMA_FORMAT  	(0X9080 + 2)
+#define E_IMA_TYPE		(0X9080 + 3)
+
+#define E_SPEEX_INDEX	(0X9090 + 0)
+#define E_SPEEX_DBUF	(0X9090 + 1)
+#define E_SPEEX_FORMAT 	(0X9090 + 2)
+#define E_SPEEX_TYPE	(0X9090 + 3)
+
+#define E_SBC_INDEX		(0X90A0 + 0)
+#define E_SBC_DBUF		(0X90A0 + 1)
+#define E_SBC_FORMAT 	(0X90A0 + 2)
+#define E_SBC_TYPE		(0X90A0 + 3)
+
 #define E_ADCANA_PARA   (0xA000 + 1)
 #define E_ADC_SR        (0xA000 + 2)
 #define E_ADC_BUF       (0xA000 + 3)
+#define E_AUDIO_CLK     (0xA000 + 4)
 
 #define E_BSP_EVENT     (0xB000 + 1)
 

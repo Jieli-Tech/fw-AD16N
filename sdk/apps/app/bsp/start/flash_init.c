@@ -11,6 +11,7 @@
 #include "vfs.h"
 #include "msg.h"
 #include "sys_memory.h"
+#include "vm_sfc.h"
 #include "my_malloc.h"
 #include "init_app.h"
 #include "audio.h"
@@ -66,6 +67,7 @@ int flash_info_init(void)
     device = dev_open(__SFC_NANE, 0);
     ASSERT(((u32)device), "open sfc: 0x%x\n", (u32)device);
     dev_ioctl(device, IOCTL_GET_CAPACITY, (u32)&capacity);
+    boot_info.flash_size = capacity;
     dev_ioctl(device, IOCTL_SET_VM_INFO, (u32)&boot_info);
     dev_ioctl(device, IOCTL_SET_PROTECT_INFO, (u32)flash_code_protect_callback);
     dev_close(device);
@@ -139,9 +141,9 @@ void flash_system_init(void)
     fs_init();
     flash_info_init();
     vm_init_api();
-#if HAS_NORFS_EN
-    norfs_init_api();
-#endif
+    /* #if HAS_NORFS_EN */
+    /*     norfs_init_api(); */
+    /* #endif */
 }
 
 

@@ -1,6 +1,8 @@
 #ifndef __USB_COMMON_DEFINE_H__
 #define __USB_COMMON_DEFINE_H__
 
+#include "app_config.h"
+
 ///<<<注意此文件不要放函数声明, 只允许宏定义, 并且差异化定义可以根据需求在对应板卡中重新定义, 除非新增，否则不要直接修改这里
 ///<<<注意此文件不要放函数声明, 只允许宏定义, 并且差异化定义可以根据需求在对应板卡中重新定义, 除非新增，否则不要直接修改这里
 ///<<<注意此文件不要放函数声明, 只允许宏定义, 并且差异化定义可以根据需求在对应板卡中重新定义, 除非新增，否则不要直接修改这里
@@ -12,14 +14,6 @@
                                    HID    AUDIO  SPEAKER   Mass Storage
 */
 /**************************************************************************/
-#define     MASSSTORAGE_CLASS   BIT(0)
-#define     SPEAKER_CLASS       BIT(1)
-#define     MIC_CLASS           BIT(2)
-#define     HID_CLASS           BIT(3)
-#define     IAP_CLASS           BIT(4)
-#define     CDC_CLASS           BIT(5)
-
-#define     AUDIO_CLASS         (SPEAKER_CLASS|MIC_CLASS)
 
 
 #define     USB_ROOT2   0
@@ -28,8 +22,8 @@
 #ifdef AUDIO_PCM_DEBUG
 #undef TCFG_PC_ENABLE
 #undef TCFG_UDISK_ENABLE
-#define TCFG_PC_ENABLE						DISABLE_THIS_MOUDLE//PC模块使能
-#define TCFG_UDISK_ENABLE					DISABLE_THIS_MOUDLE//U盘模块使能
+#define TCFG_PC_ENABLE                      DISABLE_THIS_MOUDLE//PC模块使能
+#define TCFG_UDISK_ENABLE                   DISABLE_THIS_MOUDLE//U盘模块使能
 #endif/*AUDIO_PCM_DEBUG*/
 
 #if TCFG_UDISK_ENABLE
@@ -74,5 +68,17 @@
 
 #define TCFG_OTG_DET_INTERVAL               50
 
-
+//防止编译报错
+#ifndef TCFG_ADB_ENABLE
+#define TCFG_ADB_ENABLE         0
+#endif
+#ifndef TCFG_AOA_ENABLE
+#define TCFG_AOA_ENABLE         0
+#endif
+#ifndef TCFG_PUSH_CODE_ENABLE
+#define TCFG_PUSH_CODE_ENABLE   0
+#endif
+#ifndef TCFG_HID_HOST_ENABLE
+#define TCFG_HID_HOST_ENABLE   0
+#endif
 #endif

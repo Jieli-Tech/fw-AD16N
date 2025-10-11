@@ -3,11 +3,20 @@
 
 #include "usb_common_def.h"
 
+#define     MASSSTORAGE_CLASS   BIT(0)
+#define     SPEAKER_CLASS       BIT(1)
+#define     MIC_CLASS           BIT(2)
+#define     HID_CLASS           BIT(3)
+#define     IAP_CLASS           BIT(4)
+#define     CDC_CLASS           BIT(5)
+#define     CUSTOM_HID_CLASS    BIT(6)
+
+#define     AUDIO_CLASS         (SPEAKER_CLASS|MIC_CLASS)
+
 #define     USB_MALLOC_ENABLE           0
 #define     USB_HOST_ASYNC              0
 #define     USB_H_MALLOC_ENABLE         0
 
-#define     USB_DEVICE_CLASS_CONFIG (SPEAKER_CLASS|MIC_CLASS|HID_CLASS|MASSSTORAGE_CLASS)
 
 ///////////MassStorage Class
 
@@ -37,9 +46,9 @@
 //speaker class
 //suport 8K 11.025 12K 16K 22.050K 24K 32K 44.1K 48K 64K 88.2K 96K
 #define     SPK_AUDIO_RATE              48000
-#define     SPK_AUDIO_RES               24
+#define     SPK_AUDIO_RES               16
 
-#define     SPK_CHANNEL                 2
+#define     SPK_CHANNEL                 1
 #define     SPK_FRAME_LEN               (((SPK_AUDIO_RATE) * SPK_AUDIO_RES / 8 * SPK_CHANNEL)/1000)
 
 #define     SPK_PCM_Type                (SPK_AUDIO_RES >> 4)                // 0=8 ,1=16
@@ -73,7 +82,7 @@
 
 #define     MIC_AUDIO_RES               16
 
-#define     MIC_CHANNEL                 2
+#define     MIC_CHANNEL                 1
 
 #define     MIC_FRAME_LEN               ((MIC_AUDIO_RATE * MIC_AUDIO_RES / 8 * MIC_CHANNEL)/1000)
 
@@ -118,5 +127,18 @@
 #define CDC_INTR_EP_ENABLE          0
 #endif
 
+///////////CUSTOM_HID class
+#ifndef CUSTOM_HID_EP_IN
+#define CUSTOM_HID_EP_IN            1
+#endif
+#ifndef CUSTOM_HID_EP_OUT
+#define CUSTOM_HID_EP_OUT           1
+#endif
+#ifndef MAXP_SIZE_CUSTOM_HIDIN
+#define MAXP_SIZE_CUSTOM_HIDIN      64
+#endif
+#ifndef MAXP_SIZE_CUSTOM_HIDOUT
+#define MAXP_SIZE_CUSTOM_HIDOUT     64
+#endif
 
 #endif  /*USB_STD_CLASS_DEF_H*/

@@ -18,7 +18,7 @@
 								/*03*/    MSG_PP,\
 								/*04*/    MSG_PREV_FILE,\
 								/*05*/    MSG_NEXT_FILE,\
-								/*06*/    MSG_EQ_SW,\
+								/*06*/    MSG_DEC_EQ,\
 								/*07*/    MSG_VOL_DOWN,\
 								/*08*/    MSG_VOL_UP,\
 								/*09*/    MSG_0,\
@@ -296,7 +296,7 @@ const u16 iokey_msg_mbox_music_table[][IO_KEY_MAX_NUM] = {
 							/*02*/		MSG_NEXT_FILE,\
 							/*03*/		MSG_VOL_DOWN,\
 							/*04*/		MSG_VOL_UP,\
-							/*05*/		MSG_EQ_SW,\
+							/*05*/		MSG_HW_EQ_SW,\
 							/*06*/		NO_MSG,\
 							/*07*/		NO_MSG,\
 							/*08*/		NO_MSG,\

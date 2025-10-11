@@ -217,7 +217,7 @@ u16 midi_keyboard_key_msg_filter(u8 key_status, u8 key_num, u8 key_type)
     switch (key_type) {
 #if KEY_IO_EN
     case KEY_TYPE_IO:
-        msg = iokey_msg_midi_keyboard_able[key_status][key_num];
+        msg = iokey_msg_midi_keyboard_table[key_status][key_num];
         break;
 #endif
 #if KEY_AD_EN

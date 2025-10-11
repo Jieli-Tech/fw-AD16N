@@ -1,11 +1,14 @@
 #include "app_config.h"
 #include "includes.h"
+#ifdef BLE_EN
+#include "bd49/bt_includes.h"
+#endif
 #include "jiffies.h"
 #include "tick_timer_driver.h"
 #include "device_drive.h"
 #include "usb_config.h"
 #include "usb/usb_phy.h"
-#include "usb/usb.h"
+#include "usb.h"
 #include "usb/host/usb_host.h"
 #include "usb/host/usb_ctrl_transfer.h"
 #include "usb/host/usb_storage.h"
@@ -44,10 +47,10 @@ u32 host_device2id(const struct usb_host_device *host_dev)
     return 0;
 #endif
 }
-u32 usb_get_jiffies()
-{
-    return maskrom_get_jiffies();
-}
+/* u32 usb_get_jiffies() */
+/* { */
+/*     return jiffies; */
+/* } */
 void usb_mdelay(unsigned int ms)
 {
     unsigned int t;
@@ -160,7 +163,9 @@ int _usb_msd_parser(struct usb_host_device *host_dev, u8 interface_num, const u8
 {
     log_info("find udisk @ interface %d", interface_num);
 #if TCFG_UDISK_ENABLE
-    return   usb_msd_parser(host_dev, interface_num, pBuf, &udisk_inf);
+
+    return usb_msd_parser(host_dev, interface_num, pBuf);
+
 #else
     return USB_DT_INTERFACE_SIZE;
 #endif
@@ -502,10 +507,7 @@ u32 usb_host_mount(const usb_dev id, u32 retry, u32 reset_delay, u32 mount_timeo
     const usb_dev usb_id = 0;
 #endif
 
-    memset(&host_var, 0, sizeof(host_var));
-    usb_host_config(0, &host_var);
-    host_var.msd_h_dma_buffer = msd_h_dma_buffer;
-
+    usb_host_config(0);
     struct usb_host_device *host_dev = &host_devices[usb_id];
     memset(host_dev, 0, sizeof(*host_dev));
 
@@ -601,9 +603,7 @@ u32 usb_host_remount(const usb_dev id, u32 retry, u32 delay, u32 ot, u8 notify)
 #endif
     u32 ret;
 
-    memset(&host_var, 0, sizeof(host_var));
-    usb_host_config(0, &host_var);
-    host_var.msd_h_dma_buffer = msd_h_dma_buffer;
+    usb_host_config(0);
 
     ret = _usb_host_unmount(usb_id);
     if (ret) {

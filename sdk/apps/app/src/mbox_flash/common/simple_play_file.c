@@ -16,7 +16,7 @@
 #include "decoder_msg_tab.h"
 
 #define LOG_TAG_CONST       NORM
-#define LOG_TAG             "[midi_dec]"
+#define LOG_TAG             "[smp_file]"
 #include "log.h"
 
 u32 get_decoder_status(dec_obj *obj)

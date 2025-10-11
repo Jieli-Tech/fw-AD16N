@@ -1,7 +1,7 @@
 #include "key_ir.h"
 
 #define LOG_TAG_CONST       NORM
-#define LOG_TAG             "[normal]"
+#define LOG_TAG             "[key_ir]"
 #include "log.h"
 
 
@@ -26,7 +26,7 @@ static const u8 IRTabFF00[] = {
 /*----------------------------------------------------------------------------*/
 void ir_key_init(void)
 {
-    irflt_init();
+    irflt_init(IR_KEY_IO);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -41,8 +41,8 @@ u8 irkey_get_value(void)
 {
     u8 key_num = NO_KEY;
 
-    u8 ir_value = get_irkey_value();
-    if (ir_value != 0xff) {
+    u8 ir_value = irflt_get_command_value();
+    if (ir_value != NO_KEY) {
         key_num = IRTabFF00[ir_value];
         /* log_info("irkey_num : 0x%x\n", key_num); */
     }

@@ -212,10 +212,7 @@ void mic_key_init(void)
 #endif
 #else
     //设置成AD口
-    gpio_set_direction(TCFG_MIC_KEY_IO, 1);
-    gpio_set_die(TCFG_MIC_KEY_IO, 0);
-    gpio_set_pull_down(TCFG_MIC_KEY_IO, 0);
-    gpio_set_pull_up(TCFG_MIC_KEY_IO, 0);
+    gpio_set_mode(IO_PORT_SPILT(TCFG_MIC_KEY_IO), PORT_HIGHZ);
 
     adc_api_set_channel_status(TCFG_MIC_KEY_AD_CH, ADC_STATUS_NORMAL);
     adc_api_set_channel_status(AD_CH_AUDIO_MICLDO, ADC_STATUS_NORMAL);

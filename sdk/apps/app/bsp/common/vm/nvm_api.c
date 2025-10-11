@@ -4,6 +4,12 @@
   Email: liujie@zh-jieli.com
   date : 2022-12-26
 ********************************************************************************************/
+#pragma bss_seg(".new_vm.data.bss")
+#pragma data_seg(".new_vm.data")
+#pragma const_seg(".new_vm.text.const")
+#pragma code_seg(".new_vm.text")
+#pragma str_literal_override(".new_vm.text.const")
+
 #include "typedef.h"
 #include "errno-base.h"
 #include "new_vm.h"
@@ -27,7 +33,24 @@ void *nvm_buf_for_lib(NEW_VM_OBJ *p_nvm, u32 *p_len)
 
 #define NVM_CACHE_ENABLE    1
 #define NVM_CACHE_NUMBER    6
+
+/******************************************************
+ * 变量：config_vm_multiple_read_en
+ * 用法：此变量在vm读时会调用
+ * 作用：是否支持单个id分次读
+ * 详细内容可见SDK文档VM掉电存储详细说明章节
+ * */
 const bool config_vm_multiple_read_en = 0;
+
+/******************************************************
+ * 变量：config_vm_erasure_after_format_en
+ * 用法：此变量在vm格式整理时会调用到
+ * 作用：在vm格式整理后，原半区的数据不会立即擦除，而是等到系统空闲时才会被擦除
+ * 常见场景1：没有开启该配置，在音乐模式下播放歌曲时，调整音量记忆到vm，此时遇上格式整理，整理后原半区数据依旧存在(即旧数据)，芯片若此时断电重启，从vm获取到的音量还是旧数据，不是最新数据,因为系统在断电前没有进入过空闲状态把旧数据擦除掉
+ * 常见场景2：开启该配置后，在音乐模式下播放歌曲中途，若遇上格式整理需要擦除flash，则会造成卡音现象
+ * 详细内容可见SDK文档VM掉电存储详细说明章节
+ * */
+const bool config_vm_erasure_after_format_en = 1;
 
 #if NVM_CACHE_ENABLE
 
@@ -54,6 +77,7 @@ u32 nvm_init_api(u32 addr, u32 size)
     /* if (NULL == g_nvm_obj.device) { */
     g_nvm_obj.device = dev_open(__SFC_NANE, 0);
     if (NULL == g_nvm_obj.device) {
+        log_error("nvm init E_NVM_OPEN_DEVICE\n");
         return E_NVM_OPEN_DEVICE;
     }
     /* } */
@@ -92,6 +116,33 @@ void nvm_erasure_next_api(void)
     nvm_pre_erasure_next(&g_nvm_obj, 1, 1);
 }
 
+
+/******************************************************
+ * @brief nvm_format_another_ignore_api
+ *
+ * @param delete_map 要删除的 id_map，ID对应的Bit位置1为删除
+ * @param delete_bits 要处理的 id_map 长度
+ * @return
+ * */
+void nvm_format_another_ignore_api(u32 *delete_map, u32 delete_bits)
+{
+    nvm_format_another_ignore(&g_nvm_obj, delete_map, delete_bits);
+}
+
+u32 nvm_get_half_addr_api()
+{
+    return nvm_get_half_addr(&g_nvm_obj);
+}
+
+u32 nvm_get_half_len_api()
+{
+    return nvm_get_half_len(&g_nvm_obj);
+}
+
+u32 nvm_get_cur_date_len_api()
+{
+    return nvm_get_cur_date_len(&g_nvm_obj);
+}
 
 
 /***************** 测试验证代码 ***********/

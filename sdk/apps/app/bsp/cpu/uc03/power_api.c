@@ -2,12 +2,14 @@
 #include "asm/power_interface.h"
 #include "power_api.h"
 #include "irq.h"
+#include "rtc.h"
 #include "gpio.h"
 #include "uart.h"
 #include "wdt.h"
 #include "charge.h"
 #include "app_config.h"
 #include "audio.h"
+#include "sys_memory.h"
 
 #define LOG_TAG_CONST       PMU
 #define LOG_TAG             "[pmu]"
@@ -76,8 +78,9 @@ const struct low_power_param power_param = {
 #else
     .vddio_keep     = 0,
 #endif
-#if ((defined RTC_CLK_SEL) && (0 != RTC_CLK_SEL))
-    .rtc_clk = RTC_CLK_SEL,
+
+#if RTC_EN
+    .rtc_clk = CLK_SEL_LRC,
 #endif
 };
 
@@ -176,6 +179,8 @@ void sys_power_init()
 
 void sys_power_down(u32 usec)
 {
+    //睡眠前做预擦除动作
+    sysmem_pre_erase_api();
     u8 temp_wdt_con = 0;
 
     OS_ENTER_CRITICAL();
@@ -193,9 +198,38 @@ void sys_power_down(u32 usec)
 
 void sys_softoff()
 {
+    //关机前做预擦除动作
+    sysmem_pre_erase_api();
     power_set_soft_poweroff();
 }
 
+bool is_port_edge_wkup_source(void)
+{
+    extern u64 get_wkup_source_value(void);
+    if (get_wkup_source_value() & BIT(P3_WKUP_SRC_PORT_EDGE)) {
+        /* 边沿唤醒 */
+        return 1;
+    } else {
+        /* 非边沿唤醒 */
+        return 0;
+    }
+}
 
+u32 get_lvd_en(void)
+{
+    return IS_LVD_EN();
+}
 
+u32 get_lvd_level(void)
+{
+    return GET_VLVD_LEVEL();
+}
+
+u32 get_lvd_vol(void)
+{
+    if (!get_lvd_en()) {
+        return 0;
+    }
+    return (get_lvd_level() * 100 + VLVD_LOWEST_VOL);
+}
 

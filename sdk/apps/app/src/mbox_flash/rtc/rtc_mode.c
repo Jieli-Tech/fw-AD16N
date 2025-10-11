@@ -13,21 +13,21 @@
 #include "msg.h"
 #include "audio.h"
 #include "ui_api.h"
-#include "asm/power/p33_app.h"
+/* #include "asm/power/p33_app.h" */
+#include "rtc.h"
 #include "power_api.h"
 #include "audio_dac.h"
 #include "usb/host/usb_host.h"
 #include "usb/device/usb_stack.h"
 #include "usb/otg.h"
-#include "lcd_seg4x8_driver.h"
 #define LOG_TAG_CONST       NORM
 #define LOG_TAG             "[RTC]"
 #include "log.h"
-
+#if RTC_EN
 #define RTC_LCD 0
 extern const u8 powerdown_lcd_on;
 void lcd_seg4x8_wakeupshow(u8 flag);
-static void alarm_callback(u8 priv)
+static void alarm_callback()
 {
     log_info("alarm time up!\n");
 }
@@ -49,20 +49,24 @@ const static struct sys_time clock_alarm = {  //闹钟
     .min = 0,
     .sec = 10,
 };
-const static struct rtc_dev_platform_data rtc_config = {
+const static struct rtc_config_init rtc_config = {
     .default_sys_time = (struct sys_time *) &clock_time,
     .default_alarm = (struct sys_time *) &clock_alarm,
     .cbfun = alarm_callback,//闹钟中断的回调函数,此回调在中断运行，不可执行时间过长
 #if RTC_LCD
     .timefun = lcd_seg4x8_wakeupshow,//时基唤醒中断的回调函数,此回调在中断运行，不可执行时间过长
 #else
-    .timefun = NULL,
+    /* .timefun = NULL, //时基唤醒中断回调，软件rtc没有 */
 #endif
-    .clk_sel = RTC_CLK_SEL,//时钟源选择,只能选择32k时钟或者LRC时钟
+    .rtc_clk = CLK_SEL_LRC,//时钟源选择
+    .rtc_sel = VIR_RTC,//软硬件rtc选择
+    /* .timer_wkup_en = 1,//softoff定时唤醒使能，需要在softoff前调用set_time_wakeup_soff。注：BTOSC时钟源不可用 */
+    /* .alm_en = 1,//闹钟使能 */
 };
 
 
 #if RTC_LCD
+#include "lcd_seg4x8_driver.h"
 struct sys_time new_time;
 const struct lcd_seg4x8_platform_data lcd_config = {
     /* .vlcd = LCD_VOLTAGE_3_3V, */
@@ -99,7 +103,7 @@ void rtc_app(void)
     sysmem_write_api(SYSMEM_INDEX_SYSMODE, &work_mode, sizeof(work_mode));
     key_table_sel(rtc_key_msg_filter);
 
-    rtc_init(&rtc_config);				    //初始化rtc
+    rtc_dev_init(&rtc_config);				    //初始化rtc
     read_current_time();
 
     int msg[2];
@@ -126,29 +130,31 @@ void rtc_app(void)
             break;
 
         case MSG_WRITE_ALARM:
+            rtc_alarm_en(1);      //写闹钟之前需要先使能才能有效写入
             write_alarm_time(2023, 3, 1, 16, 28, 17);
             break;
 
         case MSG_TIME_WAKEUP:
             log_info("timer  wakeup");
-            time_wakeup_set(RTC_WKUP_SRC_1HZ, 1); //使能时钟1s定时唤醒
+            /* time_wakeup_set(RTC_WKUP_SRC_1HZ, 1); //使能时钟1s定时唤醒，软件rtc无时基唤醒 */
             break;
 
         case MSG_ALARM:
             if (switch_alarm == 0) {
                 log_info("close alram");
                 switch_alarm = 1;
-                set_alarm_ctrl(0);      //关闭闹钟
+                rtc_alarm_en(0);      //关闭闹钟
             } else {
                 log_info("open alram");
                 switch_alarm = 0;
-                set_alarm_ctrl(1);      //开启闹钟
+                rtc_alarm_en(1);      //开启闹钟
             }
             break;
         case MSG_CHANGE_WORK_MODE:
             goto __rtc_app_exit;
         case MSG_500MS:
-            UI_menu(MENU_MAIN);
+            UI_menu(MENU_MAIN, 0);
+            sysmem_pre_erase_api();
             wdt_clear();
             break;
         default:
@@ -157,7 +163,7 @@ void rtc_app(void)
         }
     }
 __rtc_app_exit:
-    /* rtc_disable(); */
+    rtc_dev_disable();
     key_table_sel(NULL);
 }
 
@@ -200,7 +206,7 @@ static void rtc_powerdown(void)
 
     dac_power_on(sr);
 }
-
+#if 0
 void rtc_timed_wakeup_app()
 {
     sysmem_write_api(SYSMEM_INDEX_SYSMODE, &work_mode, sizeof(work_mode));
@@ -226,7 +232,7 @@ void rtc_timed_wakeup_app()
         case MSG_CHANGE_WORK_MODE:
             goto __rtc_timed_wakeup_app_exit;
         default:
-            UI_menu(MENU_MAIN);
+            UI_menu(MENU_MAIN, 0);
             ap_handle_hotkey(msg[0]);
             rtc_powerdown();
             read_current_time();
@@ -240,3 +246,5 @@ __rtc_timed_wakeup_app_exit:
     /* rtc_disable(); */
     key_table_sel(NULL);
 }
+#endif
+#endif

@@ -44,6 +44,21 @@
 #if DECODER_WAV_EN
 #include "wav_api.h"
 #endif
+#if DECODER_OPUS_EN
+#include "opus_api.h"
+#endif
+#if DECODER_IMA_EN
+#include "ima_api.h"
+#endif
+#if DECODER_SPEEX_EN
+#include "speex_api.h"
+#endif
+#if DECODER_SBC_EN
+#include "sbc_api.h"
+#endif
+#if DECODER_JLA_LW_EN
+#include "jla_lw_api.h"
+#endif
 /* #include "msg.h" */
 /* #include "src_api.h" */
 #include "decoder_mge.h"
@@ -51,8 +66,11 @@
 #include "string.h"
 #include "errno-base.h"
 #include "decoder_msg_tab.h"
-#if AUDIO_EQ_ENABLE
+#if defined(AUDIO_HW_EQ_EN) && (AUDIO_HW_EQ_EN)
 #include "audio_eq.h"
+#endif
+#if defined(PCM_SW_EQ_EN) && (PCM_SW_EQ_EN)
+#include "pcm_eq_api.h"
 #endif
 #if HAS_MIO_EN
 #include "mio_api.h"
@@ -83,6 +101,11 @@ u32 dec_hld_tab[] = {
     MIDI_CTRL_LST
     WAV_LST
     MP3_ST_LST
+    OPUS_LST
+    IMA_LST
+    SPEEX_LST
+    SBC_LST
+    JLA_LW_LST
     /* 0, */
 };
 
@@ -96,6 +119,11 @@ const u32 decoder_tab[] = {
     MIDI_CTRL_API
     WAV_API
     MP3_ST_API
+    OPUS_API
+    IMA_API
+    SPEEX_API
+    SBC_API
+    JLA_LW_API
     /* 0, */
 };
 
@@ -109,8 +137,31 @@ const u32 decoder_mutual[] = {
     MIDI_CTRL_MUT_TAB
     WAV_MUT_TAB
     MP3_ST_MUT_TAB
+    OPUS_MUT_TAB
+    IMA_MUT_TAB
+    SPEEX_MUT_TAB
+    SBC_MUT_TAB
+    JLA_LW_MUT_TAB
     /* 0, */
 };
+
+
+const u32 decoder_parm_set[] = {
+    F1A1_PARM_SET
+    F1A2_PARM_SET
+    UMP3_PARM_SET
+    A_PARM_SET
+    MIDI_PARM_SET
+    MIDI_CTRL_PARM_SET
+    WAV_PARM_SET
+    MP3_ST_PARM_SET
+    OPUS_PARM_SET
+    IMA_PARM_SET
+    SPEEX_PARM_SET
+    SBC_PARM_SET
+    JLA_LW_PARM_SET
+};
+
 const u8 decoder_channel = sizeof(dec_hld_tab) / 4;
 
 void decoder_init(void)
@@ -155,26 +206,38 @@ void decoder_mutex(u32 index)
         decoder_stop((void *)dec_hld_tab[i], NO_WAIT, 0);
     }
 }
-dec_obj *decoder_io(void *pfile, u32 dec_ctl, dp_buff *dbuff, u8 loop)
+
+void decoder_reset_file_stream(void *pfile)
+{
+    fs_seek(pfile, 0, SEEK_SET);
+}
+
+const struct if_decoder_io dec_io_for_file = {
+    0,
+    mp_input,
+    0,
+    mp_output,
+    decoder_get_flen,
+    0
+};
+
+dec_obj *decoder_list(dec_data_stream *p_strm, u32 dec_ctl, dp_buff *dbuff, u8 loop, u32 output_sr)
 {
     u32(*fun)(void *, void **, void *);
     u32 res, dec_i, j;
 
-
-    int file_len = fs_file_name(pfile, (void *)g_file_sname, sizeof(g_file_sname));
-
 #if HAS_MIO_EN
-    if (check_ext_api(g_file_sname, ".mio", 4)) {
-        return NULL;
-    }
-
-    /* log_info("\n************\ndecoder_fun"); */
-
-
     u32 mio_res = -1;
     void *mio_pfile = NULL;
-    if (pfile) {
-        mio_res = fs_openbyfile(pfile, &mio_pfile, "mio");
+    if (0 == (p_strm->strm_ctl & B_DEC_IS_STRM)) {
+        if (check_ext_api(g_file_sname, ".mio", 4)) {
+            return NULL;
+        }
+
+        void *pfile = p_strm->strm_source;
+        if (pfile) {
+            mio_res = fs_openbyfile(pfile, &mio_pfile, "mio");
+        }
     }
 #endif
 
@@ -191,31 +254,45 @@ dec_obj *decoder_io(void *pfile, u32 dec_ctl, dp_buff *dbuff, u8 loop)
         if (0 != config_decoder_auto_mutex) {
             decoder_mutex(dec_i);
         }
-
-        fs_seek(pfile, 0, SEEK_SET);
+        if (NULL != p_strm->strm_source) {
+            if (NULL != p_strm->reset_stream) {
+                p_strm->reset_stream(p_strm->strm_source);
+            } else {
+                log_error("file no seek");
+            }
+        }
+        /* fs_seek(pfile, 0, SEEK_SET); */
         fun = (void *)decoder_tab[dec_i];
         p_dec = 0;
         log_info("file name:%s\n", g_file_sname);
-        res = fun(pfile, (void **)(&p_dec), check_dp(dbuff));
+        res = fun(p_strm, (void **)(&p_dec), check_dp(dbuff));
         /* res = fun(pfile, (void **)(&p_dec), 0); */
         if (0 == res) {
-            regist_dac_channel(&p_dec->sound, kick_decoder);
-            decoder_ops_t *ops = p_dec->dec_ops;
-            dec_inf_t *p_dinfo = ops->get_dec_inf(p_dec->p_dbuf);
-            log_info("long %d:%d", p_dinfo->total_time / 60, p_dinfo->total_time % 60);
+            if (p_strm->strm_ctl & B_DEC_NO_CHECK) {
+                u32(*parm_set_fun)(u32, u32, int(*)(void *)) = (void *)decoder_parm_set[dec_i];
+                if (0 != (u32)parm_set_fun) {
+                    parm_set_fun(p_strm->sr, p_strm->br, (void *)p_strm->goon_callback);
+                }
+                p_dec->sr = p_strm->sr;
+            } else {
+                decoder_ops_t *ops = p_dec->dec_ops;
+                dec_inf_t *p_dinfo = ops->get_dec_inf(p_dec->p_dbuf);
+                log_info("long %d:%d", p_dinfo->total_time / 60, p_dinfo->total_time % 60);
 #if DECODE_SR_IS_NEED_JUDIGMENT
-            if (0 == p_dec->sr)
+                if (0 == p_dec->sr)
 #endif
-            {
-                log_info("need read sr");
-                p_dec->sr = p_dinfo->sr;               //获取采样率
+                {
+                    log_info("need read sr");
+                    if (0 != p_dinfo->sr) {
+                        p_dec->sr = p_dinfo->sr;               //获取采样率
+                    }
+                }
+
+                nch = p_dinfo->nch;
+                log_info("sr:%d", p_dec->sr);
+                log_info("br:%d", p_dinfo->br);
+                log_info("nch:%d", nch);
             }
-
-            nch = p_dinfo->nch;
-            log_info("sr:%d", p_dec->sr);
-            log_info("br:%d", p_dinfo->br);
-            log_info("nch:%d", nch);
-
             break;
         }
     }
@@ -239,7 +316,7 @@ dec_obj *decoder_io(void *pfile, u32 dec_ctl, dp_buff *dbuff, u8 loop)
         }
 #endif
 
-#if AUDIO_EQ_ENABLE
+#if defined(AUDIO_HW_EQ_EN) && (AUDIO_HW_EQ_EN)
         //EQ
         if (dec_ctl & BIT_EQ) {
             p_curr_sound = link_eq_sound(\
@@ -250,13 +327,26 @@ dec_obj *decoder_io(void *pfile, u32 dec_ctl, dp_buff *dbuff, u8 loop)
                                          output_ch);
         }
 #endif
+        /* #if defined(PCM_SW_EQ_EN) && (PCM_SW_EQ_EN) */
+        /* PCM_EQ 注意与解码资源复用 */
+        /* if (dec_ctl & BIT_EQ) { */
+        /* log_info(" BIT-EQ\n"); */
+        /* p_curr_sound = link_pcm_eq_sound(\ */
+        /* p_curr_sound,               \ */
+        /* cbuff_o,                    \ */
+        /* (void **) NULL,			 \ */
+        /* p_dec->sr,                  \ */
+        /* output_ch); */
+        /* } */
+        /* #endif */
         //硬件src
-        u32 dac_sr = dac_sr_read();
+        /* u32 dac_sr = dac_sr_read(); */
         p_curr_sound->enable = 0;
 #if defined(D_IS_FLASH_SYSTEM) && HAS_SRC_EN
-        if (dac_sr != p_dec->sr) {
-            log_info("need SRC, %d->%d %d", p_dec->sr, dac_sr, output_ch);
-            p_curr_sound = link_src_sound(p_curr_sound, cbuff_o, (void **) &p_dec->src_effect, p_dec->sr, dac_sr, output_ch);
+        log_info("output_sr %d; input sr %d ", output_sr, p_dec->sr);
+        if ((dec_ctl & BIT_SRC_FORCE) || (output_sr != p_dec->sr)) {
+            log_info("need SRC, %d->%d %d", p_dec->sr, output_sr, output_ch);
+            p_curr_sound = link_src_sound(p_curr_sound, cbuff_o, (void **) &p_dec->src_effect, p_dec->sr, output_sr, output_ch);
         } else {
             log_info("don't need SRC");
             void *src_tmp = src_hld_malloc();
@@ -273,7 +363,7 @@ dec_obj *decoder_io(void *pfile, u32 dec_ctl, dp_buff *dbuff, u8 loop)
         }
         p_curr_sound->mio = p_dec->sound.mio;
 #endif
-        /* #if AUDIO_EQ_ENABLE */
+        /* #if defined(AUDIO_HW_EQ_EN) && (AUDIO_HW_EQ_EN) */
         /* #if defined(D_IS_FLASH_SYSTEM) && HAS_SRC_EN */
         /*         void *p_eq_obj = audio_eq_open_api(output_ch, dac_sr); */
         /* #else */
@@ -293,7 +383,6 @@ dec_obj *decoder_io(void *pfile, u32 dec_ctl, dp_buff *dbuff, u8 loop)
 
         /* clear_dp(dbuff); */
 
-#if DECODER_LOOP_EN
         if (0 != loop) { // (dec_ctl & BIT_LOOP)
             p_dec->loop = loop;
             //log_info("get loop dp\n");
@@ -304,9 +393,6 @@ dec_obj *decoder_io(void *pfile, u32 dec_ctl, dp_buff *dbuff, u8 loop)
                 /* log_info(" -loop save fail!\n"); */
             }
         }
-#endif
-        p_dec->sound.enable |= B_DEC_ENABLE | B_DEC_KICK | B_DEC_FIRST;
-        kick_decoder();
         log_info("decode succ \n");
     } else {
         log_info("decode err : 0x%x\n", res);
@@ -315,6 +401,34 @@ dec_obj *decoder_io(void *pfile, u32 dec_ctl, dp_buff *dbuff, u8 loop)
             fs_file_close(&mio_pfile);
         }
 #endif
+    }
+    /* dac_fade_in_api(); */
+    //while(1)clear_wdt();
+    return p_dec;
+}
+dec_obj *decoder_io(void *pfile, u32 dec_ctl, dp_buff *dbuff, u8 loop)
+{
+    u32(*fun)(void *, void **, void *);
+    u32 res, dec_i, j;
+
+
+    int file_len = fs_file_name(pfile, (void *)g_file_sname, sizeof(g_file_sname));
+
+    dec_data_stream t_dstrm = {0};
+    t_dstrm.strm_source = pfile;
+    t_dstrm.io = (struct if_decoder_io *)&dec_io_for_file;
+    t_dstrm.reset_stream = decoder_reset_file_stream;
+
+    /* t_dstrm.strm_ctl = 0; */
+    dec_obj *p_dec = decoder_list(&t_dstrm, dec_ctl, dbuff, loop, dac_sr_read());
+    if (NULL != p_dec) {
+        p_dec->p_kick = kick_decoder_api;
+        regist_dac_channel(NULL, &p_dec->sound, p_dec->p_kick);
+        p_dec->sound.enable |= B_DEC_ENABLE | B_DEC_KICK | B_DEC_FIRST;
+        kick_decoder_api(NULL, &p_dec->sound);
+        log_info("decode succ \n");
+    } else {
+        /* log_info("decode err : 0x%x\n", res); */
     }
     /* dac_fade_in_api(); */
     //while(1)clear_wdt();
@@ -335,20 +449,17 @@ int decoder_time(dec_obj *p_dec)
 }
 
 
-
-extern void if_kick_decoder(sound_out_obj *psound, void *pkick);
-
-AT(.audio_isr_text)
-int dac_kick_api(void *psound, void *pkick)
-{
-    if_kick_decoder(psound, pkick);
-    return 0;
-}
-
 AT(.audio_isr_text)
 void kick_decoder(void)
 {
     bit_set_swi(0);
+}
+
+AT(.audio_isr_text)
+void kick_decoder_api(void *p_stream_in, void *psound)
+{
+    ((sound_out_obj *)psound)->enable |= B_DEC_KICK;
+    kick_decoder();
 }
 
 
@@ -364,7 +475,7 @@ void irq_decoder_ret(dec_obj *obj, u32 ret)
         midi_error_play_end_cb(obj, ret);
         return;
     }
-    if (0 != ret) {
+    if ((0 != ret) && (0x60 != (ret & 0x60))) {
         log_info("decoder ret : 0x%x\n", ret);
         if (MAD_ERROR_F1X_START_ADDR == ret) {
             /* ret = MAD_ERROR_PLAY_END;  */
@@ -381,6 +492,9 @@ void irq_decoder_ret(dec_obj *obj, u32 ret)
     case MAD_ERROR_F1X_START_ADDR:
     case MAD_ERROR_FF_FR_FILE_END:
         obj->sound.enable |= B_DEC_ERR;
+        break;
+    case MAD_ERROR_STREAM_NODATA:
+        log_info("run no data\n");
         break;
     default:
         break;
@@ -420,7 +534,7 @@ void decoder_soft_hook(void)
 #endif
 }
 
-bool decoder_stop_phy(dec_obj *obj, DEC_STOP_WAIT wait, void *p_dp, bool fade)
+bool decoder_stop_phy(dec_obj *obj, IS_WAIT dec_stop_wait, void *p_dp, bool fade, bool(*unregist_func)(void *))
 {
     if (NULL == obj) {
         return 0;
@@ -434,19 +548,19 @@ bool decoder_stop_phy(dec_obj *obj, DEC_STOP_WAIT wait, void *p_dp, bool fade)
     obj->sound.enable &= ~B_DEC_RUN_EN;
     get_dp(obj, p_dp);
     /* dac_fade_out_api(200); */
-    if (NO_WAIT != wait) {
-        /* log_info("decode stop wait!\n"); */
+    if (NO_WAIT != dec_stop_wait) {
+        /* log_info("decode stop dec_stop_wait!\n"); */
         while (obj->sound.enable & B_DEC_OBUF_EN) {
             if (false == dac_cbuff_active(&obj->sound)) {
                 break;
             }
         }
-        /* log_info("decode stop wait ok!\n"); */
+        /* log_info("decode stop dec_stop_wait ok!\n"); */
     } else {
-        /* log_info("decode stop no wait!\n"); */
+        /* log_info("decode stop no dec_stop_wait!\n"); */
     }
 
-    /* #if AUDIO_EQ_ENABLE */
+    /* #if defined(AUDIO_HW_EQ_EN) && (AUDIO_HW_EQ_EN) */
     /*     audio_eq_close_api(); */
     /*     obj->sound.info &= ~B_EQ; */
     /* #endif */
@@ -455,13 +569,17 @@ bool decoder_stop_phy(dec_obj *obj, DEC_STOP_WAIT wait, void *p_dp, bool fade)
 #if HAS_MIO_EN
     d_mio_close(&obj->sound.mio);
 #endif
-    unregist_dac_channel(&obj->sound);
+    if (unregist_func) {
+        unregist_func(&obj->sound);
+    } else {
+        log_error("dec_stop unregist_func null!\n");
+    }
     if (NULL != obj->src_effect) {
 #if HAS_SRC_EN
         src_reless(&obj->src_effect);
 #endif
     }
-#if AUDIO_EQ_ENABLE
+#if defined(AUDIO_HW_EQ_EN) && (AUDIO_HW_EQ_EN)
     if (NULL != obj->eq_effect) {
         eq_reless(&obj->eq_effect);
     }
@@ -473,16 +591,16 @@ bool decoder_stop_phy(dec_obj *obj, DEC_STOP_WAIT wait, void *p_dp, bool fade)
 /*
   @brief    decoder_stop
   @param    *obj:解码器句柄
-            wait:是否等待解码器消耗完剩余样点
+            dec_stop_wait:是否等待解码器消耗完剩余样点
             *p_dp:解码器断点buf
   @return   0:解码器已停止工作或句柄为NULL
             1:解码器停止成功
   @note     解码器停止成功后会保存断点信号到p_dp中
  */
 /*----------------------------------------------------------------------------*/
-bool decoder_stop(dec_obj *obj, DEC_STOP_WAIT wait, void *p_dp)
+bool decoder_stop(dec_obj *obj, IS_WAIT dec_stop_wait, void *p_dp)
 {
-    return decoder_stop_phy(obj, wait, p_dp, 1);
+    return decoder_stop_phy(obj, dec_stop_wait, p_dp, 1, unregist_dac_channel);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -595,7 +713,10 @@ u32 decoder_get_flen(void *priv)
 {
     dec_obj *obj = priv;
     u32 flen = 0;
-    fs_get_fsize(obj->p_file, &flen);
-    log_info("flen:%d \n", flen);
+    struct vfs_attr fattr = {0};
+    fs_get_attrs(obj->p_file, &fattr);
+    log_info("flen:%d \n", fattr.fsize);
+    flen = fattr.fsize;
     return flen;
 }
+

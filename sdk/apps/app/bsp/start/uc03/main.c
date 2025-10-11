@@ -35,6 +35,8 @@
 #include "asm/debug.h"
 #include "wdt.h"
 
+#include "my_malloc.h"
+#include "sys_timer.h"
 /* #include "vm.h" */
 /* #include "asm/power_interface.h" */
 /* #include "power_api.h" */
@@ -54,8 +56,9 @@
 //extern void dac_api_test_demo(void);
 extern void app(void);
 extern void mask_init(void *exp_hook, void *pchar, void *clk_hook, void *emit_hook);
-extern void mask_init_for_app(void);
 extern void debug_init();
+extern const u8 config_exception_enable;
+extern void sd_mask_init(u32 idle_cnt_max, void *notify_hook, void *get_buf_hook, void *deal_event_hook, void *user_hookfun_hook, void *debug_hook);
 
 
 /* AT("audio.text.cache.L3"); */
@@ -114,6 +117,32 @@ size_t strlen(const char *s)
     return sc - s;
 }
 
+static void sd_debug(u32 idx)
+{
+    if (idx == E_SD_RECEIVE_DATA_TIMEOUT || idx == E_SD_SEND_ACMD41_TIMEOUT) {
+        wdt_clear();
+    }
+    /* if (idx >= E_SD_STATUS) { */
+    /*     log_noinfo("sd_status:0x%x\n", idx); */
+    /* } else { */
+    /*     log_noinfo("sd_info:0x%x\n", idx); */
+    /* } */
+}
+
+void mask_init_for_app(void)
+{
+    if (config_exception_enable) {
+        mask_init(exception_analyze, putchar, clk_get, device_status_emit);
+    } else {
+        mask_init(NULL, putchar, clk_get, device_status_emit);
+    }
+
+//--------------------------
+#if TFG_SD_EN
+    sd_mask_init(5, NULL, NULL, NULL, NULL, sd_debug);
+#endif
+}
+
 __attribute__((noreturn))
 void c_main(int cfg_addr)
 {
@@ -141,8 +170,12 @@ void c_main(int cfg_addr)
 
     /* gpio_clk_out(IO_PORTC_00, CLK_OUT_HSB); */
 
-    log_info("time & date %s %s \n  OTP c_main\n", __TIME__, __DATE__);
+    log_info("time & date %s %s \n  OTP-c_main\n", __TIME__, __DATE__);
 
+    my_malloc_init();
+#if SYS_TIMER_EN
+    sys_timer_init();
+#endif
     power_reset_source_dump();
     power_wakeup_reason_dump();
     sys_power_init();

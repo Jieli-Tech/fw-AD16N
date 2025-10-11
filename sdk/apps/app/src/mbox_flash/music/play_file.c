@@ -184,7 +184,7 @@ static SEL_FILE_MODE mbox_select_logic_file(MBOX_MUSIC_CMD file_cmd, u32 findex,
 
 #ifdef FOLDER_PLAY_EN
     if ((play_mode == REPEAT_FOLDER) && (file_cmd == FILE_CMD_PLAY_BY_INDEX)) {
-        /* log_info("clear play mode!\n"); */
+        /* log_info("clear play dec_stop_wait!\n"); */
         play_mode = pctl[0].play_mode = REPEAT_ALL;
     }
 #endif
@@ -263,7 +263,7 @@ __sel_file_repeat_all:
     return 0;
 }
 
-bool music_play_control(MBOX_MUSIC_CMD cmd, u32 index, DEC_STOP_WAIT mode)
+bool music_play_control(MBOX_MUSIC_CMD cmd, u32 index, IS_WAIT dec_stop_wait)
 {
     u32 err, dev_cmd, file_cmd, dindex, findex;
     u8 err_flag = 0;
@@ -299,7 +299,7 @@ __mpc_device_control_part:
         goto __mpc_no_effetive_dev_deal;
     }
 
-    decoder_stop(pctl[0].p_dec_obj, mode, pctl[0].pdp);
+    decoder_stop(pctl[0].p_dec_obj, dec_stop_wait, pctl[0].pdp);
     dac_fade_out_api();
     fs_dev_close(&pctl[0]);
     if (err_device > MAX_DEVICE) {
@@ -307,7 +307,7 @@ __mpc_no_effetive_dev_deal:
         log_debug("err_device_break!\n");
         pctl[0].dev_index = NO_DEVICE;
         SET_UI_MAIN(MENU_IDLE);
-        UI_menu(MENU_IDLE);//无设备在线时显示IDLE
+        UI_menu(MENU_IDLE, 0);//无设备在线时显示IDLE
         return 0;
     }
 
@@ -345,7 +345,8 @@ __mpc_no_effetive_dev_deal:
 
     /*--------------- 挂载物理设备 ---------------*/
 __mpc_pick_one:
-    UI_menu(MENU_WAIT);//物理操作选择设备时显示WAIT
+    //log_info("__mpc_pick_one");
+    UI_menu(MENU_WAIT, 0);//物理操作选择设备时显示WAIT
     err = device_mount(&pctl[0], &dev_scan_info[pctl[0].dev_index]);
     if (err) {
         log_info("pick_dev err:0x%x\n", err);
@@ -366,9 +367,9 @@ __mpc_pick_one:
 
     /*--------------- 文件选择操作 ---------------*/
 __mpc_file_control_part:
-    decoder_stop(pctl[0].p_dec_obj, mode, pctl[0].pdp);
+    //log_info("__mpc_file_control_part");
+    decoder_stop(pctl[0].p_dec_obj, dec_stop_wait, pctl[0].pdp);
     dac_fade_out_api();
-    clear_dp_buff(pctl[0].pdp);
 
     err = device_status(pctl[0].dev_index, 0);
     if (0 != err) {
@@ -393,7 +394,7 @@ __mpc_play_file:
     sysmem_pre_erase_api();
 
     SET_UI_MAIN(MENU_MUSIC_MAIN);
-    UI_menu(MENU_FILENUM);//解码前显示文件号
+    UI_menu(MENU_FILENUM, (int)&pctl[0]);//解码前显示文件号
 
     pctl[0].p_dec_obj = NULL;
     if (BIT_FDEC_DP & pctl[0].flag) {
@@ -407,6 +408,10 @@ __mpc_play_file:
     }
 
     if (NULL != pctl[0].p_dec_obj) {
+        if (pctl[0].p_dec_obj->eq != NULL) {
+            err = pctl[0].p_dec_obj->eq(dec_eq_mode);
+            log_info("cur dec_eq dec_stop_wait:%d \n", err);
+        }
         /* log_info("DEOCDE SUCCC\n"); */
         err_device = 0;
         /* 启动解码成功记录活跃设备 */

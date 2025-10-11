@@ -42,6 +42,7 @@
 #define IOCTL_SET_POWER_DOWN            45
 #define IOCTL_RELEASE_POWER_DOWN        46
 #define IOCTL_SET_PROTECT_INFO          47
+#define IOCTL_SET_SFC_READ              48
 
 #define IOCTL_GET_ID 					100
 #define IOCTL_GET_SECTOR_SIZE			101

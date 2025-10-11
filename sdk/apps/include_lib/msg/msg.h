@@ -68,6 +68,28 @@ enum {
     MSG_MIDICTRL_CHANNAL_NEXT,
     MSG_MIDICTRL_PITCH_BEND_UP,
     MSG_MIDICTRL_PITCH_BEND_DOWN,
+    //rf_radio
+    MSG_SENDER_START,
+    MSG_SENDER_WAITING_START_ACK,
+    MSG_SENDER_START_ACK_SUCC,
+    MSG_SENDER_START_ACK_FAIL,
+    MSG_SENDER_STOP,
+    MSG_SENDER_STOP_NOW,
+    MSG_RECEIVER_START,
+    MSG_RECEIVER_STOP,
+    MSG_BLE_ROLE_SWITCH,
+    MSG_RF_STATUS_ERR,
+    //rf_remote_controller
+    MSG_MENU,
+    MSG_UP,
+    MSG_DOWN,
+    MSG_RETURN,
+    MSG_CONFIRM,
+    MSG_MAINPAGE,
+    MSG_POWER,
+    MSG_SPEAKER,
+    MSG_LEFT,
+    MSG_RIGHT,
     //others
     MSG_NEXT_MODE,
 
@@ -149,9 +171,11 @@ enum {
     MSG_TIME_WAKEUP,
     MSG_ALARM,
     MSG_POWER_DOWN,
-
+    /* 注释start */
+    /* 应用为了节省代码将插U盘和插卡消息分支写在一起，注释包含的两个消息中间不可插入其他消息，否则影响设备升级 */
     MSG_USB_DISK_IN,          //以下顺序不可随意调整
     MSG_SDMMCA_IN,
+    /* 注释end */
     MSG_SDMMCB_IN,
     MSG_EXTFLSH_IN,
     MSG_USB_DISK_OUT,
@@ -174,6 +198,10 @@ enum {
     MSG_UP_KEY_LIFT,
     MSG_DOWN_KEY_LIFT,
 
+    MSG_DEC_OTHER_FORMAT_END,
+    MSG_DEC_OTHER_FORMAT_ERR,
+    MSG_DEC_OTHER_FORMAT_LOOP,
+
     //系统相关消息，库会使用到，不能更改
     MSG_F1A1_FILE_END = 0x800,
     MSG_F1A1_FILE_ERR,
@@ -192,6 +220,18 @@ enum {
     MSG_WAV_FILE_END,
     MSG_WAV_FILE_ERR,
     MSG_WAV_LOOP,
+    MSG_OPUS_FILE_END,
+    MSG_OPUS_FILE_ERR,
+    MSG_OPUS_LOOP,
+    MSG_IMA_FILE_END,
+    MSG_IMA_FILE_ERR,
+    MSG_IMA_LOOP,
+    MSG_SPEEX_FILE_END,
+    MSG_SPEEX_FILE_ERR,
+    MSG_SPEEX_LOOP,
+    MSG_SBC_FILE_END,
+    MSG_SBC_FILE_ERR,
+    MSG_SBC_LOOP,
     MSG_WFILE_FULL,
 
     MSG_OTG_IN,
@@ -202,10 +242,21 @@ enum {
     MSG_PC_MIC,
 
     MSG_ECHO_EFF,
-    MSG_EQ_SW,
+    MSG_HW_EQ_SW,
+    MSG_DEC_EQ,
 
     MSG_CFG_RX_DATA,
+
+    // 蓝牙BLE相关消息
+    MSG_BLE_CONNECT_COMPLETE = 0x900,/*蓝牙已连接*/
+    MSG_BLE_DISCONNECT_COMPLETE,    /*蓝牙已断开连接*/
+    MSG_BLE_TESTBOX_UPDATE_START,   /*蓝牙测试盒BLE升级*/
+    MSG_BLE_APP_UPDATE_START,       /*APP_BLE升级*/
+    MSG_UART_TESTBOX_UPDATE_START, /*蓝牙测试盒UART升级*/
     MSG_COMMON_MAX,//common最大消息
+
+    //提示音播放消息
+    MSG_TEST_DEMO,
     NO_MSG = 0x0fff,
 };
 
@@ -219,6 +270,23 @@ enum {
     MSG_CBUF_ERROR = -5,
 };
 
+// 除去f1a,f2a,a,mp3,midi,wav其他解码格式结束，错误，循环统归为一个
+#define EVENT_OPUS_END       EVENT_DEC_OTHER_FORMAT_END
+#define EVENT_OPUS_ERR       EVENT_DEC_OTHER_FORMAT_ERR
+#define EVENT_OPUS_LOOP      EVENT_DEC_OTHER_FORMAT_LOOP
+
+#define EVENT_IMA_END      	 EVENT_DEC_OTHER_FORMAT_END
+#define EVENT_IMA_ERR      	 EVENT_DEC_OTHER_FORMAT_ERR
+#define EVENT_IMA_LOOP     	 EVENT_DEC_OTHER_FORMAT_LOOP
+
+#define EVENT_SPEEX_END      EVENT_DEC_OTHER_FORMAT_END
+#define EVENT_SPEEX_ERR      EVENT_DEC_OTHER_FORMAT_ERR
+#define EVENT_SPEEX_LOOP     EVENT_DEC_OTHER_FORMAT_LOOP
+
+#define EVENT_SBC_END      	 EVENT_DEC_OTHER_FORMAT_END
+#define EVENT_SBC_ERR      	 EVENT_DEC_OTHER_FORMAT_ERR
+#define EVENT_SBC_LOOP    	 EVENT_DEC_OTHER_FORMAT_LOOP
+
 //DEV_ONLINE
 
 #define MSG_HEADER_BYTE_LEN     2
@@ -228,7 +296,12 @@ enum {
 #define MSG_TYPE_BIT_LEN        12
 #define MSG_PARAM_BIT_LEN       (MSG_HEADER_BYTE_LEN*8-MSG_TYPE_BIT_LEN)
 
+#ifdef CUT_RAM_BUF_ENABLE
+#define MAX_POOL			32
+#else
 #define MAX_POOL			128
+#endif
+
 
 #define NO_EVENT			0xffff
 
@@ -237,50 +310,61 @@ enum {
 #define EVENT_F1A1_LOOP     2
 #define EVENT_F1A2_END      3
 #define EVENT_F1A2_ERR      4
-#define EVENT_F1A2_LOOP    5
+#define EVENT_F1A2_LOOP     5
 
 #define EVENT_MIDI_END      6
 #define EVENT_MIDI_ERR      7
-//                        --8
-#define EVENT_A_END         9
-#define EVENT_A_ERR         10
-#define EVENT_A_LOOP        11
 
-#define EVENT_MP3_END       12
-#define EVENT_MP3_ERR       13
-#define EVENT_MP3_LOOP      14
+#define EVENT_A_END         8
+#define EVENT_A_ERR        	9
+#define EVENT_A_LOOP        10
 
-#define EVENT_WAV_END       15
-#define EVENT_WAV_ERR       16
-#define EVENT_WAV_LOOP      17
+#define EVENT_MP3_END       11
+#define EVENT_MP3_ERR       12
+#define EVENT_MP3_LOOP      13
 
-#define EVENT_APP_SW_ACTIVE	18
-#define EVENT_WFILE_FULL    19
+#define EVENT_WAV_END       14
+#define EVENT_WAV_ERR       15
+#define EVENT_WAV_LOOP      16
 
-#define         EVENT_OTG_IN   20
-#define         EVENT_OTG_OUT  21
-#define         EVENT_UDISK_IN 22
-#define         EVENT_UDISK_OUT    23
-#define         EVENT_PC_IN    24
-#define         EVENT_PC_OUT   25
-#define         EVENT_PC_SPK   26
-#define         EVENT_PC_MIC   27
-#define 		EVENT_SD0_IN	   28
-#define 		EVENT_SD0_OUT   29
-#define			EVENT_AUX_IN   30
-#define         EVENT_AUX_OUT  31
-#define 		EVENT_EXTFLSH_IN	32
+#define EVENT_DEC_OTHER_FORMAT_END        17
+#define EVENT_DEC_OTHER_FORMAT_ERR        18
+#define EVENT_DEC_OTHER_FORMAT_LOOP       19
 
-#define EVENT_HALF_SECOND	31
+#define EVENT_APP_SW_ACTIVE 20
+#define EVENT_WFILE_FULL   	21
+
+#define EVENT_OTG_IN        22
+#define EVENT_OTG_OUT       23
+#define EVENT_UDISK_IN      24
+#define EVENT_UDISK_OUT     25
+#define EVENT_PC_IN         26
+#define EVENT_PC_OUT        27
+#define EVENT_PC_SPK        28
+#define EVENT_PC_MIC        29
+#define EVENT_SD0_IN        30
+#define EVENT_SD0_OUT       31
+#define EVENT_AUX_IN        32
+#define EVENT_AUX_OUT       33
+#define EVENT_EXTFLSH_IN    34
+
+#define EVENT_OTA_UPDATE            35
+#define EVENT_TEXTBOX_BLUE_UPDATE   36
+#define EVENT_TEXTBOX_UART_UPDATE   37
+
+#define EVENT_HALF_SECOND   38
+
 
 
 bool get_event_status(u32 event);
 void clear_one_event(u32 event);
 int get_msg(int len, int *msg);
+int get_msg_phy(int len, int *msg, bool idle);
 int post_event(int event);
 int post_msg(int argc, ...);
 void clear_all_message(void);
 void message_init();
+bool has_sys_event(void);
 
 
 #endif

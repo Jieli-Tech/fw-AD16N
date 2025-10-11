@@ -30,6 +30,8 @@ void audio_analog_open(void);
 
 bool ladc_capless_init(u32 delay);
 void dac_power_on(u32 sr);
+void dac_power_off();
 
+bool audio_clk_open_check(void);
 
 #endif

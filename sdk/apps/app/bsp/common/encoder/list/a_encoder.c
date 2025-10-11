@@ -9,6 +9,7 @@
 #include "typedef.h"
 #include "hwi.h"
 #include "a_encode_lib.h"
+#include "lib_enc_a.h"
 
 #include "circular_buf.h"
 
@@ -35,19 +36,20 @@ const u16 a_enc_sr_tab[] = {
 };
 
 
-cbuffer_t cbuf_ima_o AT(.enc_a_data);
-u8 obuf_ima_o[1024] AT(.enc_a_data) ;
-u32 a_encode_buff[368 / 4] AT(.enc_a_data) ;
+cbuffer_t cbuf_ima_o    AT(.enc_a_data);
+u8 obuf_ima_o[1024]     AT(.enc_a_data);
+u32 a_encode_buff[A_EBUF_SIZE / 4] AT(.enc_a_data) ;
 
 enc_obj enc_a_hdl;
 
-const EN_FILE_IO a_enc_io = {
-    &enc_a_hdl,      //input跟output函数的第一个参数，解码器不做处理，直接回传，可以为NULL
-    enc_input,
-    enc_output,
-};
+static EN_FILE_IO a_enc_io AT(.enc_a_data);
+/* const EN_FILE_IO a_enc_io = { */
+/*     &enc_a_hdl,      //input跟output函数的第一个参数，解码器不做处理，直接回传，可以为NULL */
+/*     enc_input, */
+/*     enc_output, */
+/* }; */
 
-u32 a_encode_api(void *p_file)
+u32 a_encode_api(void *p_file, void *input_func, void *output_func)
 {
     u32 buff_len, i;
     ENC_OPS *ops;
@@ -60,9 +62,16 @@ u32 a_encode_api(void *p_file)
         return 0;
     }
     /******************************************/
+
+    memset(&enc_a_hdl, 0, sizeof(enc_obj));
+    memset(&obuf_ima_o[0], 0x00, sizeof(obuf_ima_o));
+    memset(&a_encode_buff[0], 0x00, sizeof(a_encode_buff));
     cbuf_init(&cbuf_ima_o, &obuf_ima_o[0], sizeof(obuf_ima_o));
     /* debug_puts("A\n"); */
     // debug_puts("B\n");
+    a_enc_io.priv        = &enc_a_hdl;
+    a_enc_io.input_data  = input_func;
+    a_enc_io.output_data = output_func;
     enc_a_hdl.p_file = p_file;
     /* debug_u32hex((u32)p_file); */
     enc_a_hdl.p_ibuf = REC_ADC_CBUF; //adc_hdl.p_adc_cbuf;//&cbuf_ima_i;
@@ -76,7 +85,7 @@ u32 a_encode_api(void *p_file)
         }
     }
     if (i == ARRAY_SIZE(a_enc_sr_tab)) {
-        log_error("a encode sample rate is not matched!\n");
+        log_error("a encode sample rate %d is not matched!\n", enc_a_hdl.info.sr);
         return 0;
     }
     enc_a_hdl.info.br = enc_a_hdl.info.sr / 1000 * 4;

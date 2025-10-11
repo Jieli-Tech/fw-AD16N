@@ -9,9 +9,8 @@
 #include "common.h"
 #include "app_config.h"
 #include "device.h"
-#include "norflash.h"
-#include "sd.h"
-#include "gpio.h"
+/* #include "norflash.h" */
+/* #include "sd.h" */
 #include "msg.h"
 #include "usb/host/usb_storage.h"
 #include "usb/otg.h"
@@ -25,27 +24,59 @@
 // *INDENT-OFF*
 #if TFG_EXT_FLASH_EN
 #include "norflash.h"
-const struct spi_platform_data spi1_p_data = {
-    .port = {
-        TFG_SPI_CLK_PORT_SEL,
-        TFG_SPI_DO_PORT_SEL,
-        TFG_SPI_DI_PORT_SEL,
+#include "gpio.h"
+struct spi_platform_data spix_p_data[HW_SPI_MAX_NUM] = {
+    //spi0
+    {0},
+    //spi1
+    {
+        .port = {
+            TFG_SPI_CLK_PORT_SEL,//clk
+            TFG_SPI_DO_PORT_SEL, //do
+            TFG_SPI_DI_PORT_SEL, //di
+            0xff, //d2
+            0xff, //d3
+            TFG_SPI_CS_PORT_SEL,//cs
+        },
+        .role = SPI_ROLE_MASTER,
+        .mode = TFG_SPI_WORK_MODE,
+        .bit_mode = SPI_FIRST_BIT_MSB,
+        .cpol = 0,//clk level in idle state:0:low,  1:high
+        .cpha = 0,//sampling edge:0:first,  1:second
+        .clk  = 10000000,
     },
-    .mode = TFG_SPI_WORK_MODE,
-    .role = SPI_ROLE_MASTER,
-    .clk = 10000000,
+#if SUPPORT_SPI2
+    //spi2
+    {
+        .port = {
+            IO_PORTA_00, //clk any io
+            IO_PORTA_01, //do  any io
+            IO_PORTA_02, //di  any io
+            0xff,//d2
+            0xff,//d3
+            0xff,//cs
+        },
+        .role = SPI_ROLE_MASTER,
+        .mode = SPI_MODE_BIDIR_1BIT,
+        .bit_mode = SPI_FIRST_BIT_MSB,
+        .cpol = 0,//clk level in idle state:0:low,  1:high
+        .cpha = 0,//sampling edge:0:first,  1:second
+        .clk  = 1000000L,
+    }
+#endif
 };
 NORFLASH_DEV_PLATFORM_DATA_BEGIN(norflash_data)
     .spi_hw_num = TFG_SPI_HW_NUM,
     .spi_cs_port = TFG_SPI_CS_PORT_SEL,
     .spi_read_width = TFG_SPI_READ_DATA_WIDTH,
-    .spi_pdata = &spi1_p_data,
+    .spi_pdata = &spix_p_data[TFG_SPI_HW_NUM],
 NORFLASH_DEV_PLATFORM_DATA_END()
 extern const struct device_operations norflash_dev_ops;
 #endif
 
 #if TFG_SD_EN
 #include "sd.h"
+#include "gpio.h"
 SD0_PLATFORM_DATA_BEGIN(sd0_data)
     .port = {
         SDMMC_CMD_IO,//CMD
@@ -175,55 +206,6 @@ REGISTER_DEVICES(device_table) = {
 #endif
 };
 // *INDENT-ON*
-
-int	devices_init_api()
-{
-#if (TCFG_PC_ENABLE || TCFG_UDISK_ENABLE)
-    usb_dev_ops.init = usb_otg_init;
-#endif
-    set_device_node((struct dev_node *)device_node_begin, (struct dev_node *)device_node_end);
-
-    return devices_init();
-}
-
-/* volatile u8 test_flag = 0;//固件三部测试使用 */
-int device_status_emit(const char *device_name, const u8 status)
-{
-    int event = 0;
-    log_info("device_name:%s status:%d \n", device_name, status);
-
-    if (!strcmp(device_name, "sd0")) {
-        log_info(">>>>>>>sd ");
-        if (status) {
-            post_event(EVENT_SD0_IN);
-            log_noinfo("online \n");
-        } else {
-            post_event(EVENT_SD0_OUT);
-            log_noinfo("offline \n");
-        }
-    } else if (!strncmp(device_name, "otg:h", 5)) {
-        log_info(">>>>>>>udisk ");
-        if (status == 1) {
-            post_event(EVENT_OTG_IN);
-            log_noinfo("online \n");
-            /* test_flag = 1; */
-        } else {
-            post_event(EVENT_OTG_OUT);
-            log_noinfo("offline \n");
-            /* test_flag = 2; */
-        }
-    } else if (!strncmp(device_name, "otg:s", 5)) {
-        log_info(">>>>>>>pc ");
-        if (status) {
-            post_event(EVENT_PC_IN);
-            log_noinfo("online \n");
-        } else {
-            post_event(EVENT_PC_OUT);
-            log_noinfo("offline \n");
-        }
-    }
-    return 0;
-}
 
 
 

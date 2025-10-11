@@ -14,11 +14,20 @@
 #ifndef _TYPEDEF_H_
 #define _TYPEDEF_H_
 
-#include "asm_type.h"
+// #include "asm_type.h"
 #include "cpu.h"
 // #include "sfr.h"
 #include "string.h"
 
+typedef unsigned char   u8, bool, BOOL, bit1, uint8_t, BaseType_t;
+typedef char            s8;
+typedef unsigned short  u16, uint16_t;
+typedef signed short    s16;
+typedef unsigned int    u32, tu8, tu16, tbool, tu32, uint32_t;
+typedef signed int      s32;
+typedef unsigned long long u64;
+
+#define  OS_MUTEX volatile int
 
 #define _WEAK_	        __attribute__((weak))
 #define _WEAKREF_	    __attribute__((weakref))
@@ -84,6 +93,11 @@
 #define TRUE    1
 #define false    0
 #define true    1
+
+typedef enum  {
+    NO_WAIT = 0,
+    NEED_WAIT = 1,
+} IS_WAIT;
 
 #ifndef NULL
 #define NULL    0

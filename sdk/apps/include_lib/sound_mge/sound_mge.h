@@ -18,6 +18,7 @@
 #define B_REC_RUN        BIT(9)
 #define B_DEC_FIRST      BIT(10)
 
+#define B_DEC_NO_INDATA  BIT(11)
 // #define B_LOUDSPEAKER    BIT(10)
 
 //sound.info bits list
@@ -41,6 +42,11 @@ typedef struct _sound_out_obj {
     u32  para;
     u8 info;
 } sound_out_obj;
+
+typedef struct _sound_stream_obj {
+    void *p_ibuf;
+    u32  kick_thr;//输入数据kick门槛值
+} sound_stream_obj;
 
 typedef struct _EFFECT_OBJ__ {
     void *p_si;                                     /*point to sound in*/

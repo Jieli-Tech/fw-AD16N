@@ -170,11 +170,12 @@ void local_irq_disable();
 /*     while (1);                     */
 /* }                                  */
 
-
+// #include "log.h"
+extern int printf(const char *format, ...);
 #define ASSERT(a,...)   \
 		do { \
 			if(!(a)){ \
-				log_error("ASSERT: "#a" "__VA_ARGS__); \
+				printf("ASSERT: "#a" "__VA_ARGS__); \
 			} \
 		}while(0);
 

@@ -14,14 +14,6 @@
 #ifndef __ASM_TYPE_H_
 #define __ASM_TYPE_H_
 
-typedef unsigned char   u8, bool, BOOL, bit1, uint8_t, BaseType_t;
-typedef char            s8;
-typedef unsigned short  u16, uint16_t;
-typedef signed short    s16;
-typedef unsigned int    u32, tu8, tu16, tbool, tu32, uint32_t;
-typedef signed int      s32;
-typedef unsigned long long u64;
-
-#define  OS_MUTEX volatile int
+#include "typedef.h"
 
 #endif

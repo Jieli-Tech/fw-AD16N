@@ -1,0 +1,10 @@
+#ifndef PLATFORM_DEFINE_H
+#define PLATFORM_DEFINE_H
+
+#define AT_MIDI(x)
+#define AT_MIDI_CODE
+#define AT_MIDI_CONST
+#define AT_MIDI_SPARSE_CODE
+#define AT_MIDI_SPARSE_CONST
+
+#endif

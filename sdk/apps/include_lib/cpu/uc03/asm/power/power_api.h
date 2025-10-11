@@ -154,6 +154,12 @@ void lvd_reset_en();
 
 void lvd_wkup_en();
 
+u32 get_lvd_en(void);
+u32 get_lvd_level(void);
+u32 get_lvd_vol(void);
+
 bool is_flash_pg_keep();
+
+#include "power_manage.h"
 
 #endif

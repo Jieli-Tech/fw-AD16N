@@ -8,6 +8,7 @@
 #include "usb/device/usb_stack.h"
 #include "usb/device/descriptor.h"
 #include "usb/device/uac_audio.h"
+#include "usb/device/usb_suspend_resume.h"
 
 #include "app_config.h"
 
@@ -28,7 +29,7 @@ static const u8 sDeviceDescriptor[] = { //<Device Descriptor
     0x00,       // bDeviceProtocol: none
     EP0_SETUP_LEN,//EP0_LEN,      // bMaxPacketSize0: 8/64 bytes
     'J', 'L',     // idVendor: 0x4a4c - JL
-    '5', '4',     // idProduct: chip id
+    0x55, 0x41,     // idProduct: chip id
     0x00, 0x01,     // bcdDevice: version 1.0
     0x01,       // iManufacturer: Index to string descriptor that contains the string <Your Name> in Unicode
     0x02,       // iProduct: Index to string descriptor that contains the string <Your Product Name> in Unicode
@@ -88,7 +89,7 @@ static const u8 sConfigDescriptor[] = {	//<Config Descriptor
     0,//bNumInterfaces: 在set_descriptor函数里面计算
     0x01,    //bConfigurationValue - ID of this configuration
     0x00,    //Unused
-#if USB_ROOT2
+#if USB_ROOT2 || USB_SUSPEND_RESUME
     0xA0,    //Attributes:Bus Power remotewakeup
 #else
     0x80,    //Attributes:Bus Power
@@ -104,7 +105,9 @@ static const u8 serial_string[] = {
     0x34, 0x00, 0x30, 0x00, 0x39, 0x00, 0x36, 0x00, 0x42, 0x00, 0x32, 0x00, 0x32, 0x00, 0x45, 0x00,
     0x37, 0x00
 };
-
+static const u8 ee_string[] = {0x12, 0x03, 0x4D, 0x00, 0x53, 0x00, 0x46, 0x00, 0x54,
+                               0x00, 0x31, 0x00, 0x30, 0x00, 0x30, 0x00, 0x90, 0x00
+                              };
 const u8 *usb_get_string_desc(u32 id)
 {
     const u8 *pstr = uac_get_string(id);
@@ -138,5 +141,34 @@ const struct usb_device_descriptor_t *usb_get_desc_config()
     desc_t.config_desc = sConfigDescriptor;
 
     return &desc_t;
+}
+
+void get_device_descriptor(u8 *ptr)
+{
+    memcpy(ptr, sDeviceDescriptor, USB_DT_DEVICE_SIZE);
+}
+void get_language_str(u8 *ptr)
+{
+    memcpy(ptr, LANGUAGE_STR, LANGUAGE_STR[0]);
+}
+void get_manufacture_str(u8 *ptr)
+{
+    memcpy(ptr, MANUFACTURE_STR, MANUFACTURE_STR[0]);
+}
+void get_product_str(u8 *ptr)
+{
+    memcpy(ptr, product_string, product_string[0]);
+}
+void get_iserialnumber_str(u8 *ptr)
+{
+    memcpy(ptr, serial_string, serial_string[0]);
+}
+void get_string_ee(u8 *ptr)
+{
+    memcpy(ptr, ee_string, ee_string[0]);
+}
+const u8 *usb_get_config_desc()
+{
+    return sConfigDescriptor;
 }
 #endif

@@ -50,7 +50,7 @@ bool get_dp(dec_obj *obj, dp_buff *dbuff)
     /* log_info("-----get_dp over\n"); */
     return bres;
 }
-u32 dp_buff_len(void)
+u32 dp_buff_len()
 {
     dp_buff *p_dbuf = (void *)0;
     return sizeof(dp_buff) - ((u32)&p_dbuf->buff[0] - (u32)p_dbuf);
@@ -58,8 +58,12 @@ u32 dp_buff_len(void)
 void *check_dp(dp_buff *dbuff)
 {
     u16 crc;
+    if (0 == dbuff) {
+        return 0;
+    }
     u32 len = dbuff->len;
-    if ((0 == dbuff) || (0 == len) || (len > dp_buff_len())) {
+
+    if ((0 == len) || (len > dp_buff_len())) {
         /* log_info("  check decoder point buf null\n"); */
         return 0;
     }

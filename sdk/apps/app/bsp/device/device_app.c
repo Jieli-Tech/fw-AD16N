@@ -11,7 +11,8 @@
 #include "device.h"
 #include "device_app.h"
 #include "errno-base.h"
-#include "update/update.h"
+#include "update/code_v1/update_v1.h"
+#include "dev_update.h"
 
 /* #define LOG_TAG_CONST       NORM */
 #define LOG_TAG_CONST       OFF
@@ -148,9 +149,25 @@ u32 device_status(u32 index, bool mode)
     }
 }
 
-#if defined(TFG_DEV_UPGRADE_SUPPORT) && (1 == TFG_DEV_UPGRADE_SUPPORT)
+char *get_device_name(u32 index)
+{
+    return (char *)device_name[index];
+}
+
+#if TFG_DEV_UPGRADE_SUPPORT
+#if defined(UPDATE_V2_EN) && (1 == UPDATE_V2_EN)
+//V2的文件名传到全局变量
+#define DEVICE_TRY_TO_UPDATE(device_name, ufw_file_name)  dev_update_check(device_name)
+#else
+#define DEVICE_TRY_TO_UPDATE(device_name, ufw_file_name)  try_to_upgrade(device_name, ufw_file_name)
+#endif
+#endif
+
 void device_update(u8 update_dev)
 {
-    try_to_upgrade((char *)device_name[update_dev], TFG_UPGRADE_FILE_NAME);
-}
+#if TFG_DEV_UPGRADE_SUPPORT
+    log_info("%s \n", (char *)device_name[update_dev]);
+    u32 err = DEVICE_TRY_TO_UPDATE((char *)device_name[update_dev], TFG_UPGRADE_FILE_NAME);
+    log_error("dev update err 0x%x\n", err);
 #endif
+}

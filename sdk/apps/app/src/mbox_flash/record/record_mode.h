@@ -25,6 +25,7 @@ typedef struct _Encode_Control {
     void *device;               //编码设备句柄
     void *pfs;                  //编码文件系统句柄
     void *pfile;                //编码文件句柄
+    void *enc_obj;
     union {
         u32 rec_file_index;     //nor_fs最新文件号
         char *rec_file_path;    //fat_fs最新文件路径

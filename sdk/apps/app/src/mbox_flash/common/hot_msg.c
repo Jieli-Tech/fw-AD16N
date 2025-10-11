@@ -4,8 +4,10 @@
 #include "msg.h"
 #include "app.h"
 #include "wdt.h"
-#include "saradc.h"
+#include "adc_api.h"
+#if TCFG_CHARGE_ENABLE
 #include "charge.h"
+#endif
 #include "power_api.h"
 #include "ui_api.h"
 #include "tick_timer_driver.h"
@@ -17,6 +19,8 @@
 #include "usb/usb_config.h"
 #include "usb/device/hid.h"
 #include "usb/device/msd.h"
+
+#include "update.h"
 
 #define LOG_TAG_CONST       NORM
 #define LOG_TAG             "[hot_msg]"
@@ -44,6 +48,7 @@ void music_vol_update(void)
 void ap_handle_hotkey(u16 key)
 {
     u8 vol = 0;
+    int err = 0;
     switch (key) {
     case MSG_500MS:
         app_power_scan();
@@ -63,7 +68,7 @@ void ap_handle_hotkey(u16 key)
         vol = dac_vol('-', 255);
 __app_vol_deal:
         log_info("VOL:%d \n", vol);
-        UI_menu(MENU_MAIN_VOL);
+        UI_menu(MENU_MAIN_VOL, 0);
         break;
         //-------------设备上线
 #if TCFG_UDISK_ENABLE
@@ -90,14 +95,26 @@ __app_vol_deal:
         usb_stop();
         break;
 #endif
-#if defined(TFG_DEV_UPGRADE_SUPPORT) && (1 == TFG_DEV_UPGRADE_SUPPORT)
-    case MSG_USB_DISK_IN:
+    case MSG_USB_DISK_IN: //应用为了节省代码将插U盘和插卡消息分支写在一起，中间不可插入其他消息，否则影响设备升级
+        log_info("udisk in\n");
     case MSG_SDMMCA_IN:
         if (time_before(maskrom_get_jiffies(), 150)) {
             break;//上电1.5s内不响应设备上线消息
         }
+#if TFG_DEV_UPGRADE_SUPPORT
         u8 update_dev = key - MSG_USB_DISK_IN;
         device_update(update_dev);
+#endif
+        break;
+
+#if defined(UPDATE_V2_EN) && (1 == UPDATE_V2_EN)
+    case MSG_BLE_APP_UPDATE_START:
+    /* 手机APP升级 */
+    case MSG_BLE_TESTBOX_UPDATE_START:
+    /* 测试盒蓝牙升级 */
+    case MSG_UART_TESTBOX_UPDATE_START:
+        /* 测试盒串口升级 */
+        app_update_handle(key);
         break;
 #endif
 
@@ -131,7 +148,7 @@ __app_vol_deal:
             Input_Number = 0;
         }
         Input_Number = Input_Number * 10 + key;
-        UI_menu(MENU_INPUT_NUMBER);
+        UI_menu(MENU_INPUT_NUMBER, 0);
         break;
 #endif
     }

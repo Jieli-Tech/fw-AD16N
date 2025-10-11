@@ -17,6 +17,8 @@ typedef struct _HOWLING_HDL {
     u32 update;
 } HOWLING_HDL;
 const int FRESHIFT_SPEED_MODE_QUALITY = 2; //滤波器阶数参数：2<=>8;阶数越大，抑制效果越好，但对速度要求更高
+const int FRESHIFT_USE_LONG_FILTER = 1;
+const int FRESHIFT_USE_BAND_RESTICT = 1;
 HOWLING_HDL howling_hdl_save AT(.howling_data);
 u32 howling_work_buf[3612 / 4] AT(.howling_data);
 
@@ -24,7 +26,7 @@ void *pitchshift_howling_api(void *obuf, u32 sr, void **ppsound)
 {
     HOWLING_PITCHSHIFT_PARM phparm = {0};
     phparm.ps_parm                 = -200;   //等比移频参数，-350到350，归一化系数为8192
-    phparm.fs_parm                 = 10;      //线性移频参数，-10到10，单位Hz
+    phparm.fs_parm                 = 10;     //线性移频，单位Hz，移频方式要选择FS，移动多少Hz就配多少Hz，向高频移取正数，向低频移取负数，配置的采样率要和声音输入源的采样率一致
     phparm.effect_v                = EFFECT_HOWLING_PS; //开关位，可以为 EFFECT_HOWLING_PS或者 EFFECT_HOWLING_FS,或者 EFFECT_HOWLING_FS | EFFECT_HOWLING_PS
     HOWLING_PITCHSHIFT_FUNC_API *ops;
     ops = (HOWLING_PITCHSHIFT_FUNC_API *)get_howling_ps_func_api();
@@ -107,5 +109,24 @@ void *howling_phy(void *obuf, void *dbuf, HOWLING_PITCHSHIFT_PARM *parm, u32 sr,
     ops->open(howling_hdl_ptr, sr, &howling_hdl->parm, &howling_hdl->io);
     return howling_obj;
 }
+
+void update_howling_fs_parm(void *dbuf, u32 sr, s16 new_fs)
+{
+
+    HOWLING_PITCHSHIFT_FUNC_API *ops;
+    ops = (HOWLING_PITCHSHIFT_FUNC_API *)get_howling_ps_func_api(); //接口获取
+
+    HOWLING_HDL *howling_hdl = &howling_hdl_save;
+    howling_hdl->parm.fs_parm = new_fs;
+
+    unsigned int *howling_hdl_ptr = (unsigned int *)dbuf;
+    ops->open(howling_hdl_ptr, sr, &howling_hdl->parm, NULL);
+}
+
+void update_howling_fs_parm_api(u32 sr, s16 new_fs)
+{
+    update_howling_fs_parm(&howling_work_buf[0], sr, new_fs);
+}
+
 
 #endif

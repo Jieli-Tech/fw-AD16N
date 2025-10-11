@@ -11,4 +11,8 @@
 void touch_key_init(void);
 u8 key_filter(u8 key);
 u8 get_touch_key_value(void);
+
+
+extern const key_interface_t key_touch_info;
+
 #endif

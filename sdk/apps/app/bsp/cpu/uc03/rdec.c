@@ -3,9 +3,10 @@
 #include "gpio.h"
 #include "clock.h"
 #include "rdec.h"
-#include "log.h"
 
+#define LOG_TAG_CONST       NORM
 #define LOG_TAG             "[rdec]"
+#include "log.h"
 
 struct  rdec {
     u8 init;
@@ -29,10 +30,7 @@ RDEC_REG *rdec_get_reg(u8 index)
 
 static void __rdec_port_init(u8 port)
 {
-    gpio_set_pull_down(port, 0);
-    gpio_set_pull_up(port, 1);
-    gpio_set_die(port, 1);
-    gpio_set_direction(port, 1);
+    gpio_set_mode(IO_PORT_SPILT(port), PORT_INPUT_PULLUP_10K);
 
 }
 ___interrupt
@@ -58,9 +56,8 @@ static void rdec_port_init(const struct rdec_device *rdec)
 
     log_info("rdec->sin_port0 = %d\n", rdec->sin_port0);
     log_info("rdec->sin_port1 = %d\n", rdec->sin_port1);
-
-    gpio_set_fun_input_port(rdec->sin_port0, PFI_RDEC0_DAT0);
-    gpio_set_fun_input_port(rdec->sin_port1, PFI_RDEC0_DAT1);
+    gpio_set_function(IO_PORT_SPILT(rdec->sin_port0), PORT_FUNC_RDEC0_PORT0);
+    gpio_set_function(IO_PORT_SPILT(rdec->sin_port1), PORT_FUNC_RDEC0_PORT1);
 }
 static void log_rdec_info()
 {

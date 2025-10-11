@@ -3,7 +3,7 @@
 #include "config.h"
 #if ECHO_EN
 #define LOG_TAG_CONST       NORM
-#define LOG_TAG             "[normal]"
+#define LOG_TAG             "[echo_api]"
 #include "log.h"
 
 #define MAX_RATE 48000

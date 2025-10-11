@@ -2,10 +2,13 @@
 #include "vfs.h"
 #include "gpio.h"
 #include "clock.h"
-#include "timer.h"
+/* #include "timer.h" */
+#include "app_modules.h"
+
+#if defined(HAS_MIO_EN) && (HAS_MIO_EN)
 
 #define LOG_TAG_CONST       NORM
-#define LOG_TAG             "[normal]"
+#define LOG_TAG             "[mio_api]"
 #include "log.h"
 
 #define MIO_EN				0
@@ -30,11 +33,11 @@ void mio_a_pwm_init(u32 chl)
     gpio_set_pull_down(MIO_API_PWM_PORT, 0);
     gpio_set_direction(MIO_API_PWM_PORT, 0);
     gpio_set_die(MIO_API_PWM_PORT, 1);
-    gpio_och_sel_output_signal(IO_PORTA_15, OUTPUT_CH_SIGNAL_TIMER0_PWM);
+    gpio_och_sel_output_signal(IO_PORTA_15, OCH_TIMER0_PWM);
     JL_TIMER0->CON = 0;
-    SFR(JL_TIMER0->CON, 10, 4, TIMER_SRC_STD_24M);      //时钟源选择std24m
+    SFR(JL_TIMER0->CON, 10, 4, 6);      //时钟源选择std24m
     u32 timer_clk = 24000000;
-    SFR(JL_TIMER0->CON, 4, 4, TIMER_PRESCALE_2);        //pset=2
+    SFR(JL_TIMER0->CON, 4, 4, 4);        //pset=2
     JL_TIMER0->CNT = 0;								    //清计数值
     JL_TIMER0->PRD = timer_clk / (2 * PWM_FRE);			//设置周期
     JL_TIMER0->CON |= BIT(8) | (0b01 << 0); 			//计数模式
@@ -79,4 +82,4 @@ void mio_a_hook_init(sound_mio_obj *obj)
     obj->io_init = mio_a_io_init;
     obj->io_run = mio_a_io_run;
 }
-
+#endif

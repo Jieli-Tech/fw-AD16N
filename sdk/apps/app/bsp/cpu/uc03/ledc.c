@@ -25,10 +25,8 @@ void ledc_isr(void)
 static u8 t_div[9] = {1, 2, 3, 6, 12, 24, 48, 96, 192};
 void ledc_init(const struct ledc_platform_data *arg)
 {
-    gpio_set_die(arg->port, 1);
-    gpio_set_direction(arg->port, 0);
-    gpio_set_pull_up(arg->port, 0);
-    gpio_set_pull_down(arg->port, 0);
+    gpio_set_mode(IO_PORT_SPILT(arg->port), PORT_INPUT_FLOATING);
+    gpio_set_mode(IO_PORT_SPILT(arg->port), PORT_OUTPUT_LOW);
 
     /* gpio_set_fun_output_port(arg->port, FO_GP_OCH5, 0, 1); */
     /* SFR(JL_IOMC->OCH_CON0, 25, 5, 9);  //ledc_out to och5 */
@@ -36,7 +34,7 @@ void ledc_init(const struct ledc_platform_data *arg)
     /* JL_OMAP->PA4_OUT |= ((0x5 << 2) | (0x3 << 0)); //OCH5 to PA4 */
     /* JL_IOMC->OCH_CON0 |= (0x9 << 25);  //LEDC_OUT to OCH5 */
 
-    gpio_och_sel_output_signal(arg->port, OUTPUT_CH_SIGNAL_GP_LEDC);
+    gpio_set_function(IO_PORT_SPILT(arg->port), PORT_FUNC_LEDC0_OUT);
 
     //std_48M
     JL_LEDCK->CLK &= ~(0b11 << 0);

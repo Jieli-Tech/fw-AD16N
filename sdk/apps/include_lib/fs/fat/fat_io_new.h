@@ -51,6 +51,14 @@ typedef enum {
 } FS_IO_CMD;
 
 
+typedef struct __fs_partition_info {
+    // u32 offset;
+    u32 clust_size;
+    u32 total_size;
+    // u8 fs_attr;
+    u8 fs_type;
+} FS_PARTITION_INFO;
+
 //init
 s32 fat_drive_open(void **p_fs_hdl, void *p_fs_dev_info);
 s32 fat_drive_close(void **p_fs_hdl);
@@ -89,6 +97,8 @@ u32 fat_get_attrs(void *p_f_hdl, struct vfs_attr *attr);
 u32 fat_io_ctrl(void *f_p, u32 cmd, int arg);
 
 void fs_ext_setting(const char *str);  //AT(FF_API_C_API)
+
+int fat_format_deal(void **p_fs_hdl, void *device, u32 clust_size, u8 create_new);
 
 //base init
 void fat_init(void);

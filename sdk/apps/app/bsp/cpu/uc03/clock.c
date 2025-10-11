@@ -12,7 +12,7 @@ const int  clock_sys_src_use_lrc_hw = 1;
 extern void otp_init(u32 mode);
 extern void wait_cache_idle();
 
-#define LOG_TAG_CONST       NORM
+#define LOG_TAG_CONST       CLOCK
 #define LOG_TAG             "[clock]"
 #include "log.h"
 
@@ -87,7 +87,7 @@ u32 get_sys_pll_clk()
     t_sel = get_sys_pll_sel();
     clock = pll_clock_tab0[pll_ivco][t_sel];
     if (0 == clock) {
-        log_info(" sys clock info err\n");
+        log_error(" sys clock info err\n");
         return 0;
     }
     u32 t_diva = div_taba[(JL_CLOCK->CLK_CON1 >> 4) & 0x3];
@@ -533,4 +533,8 @@ int clk_get(const char *name)
     return 0;
 }
 
+int clk_set(const char *name, int clk)
+{
+    return 0;
+}
 

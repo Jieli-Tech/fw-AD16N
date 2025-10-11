@@ -15,6 +15,31 @@
 #define _CLOCK_H_
 #include "typedef.h"
 
+struct clock_critical_handler {
+    void (*enter)();
+    void (*exit)();
+};
+
+#define HSB_CRITICAL_HANDLE_REG(name, enter, exit) \
+	const struct clock_critical_handler hsb_##name \
+		 SEC_USED(.hsb_critical_txt) = {enter, exit};
+
+extern struct clock_critical_handler hsb_critical_handler_begin[];
+extern struct clock_critical_handler hsb_critical_handler_end[];
+
+#define list_for_each_loop_hsb_critical(h) \
+	for (h=hsb_critical_handler_begin; h<hsb_critical_handler_end; h++)
+
+#define LSB_CRITICAL_HANDLE_REG(name, enter, exit) \
+	const struct clock_critical_handler lsb_##name \
+		 SEC_USED(.lsb_critical_txt) = {enter, exit};
+
+extern struct clock_critical_handler lsb_critical_handler_begin[];
+extern struct clock_critical_handler lsb_critical_handler_end[];
+
+#define list_for_each_loop_lsb_critical(h) \
+	for (h=lsb_critical_handler_begin; h<lsb_critical_handler_end; h++)
+
 typedef enum {
     //96M:
     PLL_D3p5_27p4M = 0x01,
@@ -113,6 +138,7 @@ void pll_sel(u32 pll_clock, _PLL_DIV pll_div, _HSB_CLK_DIV pll_b_div);
 
 u32 sys_clock_get(void);
 int clk_get(const char *name);
+int clk_set(const char *name, int clk);
 void dump_clock_info();
 
 

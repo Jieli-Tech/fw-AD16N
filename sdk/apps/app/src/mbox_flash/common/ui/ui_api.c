@@ -1,4 +1,3 @@
-
 #pragma bss_seg(".led_ui.data.bss")
 #pragma data_seg(".led_ui.data")
 #pragma const_seg(".led_ui.text.const")
@@ -22,7 +21,7 @@
 #include "msg.h"
 
 #define LOG_TAG_CONST       NORM
-#define LOG_TAG             "[normal]"
+#define LOG_TAG             "[ui_api]"
 #include "log.h"
 
 UI_VAR UI_var;   /*UI 显示变量*/
@@ -31,11 +30,12 @@ UI_VAR UI_var;   /*UI 显示变量*/
 /**@brief   UI 显示界面处理函数
    @param   menu：需要显示的界面
    @return  无
-   @note    void UI_menu_api(u8 menu)
+   @note    void UI_menu_api(u8 menu, int arg)
 */
 /*----------------------------------------------------------------------------*/
-void UI_menu_api(u8 menu)
+void UI_menu_api(u8 menu, int arg)
 {
+    int ui_arg = arg;
     /*界面属性-非主界面自动返回*/
     if (menu == MENU_MAIN) {
         if (UI_var.bMenuReturnCnt < UI_RETURN) {
@@ -49,7 +49,10 @@ void UI_menu_api(u8 menu)
 #endif
                 {
                     UI_var.bCurMenu = UI_var.bMainMenu;
+                    UI_var.bCurArg = ui_arg;
                 }
+            } else {
+                ui_arg = UI_var.bCurArg;
             }
         } else {
             /*等待界面不重复刷新界面*/
@@ -57,6 +60,7 @@ void UI_menu_api(u8 menu)
                 return;
             }
             UI_var.bCurMenu = UI_var.bMainMenu;
+            UI_var.bCurArg = ui_arg;
         }
     } else {
         if (menu > 0x80) {  //仅在当前界面为主界面时刷新界面,例如：在主界面刷新播放时间
@@ -70,6 +74,7 @@ void UI_menu_api(u8 menu)
                 UI_var.bMenuReturnCnt = 0;
             }
             UI_var.bCurMenu = menu;
+            UI_var.bCurArg = ui_arg;
             /* if (menu != MENU_INPUT_NUMBER) { */
             /*     input_number = 0; */
             /* } */
@@ -98,16 +103,19 @@ void UI_menu_api(u8 menu)
     /*-----Music Related UI*/
     case MENU_MUSIC_MAIN:
     case MENU_PAUSE:
-        LED5X7_show_music_main();
+        LED5X7_show_music_main(ui_arg);
         break;
     case MENU_FILENUM:
-        LED5X7_show_filenumber();
+        LED5X7_show_filenumber(ui_arg);
         break;
-#if AUDIO_EQ_ENABLE
-    case MENU_EQ:
-        LED5X7_show_eq();
+#if (defined(AUDIO_HW_EQ_EN) && (AUDIO_HW_EQ_EN)) | (defined(PCM_SW_EQ_EN) && (PCM_SW_EQ_EN))
+    case MENU_HW_EQ:
+        LED5X7_show_hw_eq();
         break;
 #endif
+    case MENU_DEC_EQ:
+        LED5X7_show_dec_eq(ui_arg);
+        break;
 #if KEY_IR_EN
     case MENU_INPUT_NUMBER:
         LED5X7_show_IR_number();
@@ -115,7 +123,7 @@ void UI_menu_api(u8 menu)
 #endif
 #if 1
     case MENU_PLAYMODE:
-        LED5X7_show_playmode();
+        LED5X7_show_playmode(ui_arg);
         break;
 #endif
 

@@ -1,7 +1,7 @@
 #ifndef  __USBD_MSD_H__
 #define  __USBD_MSD_H__
 
-#include "usb/usb.h"
+#include "usb.h"
 #include "usb_stack.h"
 #include "usb/scsi.h"
 
@@ -37,7 +37,7 @@ struct msd_vat_t {
     struct msd_info info;
 };
 
-extern struct msd_vat_t msd_var;
+extern struct msd_vat_t _msd_var;
 void msd_init(void);
 
 u32 msd_desc_config(const usb_dev usb_id, u8 *ptr, u32 *cur_itf_num);

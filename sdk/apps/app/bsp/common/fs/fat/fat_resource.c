@@ -10,8 +10,9 @@
 #include "ioctl_cmds.h"
 #include "device.h"
 /* #include "mbr.h" */
-/* #include "fat/fs_file_name.h" */
+#include "fs_file_name.h"
 #include "fat/mbr.h"
+#include "app_modules.h"
 
 extern u32 __dev_read(void *p, u8 *buf, u32 addr);
 extern u32 __dev_write(void *p, u8 *buf, u32 addr);
@@ -28,12 +29,33 @@ extern u32 __dev_write(void *p, u8 *buf, u32 addr);
 /* static SWIN_BUF g_sector_buffer[MAX_DEEPTH]; */
 
 /**************************************************
-//       以下宏定义需要对应库修改
+//        文件系统功能
 **************************************************/
 #define FOPEN_LONG 0 //长文件名打开方式
 #define RENAME_ENABLE 0 //重命名使能
 #define W_WOL_ENABLE 0 //写卷标使能
 //////////////////////////////////////////////////
+//
+//================================================//
+//                  FS功能控制 					  //
+//================================================//
+#if FOPEN_LONG
+const int FATFS_LONG_NAME_ENABLE = 1; //是否支持长文件名
+#else
+const int FATFS_LONG_NAME_ENABLE = 0; //是否支持长文件名
+#endif
+
+#if RENAME_ENABLE
+const int FATFS_RENAME_ENABLE = 1; //是否支持重命名
+#else
+const int FATFS_RENAME_ENABLE = 0; //是否支持重命名
+#endif
+
+#if W_WOL_ENABLE
+const int FATFS_WRITE_VOL_ENABLE = 1; //是否支持重命名
+#else
+const int FATFS_WRITE_VOL_ENABLE = 0; //是否支持重命名
+#endif
 
 #if FOPEN_LONG
 static char lfn_buffer[LFN_MAX_SIZE] AT(.fat_buf);
@@ -41,9 +63,9 @@ static char lfn_buffer[LFN_MAX_SIZE] AT(.fat_buf);
 static FAT_SCANDEV scan_buffer AT(.fat_buf);
 /* static char ff_apis_buffer[sizeof(FF_APIS)]; */
 #if FOPEN_LONG || RENAME_ENABLE || W_WOL_ENABLE
-static char tmp_buf[512 + 260 + 256 + 6] AT(.fat_tmp_buf);
+static char fatfs_tmp_buf[512 + 260 + 256 + 6] AT(.fat_tmp_buf);
 #else
-static char tmp_buf[512] AT(.fat_tmp_buf);
+static char fatfs_tmp_buf[512] AT(.fat_tmp_buf);
 #endif
 
 #define FS_USE_MALLOC 1 //是否有malloc
@@ -52,7 +74,7 @@ static char tmp_buf[512] AT(.fat_tmp_buf);
 #else
 FATFS g_fat_fs;
 FIL g_fat_f;
-SWIN_BUF tmp_wbuf;
+SWIN_BUF fatfs_tmp_wbuf;
 #endif
 
 FATFS *fat_fshdl_alloc(void)
@@ -111,13 +133,13 @@ void fat_lfn_free(void *lfn_buffer)
 void *fat_tmp_alloc(void)
 {
     /* return  my_malloc(sizeof(FIL) + 1024, MM_FAT_TMP); */
-    memset((u8 *)&tmp_buf, 0x00, sizeof(tmp_buf));
-    return &tmp_buf;
+    memset((u8 *)&fatfs_tmp_buf, 0x00, sizeof(fatfs_tmp_buf));
+    return &fatfs_tmp_buf;
 }
 
-void *fat_tmp_free(void *tmp_buf)
+void *fat_tmp_free(void *fatfs_tmp_buf)
 {
-    /* return my_free(tmp_buf); */
+    /* return my_free(fatfs_tmp_buf); */
     return 0;
 }
 
@@ -141,15 +163,15 @@ SWIN_BUF *fat_wbuf_alloc(void)
 #if FS_USE_MALLOC
     return  my_malloc(sizeof(SWIN_BUF), MM_SWIN_BUF);
 #else
-    memset((u8 *)&tmp_wbuf, 0x00, sizeof(SWIN_BUF));
-    return &tmp_wbuf;
+    memset((u8 *)&fatfs_tmp_wbuf, 0x00, sizeof(SWIN_BUF));
+    return &fatfs_tmp_wbuf;
 #endif
 }
 
-SWIN_BUF *fat_wbuf_free(SWIN_BUF *tmp_wbuf)
+SWIN_BUF *fat_wbuf_free(SWIN_BUF *fatfs_tmp_wbuf)
 {
 #if FS_USE_MALLOC
-    return my_free(tmp_wbuf);
+    return my_free(fatfs_tmp_wbuf);
 #else
     return NULL;
 #endif
@@ -348,6 +370,11 @@ u32 fat_openbyclust_api(void *pfs, void **ppfile, u32 clust, void *parm)
     return fat_fsel((struct vfscan *)parm, pfs, FSEL_BY_SCLUST, ppfile, clust);
 }
 
+int fat_format_api(void **p_fs_hdl, void *device, u32 clust_size, u8 create_new)
+{
+    return fat_format_deal(p_fs_hdl, device, clust_size, create_new);
+}
+
 int fat_ioctl_api(void *pfile, int cmd, int arg)
 {
     switch (cmd) {
@@ -363,7 +390,7 @@ int fat_ioctl_api(void *pfile, int cmd, int arg)
     return -1;
 }
 
-#if HAS_VFS_EN
+#if (HAS_VFS_EN && FATFS_EN)
 
 const struct vfs_operations fat_vfs_ops sec_used(.vfs_operations) = {
     .fs_type = "fat",
@@ -373,6 +400,7 @@ const struct vfs_operations fat_vfs_ops sec_used(.vfs_operations) = {
     .createfile  = fat_openW_api,
     .write       = fat_write_api,
     .fdelete     = fat_delete_file_api,
+    .format      = fat_format_api,
 #endif
     .read        = fat_read_api,
     .seek        = fat_seek_api,
@@ -576,15 +604,16 @@ int fat_get_encfolder_info(void *pfs, char *folder, char *ext, u32 *last_num, u3
 #if 0
 #define SET_BP_TEST  0
 #define CREATE_DIR_TEST 0
-#define CREATE_FILE_TEST 1
+#define CREATE_FILE_TEST 0
 #define LONG_NAME_CREATE_FILE_TEST 0
-#define VFS_OPEN_BY_PATH 0
+#define VFS_OPEN_BY_PATH 1
 #define VFS_OPEN_BY_NUMBER 0
 #define VFS_DELETE_FILE 0
 #define VFS_TEST_RANDOM_READ 0
 static u8 buf_test[512];
 /* static int test_buf[1024]; */
 extern void wdt_clear(void);
+extern void force_set_sd_online(char *sdx);
 static const char scan_parm_test[] = "-t"
                                      "MP1MP2MP3WAVTXT"
                                      " -sn -r"
@@ -593,6 +622,8 @@ static const char scan_parm_test[] = "-t"
 struct vfscan			*fsn_test;//设备扫描句柄
 void fat_demo(void)
 {
+    force_set_sd_online("sd0");
+    y_printf(">>>[test]:------------------------start fatfs test----------------------------\n");
     /* void *device = device_get_dev_hdl("sd0");; */
     void *device = dev_open("sd0", NULL);
     /* void *device = dev_open("udisk0", NULL); */
@@ -777,6 +808,7 @@ __again:
 #endif
 #if VFS_OPEN_BY_PATH
 ////////////////////////////write/////////////////////////////////////////
+    y_printf(">>>[test]:open by path\n");
     /* fs_ext_setting("MP3WAVTXT"); */
     /* char path[64] = "#<{(|/4*.?"; */
     char path[64] = "/456.MP3";
@@ -791,7 +823,7 @@ __again:
     int rlen = fs_read(pfile, buf_test, 512);
     r_printf(">>>[test]:rlen = %d\n", rlen);
     log_info_hexdump(buf_test, rlen);
-    fs_fscan_release(pfs, fsn_test);
+    /* fs_fscan_release(pfs, fsn_test); */
 ///////////////////////////////////////////////////////////////////
 #endif
 
@@ -884,6 +916,7 @@ __again:
     /* fat_fs_close_api(&pfs); */
     fs_file_close(&pfile);
     fs_fs_close(&pfs);
+    dev_close(device);
 }
 #endif
 

@@ -13,13 +13,14 @@
 #include "app_config.h"
 #include "audio_dac_fade.h"
 #if KEY_IR_EN
-#include "irflt.h"
+/* #include "irflt.h" */
 #endif
 
 #define LOG_TAG_CONST       NORM
 #define LOG_TAG             "[tick]"
 #include "log.h"
 
+volatile u32 jiffies = 0;
 u8 tick_cnt;
 extern void app_timer_loop(void);
 /* ticktimer定时任务公共处理函数,tick_cnt只能由该函数改变 */
@@ -28,9 +29,10 @@ void tick_timer_loop(void)
     tick_cnt ++;
 
     if (0 == (tick_cnt % 5)) {
+        jiffies++;
         maskrom_update_jiffies();
 #if KEY_IR_EN
-        ir_timeout();
+        /* ir_timeout(); */
 #endif
         dac_fade_api();
         key_scan();

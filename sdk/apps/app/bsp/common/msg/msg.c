@@ -30,34 +30,46 @@ static const u16 event2msg[] = {
     MSG_F1A2_FILE_END,
     MSG_F1A2_FILE_ERR,
     MSG_F1A2_LOOP,          /* 5 */
+
     MSG_MIDI_FILE_END,
-    MSG_MIDI_FILE_ERR,
-    NO_MSG,
+    MSG_MIDI_FILE_ERR,    		/* 7 */
+
     MSG_A_FILE_END,
-    MSG_A_FILE_ERR,    		/* 10 */
+    MSG_A_FILE_ERR,    		/* 9 */
     MSG_A_LOOP,
+
     MSG_MP3_FILE_END,
-    MSG_MP3_FILE_ERR,
+    MSG_MP3_FILE_ERR,    		/* 12 */
     MSG_MP3_LOOP,
-    MSG_WAV_FILE_END,	/* 15 */
-    MSG_WAV_FILE_ERR,
+
+    MSG_WAV_FILE_END,
+    MSG_WAV_FILE_ERR,    		/* 15 */
     MSG_WAV_LOOP,
-    MSG_APP_SWITCH_ACTIVE,
+
+    MSG_DEC_OTHER_FORMAT_END,
+    MSG_DEC_OTHER_FORMAT_ERR,
+    MSG_DEC_OTHER_FORMAT_LOOP,
+
+    MSG_APP_SWITCH_ACTIVE,  /* 20 */
     MSG_WFILE_FULL,
 
-    MSG_OTG_IN,  /* 20 */
+    MSG_OTG_IN,             /* 22 */
     MSG_OTG_OUT,
     MSG_USB_DISK_IN,
     MSG_USB_DISK_OUT,
     MSG_PC_IN,
-    MSG_PC_OUT,  /* 25 */
-    MSG_PC_SPK,  /* 26 */
-    MSG_PC_MIC,  /* 27 */
+    MSG_PC_OUT,             /* 27 */
+    MSG_PC_SPK,             /* 28 */
+    MSG_PC_MIC,             /* 29 */
     MSG_SDMMCA_IN,
     MSG_SDMMCA_OUT,
     MSG_AUX_IN,
     MSG_AUX_OUT,
-    MSG_EXTFLSH_IN,
+    MSG_EXTFLSH_IN,         /* 34 */
+
+    MSG_BLE_APP_UPDATE_START,		/* 35 */
+    MSG_BLE_TESTBOX_UPDATE_START,	/* 36 */
+    MSG_UART_TESTBOX_UPDATE_START,	/* 37 */
 
     NO_MSG,
 };
@@ -125,6 +137,60 @@ bool get_event_status(u32 event)
     return FALSE;
 }
 
+bool has_sys_event(void)
+{
+    /* CPU_SR_ALLOC(); */
+    /* OS_ENTER_CRITICAL(); */
+    for (u32 i = 0; i < EVENT_TOTAL; i++) {
+        if (0 != event_buf[i]) {
+            return true;
+        }
+    }
+    /* OS_EXIT_CRITICAL(); */
+    return FALSE;
+}
+
+int get_msg_phy(int len, int *msg, bool idle)
+{
+    u32 param = 0;
+    u16 *t_msg = (u16 *)&param;
+    //get_msg
+    CPU_SR_ALLOC();
+    OS_ENTER_CRITICAL();
+
+    u32 tlen = cbuf_read(&msg_cbuf, (void *)t_msg, MSG_HEADER_BYTE_LEN);
+
+    if (MSG_HEADER_BYTE_LEN != tlen) {
+        /* if (MSG_HEADER_BYTE_LEN != cbuf_read(&msg_cbuf, (void *)&param, MSG_HEADER_BYTE_LEN)) { */
+        /* memset(msg, NO_MSG, len); */
+        OS_EXIT_CRITICAL();
+
+        /* log_info(" gm a 0x%x\n",param); */
+        /*get no msg,cpu enter idle.why do this? TODO*/
+        /* __builtin_pi32_idle(); */
+        if (idle) {
+            __asm__ volatile("idle");
+        }
+        msg[0] = NO_MSG;
+        return MSG_NO_MSG;
+    }
+    /* log_info(" gm a 0x%x\n",param); */
+    msg[0] = t_msg[0] & (MSG_HEADER_ALL_BIT >> MSG_PARAM_BIT_LEN);
+    u32 param_len = param >> MSG_TYPE_BIT_LEN;
+    if (param_len > (len - 1)) {
+        OS_EXIT_CRITICAL();
+        return MSG_BUF_NOT_ENOUGH;
+    }
+    u32 rlen = cbuf_read(&msg_cbuf, (void *)(msg + 1), param_len * sizeof(int));
+    if ((param_len * sizeof(int)) != rlen) {
+        OS_EXIT_CRITICAL();
+        return MSG_CBUF_ERROR;
+    }
+
+    OS_EXIT_CRITICAL();
+    return MSG_NO_ERROR;
+}
+
 int get_msg(int len, int *msg)
 {
     u32 param = 0;
@@ -142,36 +208,9 @@ int get_msg(int len, int *msg)
         OS_EXIT_CRITICAL();
         return MSG_NO_ERROR;
     }
-
-    u32 tlen = cbuf_read(&msg_cbuf, (void *)t_msg, MSG_HEADER_BYTE_LEN);
-
-    if (MSG_HEADER_BYTE_LEN != tlen) {
-        /* if (MSG_HEADER_BYTE_LEN != cbuf_read(&msg_cbuf, (void *)&param, MSG_HEADER_BYTE_LEN)) { */
-        /* memset(msg, NO_MSG, len); */
-        OS_EXIT_CRITICAL();
-
-        /* log_info(" gm a 0x%x\n",param); */
-        /*get no msg,cpu enter idle.why do this? TODO*/
-        /* __builtin_pi32_idle(); */
-        __asm__ volatile("idle");
-        msg[0] = NO_MSG;
-        return MSG_NO_MSG;
-    }
-    /* log_info(" gm a 0x%x\n",param); */
-    msg[0] = t_msg[0] & (MSG_HEADER_ALL_BIT >> MSG_PARAM_BIT_LEN);
-    u32 param_len = param >> MSG_TYPE_BIT_LEN;
-    if (param_len > (len - 1)) {
-        OS_EXIT_CRITICAL();
-        return MSG_BUF_NOT_ENOUGH;
-    }
-    u32 rlen = cbuf_read(&msg_cbuf, (void *)(msg + 1), param_len * sizeof(int));
-    if (param_len != rlen * sizeof(int)) {
-        OS_EXIT_CRITICAL();
-        return MSG_CBUF_ERROR;
-    }
-
     OS_EXIT_CRITICAL();
-    return MSG_NO_ERROR;
+
+    return get_msg_phy(len, msg, 1);
 }
 
 int post_event(int event)

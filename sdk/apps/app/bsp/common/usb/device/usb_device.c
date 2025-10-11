@@ -4,6 +4,7 @@
 #include "usb/device/msd.h"
 #include "usb/scsi.h"
 #include "usb/device/hid.h"
+#include "usb/device/custom_hid.h"
 #include "usb/device/cdc.h"
 #include "usb/usb_config.h"
 #include "usb/device/uac_audio.h"
@@ -22,6 +23,19 @@
 #define LOG_CLI_ENABLE
 
 #include "log.h"
+
+/* #define B_USB_DP_OUT   BIT(0) */
+/* #define B_USB_DM_OUT   BIT(1) */
+/* #define B_USB_DP_DIR   BIT(2) */
+/* #define B_USB_DM_DIR   BIT(3) */
+/* #define B_USB_DP_PU    BIT(4) */
+/* #define B_USB_DM_PU    BIT(5) */
+/* #define B_USB_DP_PD    BIT(6) */
+/* #define B_USB_DM_PD    BIT(7) */
+/* #define B_USB_DP_DIE   BIT(8) */
+/* #define B_USB_DM_DIE   BIT(9) */
+/* #define B_USB_DP_DIEH  BIT(10) */
+/* #define B_USB_DM_DIEH  BIT(11) */
 
 static u8 otg_prevent_detect;
 
@@ -58,18 +72,19 @@ int usb_device_mode(const usb_dev usb_id, const u32 class)
     /* usb_device_set_class(CLASS_CONFIG); */
     u8 class_index = 0;
     if (class == 0) {
-        usb_port_clr(
-            B_USB_DP_PU  | \
-            B_USB_DP_PD  | \
-            B_USB_DP_DIE | \
-            B_USB_DM_PU  | \
-            B_USB_DM_PD  | \
-            B_USB_DM_DIE
-        );
-        usb_port_set(
-            B_USB_DP_DIR | \
-            B_USB_DM_DIR
-        );
+        /* usb_port_clr( */
+        /*     B_USB_DP_PU  | \ */
+        /*     B_USB_DP_PD  | \ */
+        /*     B_USB_DP_DIE | \ */
+        /*     B_USB_DM_PU  | \ */
+        /*     B_USB_DM_PD  | \ */
+        /*     B_USB_DM_DIE */
+        /* ); */
+        /* usb_port_set( */
+        /*     B_USB_DP_DIR | \ */
+        /*     B_USB_DM_DIR */
+        /* ); */
+        gpio_set_mode(PORTUSB, 0x03, PORT_HIGHZ);
 
 
 
@@ -91,10 +106,11 @@ int usb_device_mode(const usb_dev usb_id, const u32 class)
         /* gpio_set_die(IO_PORT_DM + 2 * usb_id, 1); */
         /* gpio_set_die(IO_PORT_DP + 2 * usb_id, 1); */
 
-        usb_port_set(
-            B_USB_DP_DIE | \
-            B_USB_DM_DIE
-        );
+        /* usb_port_set( */
+        /*     B_USB_DP_DIE | \ */
+        /*     B_USB_DM_DIE */
+        /* ); */
+        gpio_set_mode(PORTUSB, 0x03, PORT_INPUT_FLOATING);
 
 #if (USB_DEVICE_CLASS_CONFIG & MASSSTORAGE_CLASS) == MASSSTORAGE_CLASS
         msd_release(usb_id);
@@ -111,14 +127,16 @@ int usb_device_mode(const usb_dev usb_id, const u32 class)
     usb_add_desc_config(usb_id, MAX_INTERFACE_NUM, NULL);
     if ((class & CDC_CLASS) == CDC_CLASS) {
 #if (USB_DEVICE_CLASS_CONFIG & CDC_CLASS)
-        usb_add_desc_config(usb_id, class_index++, audio_asso_desc_config);
-        log_info("add desc audio_association");
+        if (((class & SPEAKER_CLASS) == SPEAKER_CLASS) || ((class & MIC_CLASS) == MIC_CLASS)) {
+            usb_add_desc_config(usb_id, class_index++, audio_asso_desc_config);
+            log_info("add desc audio_association");
+        }
 #endif
     }
 
     if ((class & AUDIO_CLASS) == AUDIO_CLASS) {
 #if (USB_DEVICE_CLASS_CONFIG & AUDIO_CLASS) == AUDIO_CLASS
-        uac_register(&uac_info);
+        uac_register(&_uac_info);
         usb_add_desc_config(usb_id, class_index++, uac_audio_desc_config);
         log_info("add desc audio");
 #else
@@ -126,7 +144,7 @@ int usb_device_mode(const usb_dev usb_id, const u32 class)
 #endif
     } else if ((class & SPEAKER_CLASS) == SPEAKER_CLASS) {
 #if (USB_DEVICE_CLASS_CONFIG & SPEAKER_CLASS) == SPEAKER_CLASS
-        uac_register(&uac_info);
+        uac_register(&_uac_info);
         usb_add_desc_config(usb_id, class_index++, uac_spk_desc_config);
         log_info("add desc speaker");
 #else
@@ -134,7 +152,7 @@ int usb_device_mode(const usb_dev usb_id, const u32 class)
 #endif
     } else if ((class & MIC_CLASS) == MIC_CLASS) {
 #if (USB_DEVICE_CLASS_CONFIG & MIC_CLASS) == MIC_CLASS
-        uac_register(&uac_info);
+        uac_register(&_uac_info);
         usb_add_desc_config(usb_id, class_index++, uac_mic_desc_config);
         log_info("add desc mic");
 #else
@@ -142,9 +160,19 @@ int usb_device_mode(const usb_dev usb_id, const u32 class)
 #endif
     }
 
+    if ((class & CUSTOM_HID_CLASS) == CUSTOM_HID_CLASS) {
+#if (USB_DEVICE_CLASS_CONFIG & CUSTOM_HID_CLASS) == CUSTOM_HID_CLASS
+        custom_hid_register(0, &_custom_hid_var);
+        usb_add_desc_config(usb_id, class_index++, custom_hid_desc_config);
+        log_info("add desc std custom_hid");
+#else
+        log_error("custom_hid class not enable");
+#endif
+    }
+
     if ((class & HID_CLASS) == HID_CLASS) {
 #if (USB_DEVICE_CLASS_CONFIG & HID_CLASS) == HID_CLASS
-        hid_register(0, &hid_var);
+        hid_register(0, &_hid_var);
         usb_add_desc_config(usb_id, class_index++, hid_desc_config);
         log_info("add desc std hid");
 #else
@@ -154,7 +182,7 @@ int usb_device_mode(const usb_dev usb_id, const u32 class)
 
     if ((class & MASSSTORAGE_CLASS) == MASSSTORAGE_CLASS) {
 #if (USB_DEVICE_CLASS_CONFIG & MASSSTORAGE_CLASS) == MASSSTORAGE_CLASS
-        msd_register(&msd_var);
+        msd_register(&_msd_var);
         msd_register_disk_api();
         usb_add_desc_config(usb_id, class_index++, msd_desc_config);
         log_info("add desc msd");
@@ -184,7 +212,7 @@ int usb_device_mode(const usb_dev usb_id, const u32 class)
     }
 
     usb_device_init(usb_id);
-#if ((USB_DEVICE_CLASS_CONFIG & IAP_CLASS) || (SPK_AUDIO_RATE > 0XFFFF) || (MIC_AUDIO_RATE > 0XFFFF))
+#if (USB_DEVICE_CLASS_CONFIG & IAP_CLASS)
     user_setup_filter_install(usb_id2device(usb_id));
 #endif
     return 0;
@@ -227,52 +255,5 @@ struct usb_hotplug {
 
 void usb_hotplug_detect_plus(void *argv)
 {
-    static u8 slave_cnt = 0;
-    struct otg_dev_data *device_otg = (struct otg_dev_data *)(*(u32 *)0x00109c24);
-    struct usb_hotplug *hotplug = (struct usb_hotplug *)0x00109c28;
-    extern void usb_hotplug_detect(void *arg);
-    extern void udelay(u32);
-    u8 cur_sta = 0;
-
-    cur_sta = hotplug->state;
-    //等hotplug初始化完之后再检测
-    if (!(JL_USB->CON0 & BIT(PHY_ON))) {
-        goto __next;
-    }
-    if (hotplug->state == IDLE_MODE || hotplug->state == DISCONN_MODE) {
-        JL_USB->CON0 &= ~BIT(PDCHKDP);
-        if (device_otg->detect_mode & OTG_SLAVE_MODE) {
-            if (!otg_prevent_detect) {
-                gpio_set_pull_up(IO_PORT_DM, 1);
-                gpio_set_pull_down(IO_PORT_DM, 0);
-                udelay(20);  //延时一会等上下拉稳定
-                if (gpio_read(IO_PORT_DM)) {
-                    slave_cnt = 0;
-                } else {
-                    slave_cnt++;
-                    hotplug->host_cnt = 0;
-                    hotplug->disconn_cnt = 0;
-                }
-                gpio_set_pull_up(IO_PORT_DM, 0);
-                gpio_set_pull_down(IO_PORT_DM, 1);
-                udelay(1);
-                if (slave_cnt > device_otg->slave_online_cnt && device_otg->slave_online_cnt) {
-                    slave_cnt = 0;
-                    hotplug->charge_cnt = 0;
-                    if (usb_otg_sof_check_init(0)) {
-                        hotplug->state = PRE_SLAVE_MODE;
-                    } else {
-                        hotplug->state = SLAVE_MODE;
-                    }
-                }
-            }
-        }
-    }
-
-__next:
-    usb_hotplug_detect(0);
-
-    if (cur_sta == SLAVE_MODE && hotplug->state == DISCONN_MODE) {
-        otg_prevent_detect = 1;
-    }
+    return;
 }

@@ -28,6 +28,10 @@ SECTIONS
         *(.start.text)
         *(.*.text.const)
         *(.*.text)
+        *(.text.*)
+        *(.bark_const)
+        *(.ns_code)
+        *(.ns_sparse_code)
         *(.version)
         *(.debug)
         *(.debug.text.const)
@@ -76,6 +80,16 @@ SECTIONS
 	    KEEP(*(.tool_interface))
 	    PROVIDE(tool_interface_end = .);
 	    tool_interface_end = .;
+
+        . = ALIGN(4);
+        hsb_critical_handler_begin = .;
+        KEEP(*(.hsb_critical_txt))
+        hsb_critical_handler_end = .;
+
+        . = ALIGN(4);
+        lsb_critical_handler_begin = .;
+        KEEP(*(.lsb_critical_txt))
+        lsb_critical_handler_end = .;
 
         . = ALIGN(4);
         /* . = LENGTH(app_code) - SIZEOF(.data); */
@@ -138,6 +152,9 @@ SECTIONS
         *(.bss)
         *(.*.data.bss)
         *(.non_volatile_ram)
+        *(.msd.keep_ram)
+        *(.usb_hid.keep_ram)
+        *(.usb.keep_ram)
         _system_data_end = .;
     } > ram0
 
@@ -179,9 +196,17 @@ SECTIONS
             *(.song_sp_data)
             PROVIDE(song_speed_buf_end = .);
         }
+        .d_voicechanger
+        {
+            . = MAX(mode_music_overlay_data_end, mode_smpl_dec_ovly_end);
+            PROVIDE(voicechanger_buf_start = .);
+            . = ALIGN(4);
+            *(.voicechanger_data)
+            PROVIDE(voicechanger_buf_end = .);
+        }
         .d_a
         {
-            . = song_speed_buf_end;
+            . = MAX(voicechanger_buf_end, song_speed_buf_end);
             PROVIDE(a_buf_start = .);
             *(.a_data);
             PROVIDE(a_buf_end = .);
@@ -238,6 +263,7 @@ SECTIONS
 		{
             rec_data_start = .;
 			*(.rec_data)
+            *(.ans_data)
             rec_data_end = .;
 		}
 		.d_enc_ima

@@ -44,6 +44,7 @@ typedef enum {
 extern play_control pctl[1];
 extern u8 err_device;
 extern u8 last_dev;
+extern u8 dec_eq_mode;
 void music_app(void);
 extern u16 music_key_msg_filter(u8 key_status, u8 key_num, u8 key_type);
 #endif

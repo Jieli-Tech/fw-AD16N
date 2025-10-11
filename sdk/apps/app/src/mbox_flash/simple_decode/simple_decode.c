@@ -129,7 +129,9 @@ __simple_dec_play_file_entry:
 #endif
                 }
             } else {
-                post_msg(1, MSG_NEXT_FILE);
+                if ((E_DECODER == err) || (E_OPENBYINDEX == err)) {
+                    post_msg(1, MSG_NEXT_FILE);
+                }
             }
             break;
 
@@ -163,6 +165,7 @@ __simple_dec_play_file_entry:
 
 #if TFG_EXT_FLASH_EN
         case MSG_NEXT_DEVICE:
+            log_info("MSG_NEXT_DEVICE\n");
             if (true == simple_switch_device(&dec_pctl[0])) {
                 goto __simple_dec_play_file_entry;
             }
@@ -199,12 +202,10 @@ __simple_dec_play_file_entry:
         case MSG_CHANGE_WORK_MODE:
             goto __simple_decode_exit;
         case MSG_500MS:
-            UI_menu(MENU_MAIN);
+            UI_menu(MENU_MAIN, 0);
             if ((MUSIC_PLAY != get_decoder_status(dec_pctl[0].p_dec_obj)) && \
                 (MUSIC_PLAY != get_decoder_status(dec_pctl[1].p_dec_obj))) {
-#if SIMPLE_DEC_BP_ENABLE
                 sysmem_pre_erase_api();
-#endif
                 app_powerdown_deal(0);
             } else {
                 app_powerdown_deal(1);

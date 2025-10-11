@@ -28,6 +28,17 @@ typedef enum usb_sta {
     DEV_READY,
 } USB_STA ;
 
+struct udisk_end_desc {
+    u8 host_epout;
+    u8 target_epout;
+    u8 host_epin;
+    u8 target_epin;
+#if HUSB_MODE
+    u16 rxmaxp;
+    u16 txmaxp;
+#endif
+};
+
 struct mass_storage {
     OS_MUTEX mutex;
 
@@ -54,6 +65,7 @@ struct mass_storage {
 
     u8 read_only;
 
+    u8 cur_available_lun;
 };
 
 enum usb_async_mode {
@@ -64,7 +76,7 @@ enum usb_async_mode {
 
 #define MASS_LBA_INIT    (-2)
 
-int usb_msd_parser(struct usb_host_device *host_dev, u8 interface_num, const u8 *pBuf, struct usb_interface_info *inf);
+int usb_msd_parser(struct usb_host_device *host_dev, u8 interface_num, const u8 *pBuf);
 
 
 extern bool usb_stor_online(const struct dev_node *node);

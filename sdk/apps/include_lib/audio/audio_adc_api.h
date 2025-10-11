@@ -7,6 +7,7 @@
 typedef enum __AUDIO_ADC_MODE {
     AUDIO_ADC_MIC,
     AUDIO_ADC_LINEIN,
+    AUDIO_LINK,
 } AUDIO_ADC_MODE;
 
 
@@ -24,9 +25,15 @@ void audio_adc_off_api(void);
 
 
 void fill_audio_adc_fill(u8 *buf, u32 len);
-bool regist_audio_adc_channel(void *psound, void *kick);
+bool regist_audio_adc_channel(void *psound_pre, void *psound_later, void *kick);
 bool unregist_audio_adc_channel(void *psound);
 
+/*----------------------------------------------------------*/
+void auadc_open_mic(void);
+void auadc_open_linein(void);
 
+
+void uac_audio_adc_percent(u8 ch);
+void audio_adc_sync_once(void);
 
 #endif

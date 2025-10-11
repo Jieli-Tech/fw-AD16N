@@ -15,7 +15,7 @@
 extern const char libs_debug;
 
 #ifdef DEBUG_EN
-#define log_init(x)           uart_init(x)
+#define log_init(x)           debug_uart_init(x)
 #define log_uninit()          uart_uninit()
 #define log_u8hex(x)          put_u8hex(x)
 #else

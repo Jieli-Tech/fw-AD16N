@@ -51,8 +51,8 @@ void softoff_app(void)
     obj = decoder_io(pfile, BIT_F1A1, NULL, 0);
     if (NULL == obj) {
         log_info("fs_openbypath err : 0x%x\n", err);
-        fs_fs_close(&pfs);
         fs_file_close(&pfile);
+        fs_fs_close(&pfs);
         goto __softoff_app_deal;
     }
 

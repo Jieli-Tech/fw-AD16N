@@ -3,7 +3,7 @@
 #include "my_malloc.h"
 
 #define LOG_TAG_CONST       NORM
-#define LOG_TAG             "[normal]"
+#define LOG_TAG             "[sydf_res]"
 #include "log.h"
 
 #if 0

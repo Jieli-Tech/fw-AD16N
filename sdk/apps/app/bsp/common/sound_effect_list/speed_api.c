@@ -9,7 +9,7 @@
 #include "sound_mge.h"
 
 #define LOG_TAG_CONST       NORM
-#define LOG_TAG             "[normal]"
+#define LOG_TAG             "[speed_api]"
 #include "log.h"
 
 

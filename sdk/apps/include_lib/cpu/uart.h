@@ -6,7 +6,7 @@
 
 #define UART_DEBUG 1
 
-void uart_init();
+void debug_uart_init();
 void putchar(char a);
 char getchar(void);
 

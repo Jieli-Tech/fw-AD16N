@@ -308,14 +308,19 @@ enum {
 
 #define VLVD_SEL(sel)				P33_CON_SET(P3_VLVD_CON,  3, 3, sel)
 
+#define GET_VLVD_LEVEL()            ((P33_CON_GET(P3_VLVD_CON) >> 3) & 0x7)
+
 #define VLVD_OE(en)					p33_fast_access(P3_VLVD_CON,  BIT(2), en)
 
 #define VLVD_EXPIN_EN(en)			p33_fast_access(P3_VLVD_CON,  BIT(1), en)
 
 #define P33_VLVD_EN(en)				p33_fast_access(P3_VLVD_CON,  BIT(0), en)
 
+#define IS_LVD_EN()					(P33_CON_GET(P3_VLVD_CON) & BIT(0))
+
 #define P33_GET_VLVD_CON()			P33_CON_GET(P3_VLVD_CON)
 
+#define VLVD_LOWEST_VOL             2100
 /**************************P3_VLVD_FLT*******************************/
 #define VLVD_FLT(flt)				P33_CON_SET(P3_VLVD_FLT,  0, 2, flt)
 
@@ -615,11 +620,6 @@ enum {
 // };
 
 //RTC_CLK_SEL
-#define CLK_SEL_32K         1
-#define CLK_SEL_XOSC_DIV1   2
-#define CLK_SEL_XOSC_DIV2   3
-#define CLK_SEL_LRC         4
-
 
 /*
  *-------------------R3_RTC_CON0

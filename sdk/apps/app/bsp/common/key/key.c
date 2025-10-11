@@ -1,7 +1,10 @@
+#pragma bss_seg(".key.data.bss")
+#pragma data_seg(".key.data")
+#pragma const_seg(".key.text.const")
+#pragma code_seg(".key.text")
+#pragma str_literal_override(".key.text.const")
+
 #include "key.h"
-#include "key_drv_io.h"
-#include "key_drv_ad.h"
-#include "key_drv_mic.h"
 #include "msg.h"
 #include "app_config.h"
 #include "sine_play.h"
@@ -14,57 +17,59 @@ static u16(*key_msg_filter)(u8, u8, u8) = NULL;
 
 #if KEY_IO_EN
 #include "key_drv_io.h"
-#define D_KEY_TYPE        KEY_TYPE_IO
-#define d_key_init()      io_key_init()
-#define d_get_key_value() get_iokey_value()
-#define d_check_suport_double_click(k)   1
 #endif
 
 #if KEY_MATRIX_EN
 #include "key_drv_matrix.h"
-#define D_KEY_TYPE        KEY_TYPE_MATRIX
-#define d_key_init()      matrix_key_init()
-#define d_get_key_value() get_matrixkey_value()
-#define d_check_suport_double_click(k)   1
 #endif
 
 #if KEY_AD_EN
 #include "key_drv_ad.h"
-#define D_KEY_TYPE        KEY_TYPE_AD
-#define d_key_init()      ad_key_init()
-#define d_get_key_value() get_adkey_value()
-#define d_check_suport_double_click(k)   1
 #endif
 
 #if KEY_MIC_EN
 #include "key_drv_mic.h"
-#define D_KEY_TYPE        KEY_TYPE_MIC
-#define d_key_init()      mic_key_init()
-#define d_get_key_value() get_mickey_value()
 #define d_check_suport_double_click(k)   mic_key_check_support_double_click(k)
+#else
+#define d_check_suport_double_click(k)   1
 #endif
 
 #if KEY_IR_EN
 #include "key_ir.h"
-#define D_IRKEY_TYPE        KEY_TYPE_IR
-#define d_irkey_init()      ir_key_init()
-#define d_get_irkey_value() irkey_get_value()
 #endif
 
 #if KEY_TOUCH_EN
 #include "key_touch.h"
-#define D_TOUCHKEY_TYPE        KEY_TYPE_TOUCH
-#define d_touchkey_init()      touch_key_init()
-#define d_get_touchkey_value() get_touch_key_value()
 #endif
 
-#if ((!KEY_IO_EN) && (!KEY_MATRIX_EN) && (!KEY_AD_EN) && (!KEY_MIC_EN)&&(!KEY_TOUCH_EN))
-#define D_KEY_TYPE        0
-#define d_key_init()      asm("nop")
-#define d_get_key_value() 0xff
-#define d_check_suport_double_click(k)   1
+#if KEY_LPTOUCH_EN
+#include "key_lptouch.h"
 #endif
 
+static const key_interface_t *key_list[] = {
+#if KEY_IO_EN
+    &key_io_info,
+#endif
+#if KEY_AD_EN
+    &key_ad_info,
+#endif
+#if KEY_MATRIX_EN
+    &key_matrix_info,
+#endif
+#if KEY_MIC_EN
+    &key_mic_info,
+#endif
+#if KEY_IR_EN
+    &key_ir_info,
+#endif
+#if KEY_TOUCH_EN
+    &key_touch_info,
+#endif
+#if KEY_LPTOUCH_EN
+    &key_lptouch_info,
+#endif
+};
+static volatile u8 is_key_active = 0;
 void key_table_sel(void *msg_filter)
 {
     local_irq_disable();
@@ -75,13 +80,15 @@ void key_table_sel(void *msg_filter)
 void key_init(void)
 {
     key_puts("key init\n");
-    d_key_init();
-#if KEY_IR_EN
-    d_irkey_init();
+
+#if (KEY_IO_EN || KEY_AD_EN || KEY_MATRIX_EN || KEY_MIC_EN || KEY_IR_EN || KEY_TOUCH_EN || KEY_LPTOUCH_EN)
+    for (int i = 0; i < (sizeof(key_list) / sizeof(key_list[0])); i++) {
+        if (key_list[i]->key_init) {
+            key_list[i]->key_init();
+        }
+    }
 #endif
-#if KEY_TOUCH_EN
-    d_touchkey_init();
-#endif
+
 }
 /*----------------------------------------------------------------------------*/
 /**@brief   按键-消息转换函数
@@ -108,6 +115,38 @@ static void key2msg_emit(u8 key_status, u8 key_num, u8 key_type)
     }
 }
 
+/*----------------------------------------------------------------------------*/
+/**@brief   按键值获取函数
+   @param
+   @param
+   @param
+   @return  key_io_t类型按键参数，包含按键类型和键值
+   @note
+*/
+/*----------------------------------------------------------------------------*/
+key_io_t get_key_value(void)
+{
+    u8 i;
+    key_io_t key;
+    key.key_type = NO_KEY;
+
+#if (KEY_IO_EN || KEY_AD_EN || KEY_MATRIX_EN || KEY_MIC_EN || KEY_IR_EN || KEY_TOUCH_EN || KEY_LPTOUCH_EN)
+    for (i = 0; i < (sizeof(key_list) / sizeof(key_list[0])); i++) {
+        if (key_list[i]->key_get_value) {
+            key.key_num = key_list[i]->key_get_value();
+
+            if (NO_KEY != key.key_num) {
+                key.key_type = key_list[i]->key_type;
+                /* log_printf("get_key_num = %d\n", key_num); */
+                return key;
+            }
+        }
+    }
+#endif
+
+    key.key_num = NO_KEY;
+    return key;
+}
 
 /*----------------------------------------------------------------------------*/
 /**@brief   按键-消息转换函数,按键产生顺序：短按抬起/长按-->连按
@@ -123,7 +162,7 @@ void key_scan()
     static volatile u8 last_key = NO_KEY;
     static volatile u8 key_press_counter = 0;
     volatile u8 cur_key = 0, key_status = 0, back_last_key = 0;
-    /* key_io_t key; */
+    key_io_t key;
 
 #if (KEY_DOUBLE_CLICK_EN)
     static u8 double_last_key = 0;
@@ -150,27 +189,14 @@ void key_scan()
 
     cur_key = NO_KEY;
     back_last_key = last_key;
-
-    cur_key = d_get_key_value();
-#if KEY_IR_EN
-    if (cur_key == NO_KEY) {
-        cur_key = d_get_irkey_value();
-        if (cur_key != NO_KEY) {
-            key_type = D_IRKEY_TYPE;
-        }
-    } else
-#endif
-#if KEY_TOUCH_EN
-        if (cur_key == NO_KEY) {
-            cur_key = d_get_touchkey_value();
-            if (cur_key != NO_KEY) {
-                key_type = D_TOUCHKEY_TYPE;
-            }
-        } else
-#endif
-        {
-            key_type = D_KEY_TYPE;
-        }
+    key = get_key_value();
+    cur_key = key.key_num;
+    if (key.key_type != NO_KEY) {
+        key_type = key.key_type;
+        is_key_active = 35;      //35*10Ms
+    } else if (is_key_active) {
+        is_key_active --;
+    }
 
     if (cur_key == last_key) {                          //长时间按键
         if (cur_key == NO_KEY) {
@@ -225,4 +251,19 @@ void key_scan()
         key2msg_emit(key_status, back_last_key, key_type);
     }
 }
+
+#include "power_interface.h"
+void key_active_set(P33_IO_WKUP_EDGE edge)
+{
+    is_key_active = 35;      //35*10Ms
+}
+u8 key_idle_query(void)
+{
+    return !is_key_active;
+}
+REGISTER_LP_TARGET(key_lp_target) = {
+    .name = "key",
+    .is_idle = key_idle_query,
+};
+
 

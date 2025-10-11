@@ -23,7 +23,9 @@
 #define LOG_TAG             "[loud_spk]"
 #include "log.h"
 
-#define LOUDSPK_SR  48000
+#if LOUDSPEAKER_EN
+
+#define LOUDSPK_SR  SR_DEFAULT
 
 void loudspeaker_app(void)
 {
@@ -61,7 +63,7 @@ void loudspeaker_app(void)
         case MSG_CHANGE_WORK_MODE:
             goto __loudspk_app_exit;
         case MSG_500MS:
-            UI_menu(MENU_MAIN);
+            UI_menu(MENU_MAIN, 0);
         default:
             ap_handle_hotkey(msg[0]);
             break;
@@ -76,3 +78,4 @@ __loudspk_app_exit:
     dac_sr_api(dac_sr);
     key_table_sel(NULL);
 }
+#endif

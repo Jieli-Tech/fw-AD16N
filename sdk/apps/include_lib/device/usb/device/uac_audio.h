@@ -441,7 +441,7 @@ struct uac_iso_endpoint_descriptor {
 #define UAC1_STATUS_TYPE_IRQ_PENDING		(1 << 7)
 #define UAC1_STATUS_TYPE_MEM_CHANGED		(1 << 6)
 
-#include "usb/usb.h"
+#include "usb.h"
 struct uac1_status_word {
     __u8 bStatusType;
     __u8 bOriginator;
@@ -460,8 +460,8 @@ struct uac_info_t {
     int(*uac_get_spk_vol)();
     int(*uac_mic_stream_read)(u8 *buf, u32 len);
 
-    u16 spk_audio_rate;
-    u16 mic_audio_rate;
+    u32 spk_audio_rate;
+    u32 mic_audio_rate;
     u8 spk_channle;
     u8 mic_channle;
     u8 spk_audio_res;
@@ -487,7 +487,7 @@ struct uac_info_t {
 
 };
 
-extern struct uac_info_t uac_info;
+extern struct uac_info_t _uac_info;
 void uac_init(void);
 
 u32 uac_spk_desc_config(const usb_dev usb_id, u8 *ptr, u32 *cur_itf_num);

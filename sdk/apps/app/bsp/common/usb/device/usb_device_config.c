@@ -3,10 +3,11 @@
 #include "usb_config.h"
 #include "usb/device/descriptor.h"
 #include "usb/device/usb_stack.h"
+#include "usb/device/usb_suspend_resume.h"
 #include "irq.h"
 #include "gpio.h"
 #include "clock.h"
-#include "fusb_pll_trim.h"
+/* #include "fusb_pll_trim.h" */
 #define LOG_TAG_CONST       USB
 #define LOG_TAG             "[USB]"
 #define LOG_ERROR_ENABLE
@@ -82,50 +83,6 @@ void *usb_get_ep_buffer(const usb_dev usb_id, u32 ep)
     return ep_buffer;
 }
 
-extern void *usb_get_request();
-static void uac_config_desc_intercept(struct usb_device_t *usb_device)
-{
-    u8 standard_config_desc[6] = {0x80, 0x06, 0x00, 0x02, 0x00, 0x00};  //不需要看请求的数据长度
-    u8 standard_open_spk[4] = {0x01, 0x0b, 0x01, 0x00}; //spk的接口号会变化，这里不看接口号
-    struct usb_ctrlrequest *request;
-    request = usb_get_request();
-    /* printf_buf(request, 8); */
-    if (!memcmp(standard_config_desc, request, sizeof(standard_config_desc)) && (usb_device->bsetup_phase == USB_EP0_STAGE_IN)) {
-        u8 *config_desc = usb_get_setup_buffer(usb_device);
-#if ((USB_DEVICE_CLASS_CONFIG & 0x06) == SPEAKER_CLASS)
-        log_info("SPKEAKER_CLASS\n");
-        config_desc[9 + 39 + (8 + SPK_CHANNEL) + 35] = DW3BYTE(SPK_AUDIO_RATE);
-        config_desc[9 + 39 + 40] = LOBYTE(SPK_FRAME_LEN);
-        config_desc[9 + 39 + 41] = HIBYTE(SPK_FRAME_LEN);
-#elif ((USB_DEVICE_CLASS_CONFIG & 0x06) == (SPEAKER_CLASS | MIC_CLASS))
-        log_info("SPKEAKER_CLASS | MIC_CLASS\n");
-        config_desc[9 + 68 + (8 + SPK_CHANNEL) + (8 + MIC_CHANNEL) + 35] = DW3BYTE(SPK_AUDIO_RATE);
-        config_desc[9 + 68 + (8 + SPK_CHANNEL) + (8 + MIC_CHANNEL) + 40] = LOBYTE(SPK_FRAME_LEN);
-        config_desc[9 + 68 + (8 + SPK_CHANNEL) + (8 + MIC_CHANNEL) + 41] = HIBYTE(SPK_FRAME_LEN);
-        config_desc[9 + 68 + (8 + SPK_CHANNEL) + (8 + MIC_CHANNEL) + 52 + 35] = DW3BYTE(MIC_AUDIO_RATE);
-        config_desc[9 + 68 + (8 + SPK_CHANNEL) + (8 + MIC_CHANNEL) + 52 + 40] = LOBYTE(MIC_FRAME_LEN);
-        config_desc[9 + 68 + (8 + SPK_CHANNEL) + (8 + MIC_CHANNEL) + 52 + 41] = HIBYTE(MIC_FRAME_LEN);
-        /* #elif ((USB_DEVICE_CLASS_CONFIG & 0x06) == (SPEAKER_CLASS | MASSSTORAGE_CLASS)) */
-        /*         log_info("SPKEAKER_CLASS | MASSSTORAGE_CLASS\n"); */
-        /*         config_desc[9 + 23 + 49 + 35] = DW3BYTE(SPK_AUDIO_RATE); */
-        /*         config_desc[9 + 23 + 49 + 40] = LOBYTE(SPK_FRAME_LEN); */
-        /*         config_desc[9 + 23 + 49 + 41] = HIBYTE(SPK_FRAME_LEN); */
-        /* #elif ((USB_DEVICE_CLASS_CONFIG & 0x06) == (SPEAKER_CLASS | MIC_CLASS | MASSSTORAGE_CLASS)) */
-        /*         log_info("SPKEAKER_CLASS | MIC_CLASS | MASSSTORAGE_CLASS\n"); */
-        /*         config_desc[9 + 23 + 87 + 35] = DW3BYTE(SPK_AUDIO_RATE); */
-        /*         config_desc[9 + 23 + 87 + 40] = LOBYTE(SPK_FRAME_LEN); */
-        /*         config_desc[9 + 23 + 87 + 41] = HIBYTE(SPK_FRAME_LEN); */
-#else
-        log_error("USB_DEVICE_CLASS_CONFIG ERROR\n");
-#endif
-    }
-
-    if (!memcmp(standard_open_spk, request, sizeof(standard_open_spk))) {
-        JL_USB->EP3_RLEN = SPK_FRAME_LEN;
-        printf("JL_USB %d\n", JL_USB->EP3_RLEN);
-    }
-}
-
 void usb_isr(const usb_dev usb_id)
 {
     u32 intr_usb, intr_usbe;
@@ -143,21 +100,16 @@ void usb_isr(const usb_dev usb_id)
 
     if (intr_usb & INTRUSB_SUSPEND) {
         log_error("usb suspend");
-        usb_sie_close(usb_id);
+        usb_slave_suspend(usb_id);
     }
     if (intr_usb & INTRUSB_RESET_BABBLE) {
         log_error("usb reset");
-        SFR(JL_USB_IO->CON0, 14, 2, 0b10);  //USB_IO_CON0 SR
-        JL_USB_IO->CON0 &= ~ BIT(OUTRES);   //输出电阻默认关闭
         usb_reset_interface(usb_device);
-#if FUSB_PLL_TRIM
-        /* fusb_pll_trim(USB_TRIM_HAND, 10); */
-        fusb_pll_trim(USB_TRIM_AUTO, 10);
-#endif
-
+        usb_slave_reset(usb_id);
     }
     if (intr_usb & INTRUSB_RESUME) {
         log_error("usb resume");
+        usb_slave_resume(usb_id);
     }
 
     if (intr_tx & BIT(0)) {
@@ -165,9 +117,6 @@ void usb_isr(const usb_dev usb_id)
             usb_interrupt_rx[usb_id][0](usb_device, 0);
         } else {
             usb_control_transfer(usb_device);
-#if (SPK_AUDIO_RATE > 0xFFFF || MIC_AUDIO_RATE > 0xFFFF)   //88.2k, 96K
-            uac_config_desc_intercept(usb_device);
-#endif
         }
     }
 
@@ -236,9 +185,10 @@ u32 usb_device_config(const usb_dev usb_id)
 
     usb_var_init(usb_id, &(usb_config_var[usb_id]->usb_ep_addr));
     usb_setup_init(usb_id, &(usb_config_var[usb_id]->usb_setup), usb_config_var[usb_id]->usb_setup_buffer);
-    usb_device_set_desc(usb_id, usb_get_desc_config());
+    /* usb_device_set_desc(usb_id, usb_get_desc_config()); */
     struct usb_device_t *usb_device = usb_id2device(usb_id);
     usb_device->usb_g_set_intr_hander = usb_g_set_intr_hander;
+    usb_slave_suspend_resume_init(usb_id);
     return 0;
 }
 
@@ -249,7 +199,7 @@ u32 usb_release(const usb_dev usb_id)
     usb_setup_init(usb_id, NULL, NULL);
 
     usb_config_var[usb_id] = NULL;
-    usb_device_set_desc(usb_id, NULL);
+    /* usb_device_set_desc(usb_id, NULL); */
 
     return 0;
 }

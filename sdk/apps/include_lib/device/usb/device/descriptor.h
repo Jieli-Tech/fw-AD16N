@@ -1,7 +1,7 @@
 #ifndef  __DESCRIPTOR_H__
 #define  __DESCRIPTOR_H__
 
-#include "usb/usb.h"
+#include "usb.h"
 
 void get_device_descriptor(u8 *ptr);
 void get_language_str(u8 *ptr);

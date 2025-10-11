@@ -7,7 +7,7 @@
 extern dec_obj dec_midi_ctrl_hld;
 extern const u8 midi_evt[10];
 extern const decoder_ops_t midi_ctrl_ops;
-u32 midi_ctrl_decode_api(void *p_file, void **ppdec, void *p_dp_buf);
+u32 midi_ctrl_decode_api(void *strm, void **ppdec, void *p_dp_buf);
 int midi_ctrl_cfg_init(void);
 u32 midi_ctrl_buff_api(dec_buf *p_dec_buf);
 

@@ -3,6 +3,12 @@
 
 #include "audio_enc_api.h"
 
+//obuf
+#define MP2_ENC_OBUF_SIZE           (1024)
+//dbuf
+#define STEREO_MP2_ENC_DBUF_SIZE    (9584)
+#define MONO_MP2_ENC_DBUF_SIZE      (6736)
+
 #if 1//def WIN32
 #define AT_MP2(x)
 #define AT_MP2_CODE

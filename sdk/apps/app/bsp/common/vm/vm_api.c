@@ -2,7 +2,7 @@
 #include "app_modules.h"
 
 #define LOG_TAG_CONST       NORM
-#define LOG_TAG             "[normal]"
+#define LOG_TAG             "[vm_api]"
 #include "log.h"
 
 #define LABEL_INDEX_LEN_CRC_SIZE        (4)

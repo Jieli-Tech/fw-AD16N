@@ -17,8 +17,8 @@
 /* #include "common/code/mem/mem_heap_lwip.h" */
 
 #if defined(TCFG_NORFLASH_DEV_ENABLE)// && TCFG_NORFLASH_DEV_ENABLE
-#define LOG_TAG_CONST       OFF
-/* #define LOG_TAG_CONST       FLASH */
+/* #define LOG_TAG_CONST       OFF */
+#define LOG_TAG_CONST       FLASH
 #define LOG_TAG            "[flash]"
 #define LOG_ERROR_ENABLE
 #define LOG_INFO_ENABLE
@@ -60,23 +60,24 @@ static struct norflash_info _norflash = {
     .part_list = nor_part,
 };
 
-int _norflash_read(u32 addr, u8 *buf, u32 len, u8 cache);
+static int _norflash_read(u32 addr, u8 *buf, u32 len, u8 cache);
 int _norflash_eraser(u8 eraser, u32 addr);
 
 #define spi_cs_init() \
     do { \
-        gpio_set_die(_norflash.spi_cs_io, 1); \
-        gpio_set_direction(_norflash.spi_cs_io, 0); \
+        gpio_hw_set_die(IO_PORT_SPILT(_norflash.spi_cs_io), 1); \
+        gpio_hw_set_direction(IO_PORT_SPILT(_norflash.spi_cs_io), 0); \
         gpio_write(_norflash.spi_cs_io, 1); \
     } while (0)
 
 #define spi_cs_uninit() \
     do { \
-        gpio_set_die(_norflash.spi_cs_io, 0); \
-        gpio_set_direction(_norflash.spi_cs_io, 1); \
-        gpio_set_pull_up(_norflash.spi_cs_io, 0); \
-        gpio_set_pull_down(_norflash.spi_cs_io, 0); \
+        gpio_hw_set_die(IO_PORT_SPILT(_norflash.spi_cs_io), 0); \
+        gpio_hw_set_direction(IO_PORT_SPILT(_norflash.spi_cs_io), 1); \
+        gpio_hw_set_pull_up(IO_PORT_SPILT(_norflash.spi_cs_io), 0); \
+        gpio_hw_set_pull_down(IO_PORT_SPILT(_norflash.spi_cs_io), 0); \
     } while (0)
+
 #define spi_cs_h()                  gpio_write(_norflash.spi_cs_io, 1)
 #define spi_cs_l()                  gpio_write(_norflash.spi_cs_io, 0)
 
@@ -88,10 +89,10 @@ int _norflash_eraser(u8 eraser, u32 addr);
 #define spi_dma_read(x, y)          spi_dma_recv(_norflash.spi_num, x, y)
 #define spi_dma_write(x, y)         spi_dma_send(_norflash.spi_num, x, y)
 #define spi_set_width(x)            spi_set_bit_mode(_norflash.spi_num, x)
-#define spi_init()                  spi_open(_norflash.spi_num)
+#define spi_init()                  spi_open(_norflash.spi_num, get_hw_spi_config(TFG_SPI_HW_NUM))
 #define spi_closed()                spi_close(_norflash.spi_num)
 #define spi_suspend()               spi_close(_norflash.spi_num)
-#define spi_resume()                hw_spi_resume(_norflash.spi_num)
+#define spi_resume()                spi_resume(_norflash.spi_num)
 /* #else */
 /* #define spi_read_byte()     soft_spi_recv_byte(_norflash.spi_num, NULL [> &_norflash.spi_err <]) */
 /* #define spi_write_byte(x)   soft_spi_send_byte(_norflash.spi_num, x) */
@@ -470,7 +471,7 @@ int _norflash_close(void)
     return 0;
 }
 
-int _norflash_read(u32 addr, u8 *buf, u32 len, u8 cache)
+static int _norflash_read(u32 addr, u8 *buf, u32 len, u8 cache)
 {
     int reg = 0;
     u32 align_addr;

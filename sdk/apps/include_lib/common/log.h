@@ -10,6 +10,8 @@
 // void printf_buf(u8 *buf, u32 len);
 int printf(const char *format, ...);
 void printf_buf(const u8 *buf, int len);
+void put_buf(u8 *buf, u32 len);
+void __attribute__((weak)) log_print(int level, const char *tag, const char *format, ...);
 
 #define PRINTF(format, ...)         printf(format, ## __VA_ARGS__)
 

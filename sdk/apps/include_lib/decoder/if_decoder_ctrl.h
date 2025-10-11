@@ -91,6 +91,11 @@ typedef  struct FIXPHASE_obj {
     short fifo_buf[18 + 12][32][2];
 } FIXPHASE_obj;
 
+#define CMD_SET_GOON_CALLBACK     0x95
+typedef struct _GoOn_DEC_CallBack_ {
+    void *priv;
+    int (*callback)(void *priv);//回调告知解码库本次input能取多少字节数据，数据过少跳过本次run
+} GoOn_DEC_CallBack;
 
 #define  REPEAT_PLAY_ALWAYS    0x90
 typedef  struct _repeat_mode_flag {
@@ -164,6 +169,7 @@ extern audio_decoder_ops *get_f1a_ops();
 extern audio_decoder_ops *get_ima_ops();
 extern audio_decoder_ops *get_mp3_ops();
 extern audio_decoder_ops *get_wav_ops();
+extern audio_decoder_ops *get_opusdec_ops();
 
 
 ///------------------

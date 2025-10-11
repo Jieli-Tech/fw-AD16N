@@ -4,6 +4,7 @@
 #pragma code_seg(".midi_keyboard.text")
 #pragma str_literal_override(".midi_keyboard.text.const")
 
+#include "lib_midi.h"
 #include "cpu.h"
 #include "config.h"
 #include "typedef.h"
@@ -20,15 +21,17 @@
 #include "MIDI_DEC_API.h"
 #include "boot.h"
 #include "decoder_msg_tab.h"
+#include "app_modules.h"
 
-#if DECODER_MIDI_KEYBOARD_EN
+#if defined(DECODER_MIDI_KEYBOARD_EN) && (DECODER_MIDI_KEYBOARD_EN)
 
 #define LOG_TAG_CONST       NORM
-#define LOG_TAG             "[normal]"
+#define LOG_TAG             "[mdid_cta]"
 #include "log.h"
 
 /* midi琴最大同时发声的key数,该值影响音符的叠加,值越大需要的解码buffer越大,需要的buffer大小由need_dcbuf_size()获取 */
 extern const int MAX_CTR_PLAYER_CNT;//该值在app_config.c中定义
+extern const int MIDI_CTRL_OUT_CHANNEL;//该值在app_config.c中定义
 
 /* param */
 static u32 midi_ctrl_tone_tab                   AT(.midi_ctrl_buf);
@@ -40,7 +43,7 @@ dec_inf_t midi_ctrl_dec_inf                     AT(.midi_ctrl_buf);
 dec_obj dec_midi_ctrl_hld;
 cbuffer_t cbuf_midi_ctrl                        AT(.midi_ctrl_buf);
 u16 obuf_midi_ctrl[DAC_DECODER_BUF_SIZE / 2]    AT(.midi_ctrl_buf);
-u32 midi_ctrl_decode_buff[(5628 + 3) / 4]       AT(.midi_ctrl_buf);
+u32 midi_ctrl_decode_buff[(MIDI_CTRL_DBUF_SIZE + 3) / 4]       AT(.midi_ctrl_buf);
 #define MIDI_CTRL_CAL_BUF ((void *)&midi_ctrl_decode_buff[0])
 
 
@@ -75,9 +78,10 @@ static u8 midi_musicsr_to_cfgsr(u32 sr)
     return 0;
 }
 
-u32 midi_ctrl_decode_api(void *p_file, void **ppdec, void *p_dp_buf)
+u32 midi_ctrl_decode_api(void *strm, void **ppdec, void *p_dp_buf)
 {
-    if (p_file != NULL) {
+    dec_data_stream *p_strm = strm;
+    if (p_strm->strm_source != NULL) {
         return E_MIDI_FILEHDL;
     }
 
@@ -97,7 +101,7 @@ u32 midi_ctrl_decode_api(void *p_file, void **ppdec, void *p_dp_buf)
 
     buff_len = ops->need_dcbuf_size();
     if (buff_len > sizeof(midi_ctrl_decode_buff)) {
-        log_info("MIDI_CTRL Need Buff Len:%d\n", buff_len);//buff大小会随MAX_CTR_PLAYER_CNT改变
+        log_info("MIDI_CTRL Need Buff Len:%d > %d\n", buff_len, sizeof(midi_ctrl_decode_buff)); //buff大小会随MAX_CTR_PLAYER_CNT改变
         return E_MIDI_DBUF;
     }
     /******************************************/
@@ -105,9 +109,9 @@ u32 midi_ctrl_decode_api(void *p_file, void **ppdec, void *p_dp_buf)
 
     sr = dac_sr_read();                //获取采样率
     dec_midi_ctrl_hld.sr = sr;
-    dec_midi_ctrl_hld.p_file = p_file;
+    /* dec_midi_ctrl_hld.p_file = p_file; */
     dec_midi_ctrl_hld.sound.p_obuf = &cbuf_midi_ctrl;
-    dec_midi_ctrl_hld.sound.info &= ~B_STEREO;
+    dec_midi_ctrl_hld.sound.info |= MIDI_CTRL_TRACK;
     dec_midi_ctrl_hld.p_dbuf = MIDI_CTRL_CAL_BUF;
     dec_midi_ctrl_hld.dec_ops = ops;
     dec_midi_ctrl_hld.event_tab = (u8 *)&midi_evt[0];
@@ -115,16 +119,22 @@ u32 midi_ctrl_decode_api(void *p_file, void **ppdec, void *p_dp_buf)
     /* MIDI_CONFIG_PARM midi_ctrl_t_parm; */
     midi_ctrl_t_parm.player_t = MAX_CTR_PLAYER_CNT;                                //设置需要合成的最多按键个数，8到32可配
     midi_ctrl_t_parm.sample_rate = midi_musicsr_to_cfgsr(sr);//0:48k,1:44.1k,2:32k,3:24k,4:22.050k,5:16k,6:12k,7:11.025k,8:8k
-    midi_ctrl_t_parm.spi_pos = (u8 *)midi_ctrl_tone_tab;                    //spi_memory为音色文件数据起始地址
+    midi_ctrl_t_parm.spi_pos = (MIDI_CTRL_POS_TYPE)midi_ctrl_tone_tab;                    //spi_memory为音色文件数据起始地址
+    //for_4byte
+#if defined(MIDI_VER_4BYTE) && (MIDI_VER_SELECT == MIDI_VER_4BYTE)
+    midi_ctrl_t_parm.bitwidth = 16;
+    midi_ctrl_t_parm.OutdataBit = 0;
+    midi_ctrl_t_parm.out_channel = MIDI_CTRL_OUT_CHANNEL;
+#endif
 
-    midi_ctrl_parmt.output = (int (*)(void *, void *, int))mp_output;          //这个是最后的输出函数接口，
+    midi_ctrl_parmt.output = (int (*)(void *, void *, int))p_strm->io->output;          //这个是最后的输出函数接口，
     midi_ctrl_parmt.tempo = 1000;
     midi_ctrl_parmt.track_num = 1;
     midi_ctrl_parmt.priv = &dec_midi_ctrl_hld;
 
     memset(&midi_ctrl_dec_inf, 0, sizeof(midi_ctrl_dec_inf));
     midi_ctrl_dec_inf.sr = sr;
-    midi_ctrl_dec_inf.nch = 1;
+    midi_ctrl_dec_inf.nch = MIDI_CTRL_CHANNEL;
 
     /******************************************/
     ops->open(MIDI_CTRL_CAL_BUF, (const struct if_decoder_io *)&midi_ctrl_parmt, (u8 *)&midi_ctrl_t_parm);        //传入io接口，说明如下
@@ -149,7 +159,12 @@ int midi_ctrl_cfg_init(void)
         return E_MOUNT;
     }
 
+#if defined(MIDI_VER_4BYTE) && (MIDI_VER_SELECT == MIDI_VER_4BYTE)
+    /* 4byte的音色库文件后缀是mdb */
+    err = vfs_openbypath(pvfs, &pvfile, "/midi_cfg_ster1/00_MIDI.mdb");
+#else
     err = vfs_openbypath(pvfs, &pvfile, "/midi_cfg/00_MIDI.mda");
+#endif
     if (err != 0) {
         log_info("midi ctrl mda open fail, try old midi_cfg.bin!\n");
         err = vfs_openbypath(pvfs, &pvfile, "/midi_cfg/midi_cfg.bin");

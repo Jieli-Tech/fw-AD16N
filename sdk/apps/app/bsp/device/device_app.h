@@ -11,6 +11,7 @@ void *device_obj(u32 index);
 u32 device_online(void);
 u32 device_status(u32 index, bool mode);
 void device_update(u8 update_dev);
+char *get_device_name(u32 index);
 
 
 enum {

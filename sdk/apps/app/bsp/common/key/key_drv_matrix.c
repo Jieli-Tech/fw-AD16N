@@ -50,23 +50,20 @@ void matrix_key_init(void)
     }
 #else
     for (i = 0; i < sizeof(matrix_key_row); i++) { //key 高祖模式
-        gpio_set_pull_up(matrix_key_row[i], 0);
-        gpio_set_pull_down(matrix_key_row[i], 0);
-        gpio_set_direction(matrix_key_row[i], 1);
-        gpio_set_die(matrix_key_row[i], 0);
-        gpio_set_dieh(matrix_key_row[i], 0);
+        gpio_set_mode(IO_PORT_SPILT(matrix_key_row[i]), PORT_HIGHZ);
+        gpio_hw_set_dieh(IO_PORT_SPILT(matrix_key_row[i]), 0);
     }
 #endif
     for (i = 0; i < sizeof(matrix_key_col); i++) {
-        gpio_set_direction(matrix_key_col[i], 1);
+        gpio_hw_set_direction(IO_PORT_SPILT(matrix_key_col[i]), 1);
 #if KEY_DETECT_LEVEL
-        gpio_set_pull_up(matrix_key_col[i], 0);
-        gpio_set_pull_down(matrix_key_col[i], 1);
+        gpio_hw_set_pull_up(IO_PORT_SPILT(matrix_key_col[i]), 0);
+        gpio_hw_set_pull_down(IO_PORT_SPILT(matrix_key_col[i]), 1);
 #else
-        gpio_set_pull_up(matrix_key_col[i], 1);
-        gpio_set_pull_down(matrix_key_col[i], 0);
+        gpio_hw_set_pull_up(IO_PORT_SPILT(matrix_key_col[i]), 1);
+        gpio_hw_set_pull_down(IO_PORT_SPILT(matrix_key_col[i]), 0);
 #endif
-        gpio_set_die(matrix_key_col[i], 1);
+        gpio_hw_set_die(IO_PORT_SPILT(matrix_key_col[i]), 1);
     }
 }
 void matrix_key_suspend()
@@ -77,18 +74,12 @@ void matrix_key_release()
 {
     u8 i = 0;
     for (i = 0; i < sizeof(matrix_key_row); i++) {
-        gpio_set_pull_up(matrix_key_row[i], 0);
-        gpio_set_pull_down(matrix_key_row[i], 0);
-        gpio_set_direction(matrix_key_row[i], 1);
-        gpio_set_die(matrix_key_row[i], 0);
-        gpio_set_dieh(matrix_key_row[i], 0);
+        gpio_set_mode(IO_PORT_SPILT(matrix_key_row[i]), PORT_HIGHZ);
+        gpio_hw_set_dieh(IO_PORT_SPILT(matrix_key_row[i]), 0);
     }
     for (i = 0; i < sizeof(matrix_key_col); i++) {
-        gpio_set_pull_up(matrix_key_col[i], 0);
-        gpio_set_pull_down(matrix_key_col[i], 0);
-        gpio_set_direction(matrix_key_col[i], 1);
-        gpio_set_die(matrix_key_col[i], 0);
-        gpio_set_dieh(matrix_key_col[i], 0);
+        gpio_set_mode(IO_PORT_SPILT(matrix_key_col[i]), PORT_HIGHZ);
+        gpio_hw_set_dieh(IO_PORT_SPILT(matrix_key_col[i]), 0);
     }
 }
 
@@ -124,7 +115,7 @@ u8 matrix_key_scan()//key 高祖模式
     u8 j = 0;
     u8 key_val = NO_KEY;
     for (i = 0; i < sizeof(matrix_key_row); i++) {
-        gpio_direction_output(matrix_key_row[i], KEY_DETECT_LEVEL);
+        gpio_hw_direction_output(IO_PORT_SPILT(matrix_key_row[i]), KEY_DETECT_LEVEL);
 
         for (j = 0; j < sizeof(matrix_key_col); j++) {
             if (gpio_read(matrix_key_col[j]) == KEY_DETECT_LEVEL) {
@@ -138,7 +129,7 @@ u8 matrix_key_scan()//key 高祖模式
                 /* return key_val; */
             }
         }
-        gpio_set_direction(matrix_key_row[i], 1);
+        gpio_hw_set_direction(IO_PORT_SPILT(matrix_key_row[i]), 1);
         /* delay(250);//500:62.8us */
     }
     /* key_puts("- "); */

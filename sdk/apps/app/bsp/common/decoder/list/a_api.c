@@ -3,7 +3,7 @@
 #include "a_api.h"
 #include "cpu.h"
 #include "app_modules.h"
-#if DECODER_A_EN
+#if defined(DECODER_A_EN) && (DECODER_A_EN)
 
 #include "config.h"
 #include "typedef.h"
@@ -18,6 +18,7 @@
 #include "decoder_msg_tab.h"
 #include "app_config.h"
 #include "audio_dac_api.h"
+#include "lib_a.h"
 
 #define LOG_TAG_CONST       NORM
 #define LOG_TAG             "[a_api]"
@@ -25,28 +26,28 @@
 
 
 #define A_OBUF_SIZE DAC_DECODER_BUF_SIZE
-#define A_OUTPUT_MAX_SIZE (32 * 2)
-#define A_KICK_SIZE (A_OBUF_SIZE - (A_OUTPUT_MAX_SIZE * 2))
+#define A_KICK_SIZE (A_OBUF_SIZE - (A_DEC_OUTPUT_MAX_SIZE * 2))
 
 cbuffer_t cbuf_a AT(.a_data);
 u16 obuf_a[A_OBUF_SIZE / 2] AT(.a_data) ;
 dec_obj dec_a_hld ;
 /* u32 a_decode_buff[228 / 4] AT(.a_data) ; */
-u32 a_decode_buff[0xf4 / 4] AT(.a_data);
+u32 a_decode_buff[A_DBUF_SIZE / 4] AT(.a_data);
 #define A_CAL_BUF ((void *)&a_decode_buff[0])
 
 const char a_ext[] = {".a"};
 const char b_ext[] = {".b"};
 const char e_ext[] = {".e"};
 
-const struct if_decoder_io a_dec_io0 = {
-    &dec_a_hld,  //input跟output函数的第一个参数，解码器不做处理，直接回传，可以为NULL
-    mp_input,
-    0,
-    mp_output,
-    decoder_get_flen,
-    0
-};
+struct if_decoder_io a_dec_io0 AT(.a_data);
+/* const struct if_decoder_io a_dec_io0 = { */
+/*     &dec_a_hld,  //input跟output函数的第一个参数，解码器不做处理，直接回传，可以为NULL */
+/*     mp_input, */
+/*     0, */
+/*     mp_output, */
+/*     decoder_get_flen, */
+/*     0 */
+/* }; */
 
 static u32 a_dp_buff[24 / 4] AT(.a_data) ;
 
@@ -55,9 +56,15 @@ u32 get_a_dp_buff_size(void)
     return sizeof(a_dp_buff);
 }
 
-u32 a_decode_api(void *p_file, void **p_dec, void *p_dp_buf)
+void clear_a_dp_buff(void)
 {
-    u32 buff_len, i;
+    memset((void *)&a_dp_buff[0], 0, get_a_dp_buff_size());
+}
+
+u32 a_decode_api(void *strm, void **p_dec, void *p_dp_buf)
+{
+    dec_data_stream *p_strm = strm;
+    u32 buff_len, i = 0;
     /* void *name; */
     /* char name[VFS_FILE_NAME_LEN] = {0}; */
     decoder_ops_t *ops;
@@ -71,9 +78,13 @@ u32 a_decode_api(void *p_file, void **p_dec, void *p_dp_buf)
         return E_A_DBUF;
     }
     /******************************************/
+    memcpy(&a_dec_io0, p_strm->io, sizeof(struct if_decoder_io));
+    a_dec_io0.priv      = &dec_a_hld;
+
     cbuf_init(&cbuf_a, &obuf_a[0], sizeof(obuf_a));
     /* debug_puts("A\n"); */
-    dec_a_hld.p_file       = p_file;
+    sound_stream_obj *psound_strm = p_strm->strm_source;
+    dec_a_hld.p_file       = psound_strm;
     dec_a_hld.sound.p_obuf = &cbuf_a;
     dec_a_hld.sound.para = A_KICK_SIZE;
     dec_a_hld.p_dbuf       = A_CAL_BUF;
@@ -87,24 +98,26 @@ u32 a_decode_api(void *p_file, void **p_dec, void *p_dp_buf)
     ops->open(A_CAL_BUF, &a_dec_io0, NULL);         //传入io接口，说明如下
 
     /* name = vfs_file_name(p_file); */
-    int file_len = vfs_file_name(p_file, (void *)g_file_sname, sizeof(g_file_sname));
-    log_info("file g_file_sname : %s", g_file_sname);
-    if (check_ext_api(g_file_sname, a_ext, 2)) {
-        log_info("file is a a_file");
-        //ctype = 'a';
-        i = 8000;
-    } else if (check_ext_api(g_file_sname, b_ext, 2)) {
-        log_info("file is a b_file");
-        //ctype = 'b';
-        i = 16000;
-    } else { //if (check_ext_api(name,e_ext,2))
-        log_info("file is a e_file");
-        //ctype = 'c';
-        if (ops->format_check(A_CAL_BUF)) {                  //格式检查
-            log_error("e_file format check err\n");
-            return E_A_FORMAT;
+    /* int file_len = vfs_file_name(p_file, (void *)g_file_sname, sizeof(g_file_sname)); */
+    /* log_info("file g_file_sname : %s", g_file_sname); */
+    if (!(B_DEC_NO_CHECK & p_strm->strm_ctl)) {
+        if (check_ext_api(g_file_sname, a_ext, 2)) {
+            log_info("file is a a_file");
+            //ctype = 'a';
+            i = 8000;
+        } else if (check_ext_api(g_file_sname, b_ext, 2)) {
+            log_info("file is a b_file");
+            //ctype = 'b';
+            i = 16000;
+        } else { //if (check_ext_api(name,e_ext,2))
+            log_info("file is a e_file");
+            //ctype = 'c';
+            if (ops->format_check(A_CAL_BUF)) {                  //格式检查
+                log_error("e_file format check err\n");
+                return E_A_FORMAT;
+            }
+            i = ops->get_dec_inf(A_CAL_BUF)->sr;                //获取采样率
         }
-        i = ops->get_dec_inf(A_CAL_BUF)->sr;                //获取采样率
     }
     memcpy(&a_dp_buff[0], (void *)ops->get_bp_inf(A_CAL_BUF), sizeof(a_dp_buff));
     /* regist_dac_channel(&dec_a_hld.sound, kick_decoder); //注册到DAC; */

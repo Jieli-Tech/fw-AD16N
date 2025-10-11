@@ -20,7 +20,9 @@
 #include "usb/device/usb_stack.h"
 #include "usb/device/uac_audio.h"
 #include "usb/usr/usb_mic_interface.h"
-#include "usb/usr/uac_sync.h"
+#include "usb/usr/auadc_2_usbmic.h"
+#include "uac_sync.h"
+#include "sound_kick.h"
 
 #if ( TCFG_PC_ENABLE && (USB_DEVICE_CLASS_CONFIG & MIC_CLASS))
 
@@ -30,6 +32,9 @@
 #include "uart.h"
 
 /* SEC(.uac_var); */
+uac_sync uac_mic_sync AT(.uac_var);
+sound_out_obj *(*mic_open_func)(uac_mic_read *);
+void (*mic_close_func)(void **);
 static u16 g_usb_mic_vol = 31;
 static u32 usb_mic_cnt;
 void uac_mic_vol(u8 vol_l, u8 vol_r)
@@ -41,21 +46,10 @@ void uac_mic_vol(u8 vol_l, u8 vol_r)
     g_usb_mic_vol = vol_l;
 }
 
-extern const bool config_usbslave_ctl_mic;
+#define DECAY_TIME_MS  100
+static u16 decay_size = DECAY_TIME_MS * (2 * MIC_AUDIO_RATE / 1000);
 
-cbuffer_t mic_out_cbuf SEC(.uac_var);
-u16 mic_out_obuf[AUDIO_ADC_PACKET_SIZE * 2] SEC(.uac_var);
-
-cbuffer_t mic_run_cbuf SEC(.uac_var);
-u16 mic_run_obuf[AUDIO_ADC_PACKET_SIZE * 4] SEC(.uac_var);
-
-typedef struct __uac_mic_read {
-    sound_out_obj mic_out_sound;
-    sound_out_obj *read_sound;
-    EFFECT_OBJ *p_src;
-} uac_mic_read;
-
-uac_mic_read uac_read SEC(.uac_var);
+uac_mic_read uac_read;
 
 u32 uac_mic_stream_size()
 {
@@ -71,110 +65,50 @@ u32 uac_mic_stream_buf_length()
     }
     return 100;
 }
-uac_sync uac_mic_sync;
+
 u32 usb_slave_mic_open(u32 sr, u32 frame_len, u32 ch)
 {
-    log_info("USB MIC OPEN");
-    /* return 0; */
-    //-----
-    u32 err = 0;
-    usb_mic_cnt = 0;
-
-    memset(&uac_read, 0, sizeof(uac_read));
-    /*---------------------------------------------------------------*/
-    cbuf_init(&mic_out_cbuf, &mic_out_obuf[0], sizeof(mic_out_obuf));
-    sound_out_init(&uac_read.mic_out_sound, (void *)&mic_out_cbuf, 0);
-
-    /*---------------------------------------------------------------*/
-    cbuf_init(&mic_run_cbuf, &mic_run_obuf[0], sizeof(mic_run_obuf));
-    /*---------------------------------------------------------------*/
-
-    sound_out_obj *p_curr_sound;
-
-    log_info("usmo ---- 000");
-    p_curr_sound = &uac_read.mic_out_sound;
-    log_info("usmo ---- 001");
-
+    /* memset(&uac_read, 0, sizeof(uac_read)); */
 #if TCFG_MIC_SRC_ENABLE
-    ///*
-    p_curr_sound = link_src_sound(
-                       p_curr_sound,
-                       &mic_run_cbuf,
-                       (void **)&uac_read.p_src,
-                       sr,
-                       sr,
-                       1
-                   );
     uac_sync_init(&uac_mic_sync, sr);
-    //*/
 #endif
-    log_info("usmo ---- 002");
 
+    uac_read.self.sr = sr;
+    uac_read.self.frame_len = frame_len;
+    uac_read.self.ch = ch;
 
-
-    void *kick = NULL;
-
-    if (&uac_read.mic_out_sound != p_curr_sound) {
-        log_info("usmo ---- 003");
-        kick = regist_stream_channel(&uac_read.mic_out_sound);
-
-    }
-    /* p_curr_sound = &uac_read.mic_out_sound; */
-    log_info("usmo ---- 004");
-    regist_audio_adc_channel((void *)&uac_read.mic_out_sound, kick);
-    log_info("usmo ---- 005");
-    uac_read.read_sound = p_curr_sound;
-    if (config_usbslave_ctl_mic) {
-        log_info("usmo ---- 006");
-        err = audio_adc_init_api(sr, AUDIO_ADC_MIC, 0);
-    }
-    if (0 == err) {
-        log_info("usmo ---- 007");
-        if (config_usbslave_ctl_mic) {
-            audio_adc_enable();
+    if (mic_open_func) {
+        sound_out_obj *psound = mic_open_func(&uac_read);
+        if (NULL == psound) {
+            log_info("USB MIC OPEN FAIL!");
+            return E_USBMIC_SOUND_NULL;
         }
-        p_curr_sound->enable |= B_DEC_RUN_EN;
-        uac_read.mic_out_sound.enable |= B_DEC_RUN_EN;
-    } else {
-        log_info("err : 0x%x", err);
+        uac_read.read_sound = psound;
     }
+    log_info("USB MIC OPEN SUCC!");
     return 0;
 }
 
 void usb_slave_mic_close(void)
 {
-    /* return ; */
-    log_info("usmc ---- 00s");
-    if (uac_read.mic_out_sound.enable & B_DEC_RUN_EN) {
-        log_info("usmc ---- 0s1");
-        uac_read.mic_out_sound.enable &= ~B_DEC_RUN_EN;
-        unregist_audio_adc_channel(&uac_read.mic_out_sound);
-        unregist_stream_channel(&uac_read.mic_out_sound);
-        log_info("usmc ---- 0s1, 0x%x", (u32)uac_read.p_src);
-        if (NULL != uac_read.p_src) {
-            src_reless((void **)&uac_read.p_src);
-        }
-        memset(&uac_read.mic_out_sound, 0, sizeof(uac_read.mic_out_sound));
-        uac_read.read_sound = NULL;
-
+    if (mic_close_func) {
+        mic_close_func((void **)&uac_read.p_src);
     }
-    log_info("USB MIC CLOSE");
-    if (config_usbslave_ctl_mic) {
-        log_info("usmc ---- 001");
-        audio_adc_off_api();
-    } else {
-        log_info("usmc ---- 002");
-        /* audio_adc_disable(); */
-    }
-    log_info("usmc ---- 003");
+    memset(&uac_read, 0, sizeof(uac_read));
+    /* uac_read.read_sound = NULL; */
 }
 static u32 uac_mic_all;
 static u32 uac_mic_cnt;
+static u32 uac_mic_cnt_last;
 EFFECT_OBJ *uac_mic_percent(u32 *p_percent)
 {
     if (uac_mic_cnt == 0) {
         return NULL;
     }
+    if ((uac_mic_cnt_last + 0) == uac_mic_cnt) {
+        return NULL;
+    }
+    uac_mic_cnt_last = uac_mic_cnt;
     *p_percent = uac_mic_all / uac_mic_cnt;
     uac_mic_all = 0;
     uac_mic_cnt = 0;
@@ -195,10 +129,7 @@ EFFECT_OBJ *uac_mic_percent(u32 *p_percent)
 int usb_slave_mic_read(u8 *buf, u32 len)
 {
     /* return 0; */
-
-    /* JL_PORTA->DIR &= ~BIT(9); */
-    /* JL_PORTA->OUT ^= BIT(9); */
-    u32 tlen;
+    u32 tlen = 0;
 
 #if (MIC_CHANNEL == 2)
     len = len / 2;//双声道读取一半的数据
@@ -217,16 +148,43 @@ int usb_slave_mic_read(u8 *buf, u32 len)
             usb_mic_cnt = 0;
         }
 #endif
-
+        sound_out_obj *psound = uac_read.read_sound;
+        if (0 == (psound->enable & B_DEC_RUN_EN)) {
+            /* 解码停止后，sound_input不再消耗数据，需修改为消耗完obuf数据:TODO */
+            psound->enable &= ~B_DEC_OBUF_EN;
+            goto __no_read;
+        }
+        if (psound->enable & B_DEC_FIRST) {
+            if (cbuf_get_data_size(psound->p_obuf) < (cbuf_get_space(psound->p_obuf) / 2)) {
+                goto __no_read;
+            } else {
+                psound->enable &= ~B_DEC_FIRST;
+            }
+        }
         tlen = sound_input(uac_read.read_sound, buf, len);
         /* log_char('B'); */
         u32 uac_mic_data = uac_mic_stream_size();
         u32 uac_mic_size = uac_mic_stream_buf_length();
         /* log_char('C'); */
         if (0 != uac_mic_size) {
+            u32 inpcm_data  = source_data_pcm(uac_read.source, uac_read.self.sr);
+            u32 inpcm_space = source_space_pcm(uac_read.source, uac_read.self.sr);
+            u32 t_decay_size = inpcm_space;
+            /* u32 t_decay_size = decay_size > inpcm_space ? inpcm_space : decay_size; */
+            /* if (t_decay_size < inpcm_data) { */
+            /*     inpcm_data = t_decay_size; */
+            /* } */
+            uac_mic_data += inpcm_data;
+            uac_mic_size += t_decay_size;
             u32 percent = (uac_mic_data * 100) / uac_mic_size;
             uac_mic_all += percent;
             uac_mic_cnt++;
+            /* static u32 wptr_last = 0; */
+            /* u32 wptr = cbuf_get_writeptr((cbuffer_t *)psound->p_obuf); */
+            /* if (wptr_last != wptr) { */
+            /*     wptr_last = wptr; */
+            /*     uac_mic_new_data = 1; */
+            /* } */
         }
         /* log_char('D'); */
 
@@ -234,8 +192,9 @@ int usb_slave_mic_read(u8 *buf, u32 len)
         memset(buf, 0, len * MIC_CHANNEL);
         return (len * MIC_CHANNEL);
     }
-
+__no_read:
     //数据不够则部分清零
+    sound_kick(uac_read.read_sound, (void *)uac_read.pkick);
     if (tlen != len) {
         log_char('.');
         memset(buf + tlen, 0, len - tlen);
@@ -268,8 +227,39 @@ int usb_slave_mic_read(u8 *buf, u32 len)
     return (tlen * MIC_CHANNEL);
 }
 
+void set_usb_mic_func(void *open, void *close)
+{
+    local_irq_disable();
+    mic_open_func = open;
+    mic_close_func = close;
+    local_irq_enable();
+}
 
+void set_usb_mic_info(void *source)
+{
+    local_irq_disable();
+    /* uac_read.read_sound = psound; */
+    /* uac_read.pkick = kick; */
+    /* uac_read.p_src = p_src; */
+    uac_read.source = source;
+    if ((NULL == uac_read.read_sound) && (mic_open_func)) {
+        uac_read.read_sound = mic_open_func(&uac_read);
+    }
+    local_irq_enable();
+}
 
-
+bool clr_usb_mic_info(void *psound)
+{
+    if (psound == uac_read.read_sound) {
+        local_irq_disable();
+        memset(&uac_read, 0, sizeof(uac_read));
+        /* uac_read.read_sound = NULL; */
+        /* uac_read.pkick = NULL; */
+        /* uac_read.p_src = NULL; */
+        local_irq_enable();
+        return true;
+    }
+    return false;
+}
 #endif
 

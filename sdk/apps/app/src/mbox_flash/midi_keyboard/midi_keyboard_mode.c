@@ -32,6 +32,8 @@
 #define LOG_TAG             "[midi_dec]"
 #include "log.h"
 
+#if DECODER_MIDI_KEYBOARD_EN
+
 #define MIDI_VIBRATO_ENABLE     0   //琴键颤音功能
 
 static dec_obj *midi_keyboard_obj   AT(.midi_ctrl_buf);
@@ -59,6 +61,25 @@ const u8 Channal_Prog_Tab[CTRL_CHANNEL_NUM] = {
     MIDI_PROG_SHANAI_ETHNIC,
     MIDI_PROG_TELEPHONE_RING_SOUND_EFFECTS,
 };
+
+#if defined(MIDI_VER_4BYTE) && (MIDI_VER_SELECT == MIDI_VER_4BYTE)
+void midi_pro_cbk()
+{
+    if (NULL == midi_keyboard_obj) {
+        return;
+    }
+    midi_keyboard_obj->sound.enable |= B_DEC_PAUSE;
+}
+
+void midi_dispro_cbk()
+{
+    if (NULL == midi_keyboard_obj) {
+        return;
+    }
+    midi_keyboard_obj->sound.enable &= ~B_DEC_PAUSE;
+    midi_keyboard_obj->sound.enable |= B_DEC_KICK;
+}
+#endif
 
 void midi_keyboard_app(void)
 {
@@ -106,6 +127,12 @@ void midi_keyboard_app(void)
             midi_ctrl_set_prog(midi_keyboard_obj, Channal_Prog_Tab[chn_num], chn_num);
         }
     }
+#if defined(MIDI_VER_4BYTE) && (MIDI_VER_SELECT == MIDI_VER_4BYTE)
+    MIDI_CTRL_EVENT midi_ctrl_event_test;
+    midi_ctrl_event_test.midi_event_protect = midi_pro_cbk;
+    midi_ctrl_event_test.midi_event_disprotect = midi_dispro_cbk;
+    midi_ctrl_dec_confing_api(midi_keyboard_obj, CMD_MIDI_CTRL_EVENT, &midi_ctrl_event_test);
+#endif
     midi_ctrl_note_on(midi_keyboard_obj, 60, 127, 0);
 
     while (1) {
@@ -197,8 +224,9 @@ __midikey_channal_sel:
         case MSG_CHANGE_WORK_MODE:
             goto __midi_decode_app_exit;
         case MSG_500MS:
-            UI_menu(MENU_MAIN);
+            UI_menu(MENU_MAIN, 0);
             if (0 == midi_keyboard_idle_cnt) {
+                sysmem_pre_erase_api();
                 app_powerdown_deal(0);
             } else {
                 app_powerdown_deal(1);
@@ -222,9 +250,9 @@ static u32 midi_ctrl_melody_trigger(void *priv, u8 key, u8 vel)
     return 0;
 }
 /* 音符结束回调 */
-static u32 midi_ctrl_melody_stop_trigger(void *priv, u8 key)
+static u32 midi_ctrl_melody_stop_trigger(void *priv, u8 key, u8 chn)
 {
-    log_info("OFF %d\n", key);
+    log_info("OFF %d %d\n", key, chn);
     midi_keyboard_idle_cnt--;
     if (0 == midi_keyboard_idle_cnt) {
         dec_obj *obj = (dec_obj *)priv;
@@ -233,7 +261,7 @@ static u32 midi_ctrl_melody_stop_trigger(void *priv, u8 key)
     return 0;
 }
 
-static void midi_on_off_callback_init(dec_obj *obj, u32(*melody_callback)(void *, u8, u8), u32(*melody_stop_callback)(void *, u8))
+static void midi_on_off_callback_init(dec_obj *obj, u32(*melody_callback)(void *, u8, u8), u32(*melody_stop_callback)(void *, u8, u8))
 {
     audio_decoder_ops *ops = (audio_decoder_ops *)obj->dec_ops;
 
@@ -244,9 +272,11 @@ static void midi_on_off_callback_init(dec_obj *obj, u32(*melody_callback)(void *
 
     EX_MELODY_STOP_STRUCT melody_stop_parm;
     melody_stop_parm.priv = obj;
+    melody_stop_parm.main_chn_enable = 0;
     melody_stop_parm.melody_stop_trigger = melody_stop_callback;
     ops->dec_confing(obj->p_dbuf, CMD_MIDI_STOP_MELODY_TRIGGER, &melody_stop_parm);
 
     midi_keyboard_function_switch |= MELODY_ENABLE | MELODY_STOP_ENABLE;
     ops->dec_confing(obj->p_dbuf, CMD_MIDI_SET_SWITCH, &midi_keyboard_function_switch);
 }
+#endif

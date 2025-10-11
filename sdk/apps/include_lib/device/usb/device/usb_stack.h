@@ -1,7 +1,7 @@
 #ifndef  __USB_STACK_H__
 #define  __USB_STACK_H__
 #include "typedef.h"
-#include "usb/usb.h"
+#include "usb.h"
 #include "usb/ch9.h"
 #include "usb/usb_phy.h"
 #include "usb/otg.h"
@@ -53,6 +53,8 @@ struct usb_device_t {
     u8 bRemoteWakup: 1;
     u8 res: 7;
     u8 wDeviceClass;    // 设备类
+
+    u8 baddr_config: 1;
 };
 
 struct usb_device_descriptor_t {
@@ -95,6 +97,7 @@ void dump_setup_request(const struct usb_ctrlrequest *request);
 void user_setup_filter_install(struct usb_device_t *usb_device);
 void usb_ep_enable(const usb_dev usb_id, u32 ep, u32 is_enable);
 void *usb_get_setup_buffer(const struct usb_device_t *usb_device);
+u32 usb_root2_testing();
 
 extern void usb_start();
 extern void usb_stop();

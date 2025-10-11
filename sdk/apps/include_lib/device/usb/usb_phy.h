@@ -1,7 +1,7 @@
 #ifndef  __USB_PHY_H__
 #define  __USB_PHY_H__
 #include "typedef.h"
-#include "usb/usb.h"
+#include "usb.h"
 
 #ifndef min
 #define min(a,b) ((a)<(b) ? (a) : (b))
@@ -130,10 +130,14 @@
 #define USB_EP0_STAGE_OUT         2
 #define USB_EP0_SET_STALL         3
 #define USB_EP0_IGNORE            4
+#define USB_EP0_STAGE_NAK         5
 
 /*            common api            */
 u32 usb_host_timeout(u32 ot);
 u16 usb_read_sofframe(const usb_dev id);
+u32 usb_read_dp_se(const usb_dev id);
+u32 usb_read_dm_se(const usb_dev id);
+u32 usb_otg_sof_check_init(const usb_dev id);
 
 /*            slave api            */
 u32 usb_g_bulk_read64byte_fast(const usb_dev usb_id, u32 ep, u8 *ptr, u32 len);
@@ -160,5 +164,6 @@ u32 usb_host_reset(const usb_dev usb_id, u32 reset_delay, u32 timeout);
 u32 usb_h_force_reset(const usb_dev usb_id);
 // u32 usb_h_sie_init(u32 reset_delay, u32 timeout);
 // void usb_h_sie_close();
+u32 usb_get_jiffies();
 
 #endif  /*USB_PHY_H*/

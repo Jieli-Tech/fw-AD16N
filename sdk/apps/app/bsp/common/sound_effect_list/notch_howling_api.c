@@ -48,7 +48,7 @@ typedef struct _NH_HOWLING_HDL {
     cbuffer_t cbuf;
 } NH_HOWLING_HDL;
 
-u8 notch_howling_work_buf[3472] AT(.howling_data);
+u32 notch_howling_work_buf[3472 / 4] AT(.howling_data);
 NH_HOWLING_HDL notch_howling_hdl_save AT(.howling_data);
 
 static void notch_howling_parm_debug(NH_HOWLING_HDL *howling_hdl)

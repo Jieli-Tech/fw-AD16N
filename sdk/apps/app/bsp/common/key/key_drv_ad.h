@@ -5,7 +5,7 @@
 #include "config.h"
 #include "clock.h"
 #include "app_config.h"
-#include "saradc.h"
+#include "adc_api.h"
 
 #define ADC_CH_NONE         0Xff
 #define ADC_VALUE_NONE      0XFFFF

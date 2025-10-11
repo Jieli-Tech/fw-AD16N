@@ -82,7 +82,8 @@ void bit_set_swi(unsigned char index);
 
 void interrupt_init();
 
-void irq_save(void);
+// void irq_save(void);
+void irq_save(u32 b_index_l, u32 b_index_h);
 void irq_resume(void);
 void irq_enable(u8 index);
 // void irq_list_enable(u32 b_index);
@@ -93,6 +94,7 @@ void HWI_Install(unsigned char index, unsigned int isr, unsigned char priority);
 
 void bit_clr_ie(unsigned char index);
 void bit_set_ie(unsigned char index);
+#define  unrequest_irq(idx) bit_clr_ie(idx)
 
 #ifdef IRQ_TIME_COUNT_EN
 void irq_handler_enter(int irq);
@@ -100,6 +102,10 @@ void irq_handler_enter(int irq);
 void irq_handler_exit(int irq);
 
 void irq_handler_times_dump();
+
+void irq_unmask_set(u8 index);
+
+void irq_unmask_disable(u8 index);
 #else
 
 #define irq_handler_enter(irq)      do { }while(0)

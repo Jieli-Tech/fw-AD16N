@@ -4,9 +4,6 @@
 #include "audio_dac.h"
 #include "app_config.h"
 
-#define B_DAC_MUTE		BIT(0)
-#define B_DAC_FADE_EN   BIT(1)
-#define B_DAC_FADE_OUT  BIT(2)
 
 
 /*---------DAC FADE IN & OUT Configuration---------------*/

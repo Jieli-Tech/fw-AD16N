@@ -11,8 +11,13 @@
 #if USB_DEVICE_CLASS_CONFIG & HID_CLASS
 #include "usb/device/hid.h"
 #endif
+#if USB_DEVICE_CLASS_CONFIG & CUSTOM_HID_CLASS
+#include "usb/device/custom_hid.h"
+#endif
 #if USB_DEVICE_CLASS_CONFIG & AUDIO_CLASS
 #include "usb/device/uac_audio.h"
+#include "usb/usr/usb_mic_interface.h"
+#include "usb/usr/auadc_2_usbmic.h"
 #endif
 #if USB_DEVICE_CLASS_CONFIG & CDC_CLASS
 #include "cfg_tools.h"
@@ -84,11 +89,15 @@ void usb_start()
 #if (USB_DEVICE_CLASS_CONFIG & HID_CLASS)
     hid_init();
 #endif
+#if (USB_DEVICE_CLASS_CONFIG & CUSTOM_HID_CLASS)
+    custom_hid_init();
+#endif
 #if USB_DEVICE_CLASS_CONFIG & MASSSTORAGE_CLASS
     msd_init();
 #endif
 #if USB_DEVICE_CLASS_CONFIG & AUDIO_CLASS
     uac_init();
+    set_usb_mic_func(auadc_mic_open, auadc_mic_close);//注册auadc mic
 #endif
     usb_device_mode(0, USB_DEVICE_CLASS_CONFIG);
 #if USB_DEVICE_CLASS_CONFIG & CDC_CLASS
@@ -98,6 +107,9 @@ void usb_start()
 
 void usb_pause()
 {
+    if (usb_phy_status(0) == 0) {
+        return;
+    }
     log_info("USB Pause");
     usb_sie_disable(0);
 #if USB_DEVICE_CLASS_CONFIG & MASSSTORAGE_CLASS
@@ -114,5 +126,7 @@ void usb_stop()
         usb_sie_close(0);
     }
 }
+
+
 
 #endif

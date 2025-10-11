@@ -26,12 +26,13 @@ void LED5X7_clear_icon(void);
 void LED5X7_show_char(u8 chardata);
 void LED5X7_show_number(u8 number);
 void LED5X7_show_Hi(void);
-void LED5X7_show_music_main(void);
-void LED5X7_show_filenumber(void);
+void LED5X7_show_music_main(int arg);
+void LED5X7_show_filenumber(int arg);
 void LED5X7_show_volume(void);
-void LED5X7_show_eq(void);
+void LED5X7_show_dec_eq(u32 arg);
+void LED5X7_show_hw_eq(void);
 void LED5X7_show_IR_number(void);
-void LED5X7_show_playmode(void);
+void LED5X7_show_playmode(int arg);
 #if 0
 void LED5X7_show_fm_main(void);
 void LED5X7_show_fm_station(void);

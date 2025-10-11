@@ -39,6 +39,7 @@ typedef enum {
     EQ_IIR_TYPE_BAND_PASS,
     EQ_IIR_TYPE_HIGH_SHELF,
     EQ_IIR_TYPE_LOW_SHELF,
+    EQ_IIR_TYPE_BAND_PASS_NEW,//用于频谱分析
 } EQ_IIR_TYPE;
 
 struct eq_seg_info {
@@ -85,7 +86,7 @@ extern void design_lp(int fc, int fs, float quality_factor, float *coeff);
 /*----------------------------------------------------------------------------*/
 extern void design_hp(int fc, int fs, float quality_factor, float *coeff);
 /*----------------------------------------------------------------------------*/
-/**@brief    带通滤波器
+/**@brief    波峰滤波器
    @param    fc:中心截止频率
    @param    fs:采样率
    @param    gain:增益
@@ -120,6 +121,17 @@ extern void design_ls(int fc, int fs, float gain, float quality_factor, float *c
 */
 /*----------------------------------------------------------------------------*/
 extern void design_hs(int fc, int fs, float gain, float quality_factor, float *coeff);
+/*----------------------------------------------------------------------------*/
+/**@brief    带通滤波器
+   @param    fc:中心截止频率
+   @param    fs:采样率
+   @param    quality_factor:q值
+   @param    coeff:计算后，系数输出地址
+   @return
+   @note
+*/
+/*----------------------------------------------------------------------------*/
+extern void design_bp(int fc, int fs, float quality_factor, float *coeff);
 /*----------------------------------------------------------------------------*/
 /**@brief    滤波器系数检查
    @param    coeff:滤波器系数

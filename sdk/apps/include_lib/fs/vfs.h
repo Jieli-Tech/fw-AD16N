@@ -46,6 +46,7 @@ enum {
 
     FS_IOCTL_MK_DIR, //创建文件夹
     FS_IOCTL_GET_ENCFOLDER_INFO, //获取录音文件信息i
+    FS_IOCTL_SET_VOL, // 设置卷标
     FS_IOCTL_DIR_FILE_TOTAL,
     FS_IOCTL_FILE_TOTAL,
     FS_IOCTL_FS_TOTAL,
@@ -54,6 +55,9 @@ enum {
     FS_IOCTL_FILE_INDEX,
     FS_IOCTL_FS_INDEX,
     FS_IOCTL_RESET_VFSCAN,
+    FS_IOCTL_GET_PARTITION_INFO,  //获取分区信息，簇大小，容量
+    FS_IOCTL_GET_FREE_SPACE, //获取剩余空间
+    FS_IOCTL_GET_PATH,  //获取相对路径和绝对路径
 };
 
 
@@ -87,6 +91,7 @@ struct vfs_operations {
     // int (*fsel)(struct vfscan *, void *, int sel_mode, void **, int);
     int (*fsel)(void *, void *, int sel_mode, void **, int);
     int (*file_crc)(void *pfile);
+    int (*format)(void **p_fs_hdl, void *device, u32 clust_size, u8 create_new);
 
 
 
@@ -130,6 +135,14 @@ struct imount {
 
 #define VFS_FILE_NAME_LEN			16
 extern char g_file_sname[VFS_FILE_NAME_LEN];
+
+
+extern struct vfs_operations vfs_ops_begin[];
+extern struct vfs_operations vfs_ops_end[];
+
+#define list_for_each_vfs_operation(ops) \
+	for (ops=vfs_ops_begin; ops<vfs_ops_end; ops++)
+
 
 
 

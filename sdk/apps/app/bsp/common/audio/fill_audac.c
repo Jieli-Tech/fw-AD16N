@@ -10,13 +10,14 @@
 #include "sine_play.h"
 #include "circular_buf.h"
 #include "app_modules.h"
+#include "sound_kick.h"
 
 #if HAS_MIO_EN
 #include "mio_api.h"
 #endif
 
-/* #define LOG_TAG_CONST       NORM */
-#define LOG_TAG_CONST       OFF
+#define LOG_TAG_CONST       NORM
+/* #define LOG_TAG_CONST       OFF */
 #define LOG_TAG             "[audio_dac_api]"
 #include "log.h"
 
@@ -24,35 +25,8 @@ AT(.audio_isr_text)
 void fifo_dac_fill_kick(u32 i, u32 dac_packet_num)
 {
 #if HAS_MIO_EN
-    d_mio_kick(dac_mge.sound[i]->mio, dac_packet_num/*DAC_PACKET_SIZE*/);
+    d_mio_kick(dac_mge.sound_later[i]->mio, dac_packet_num/*DAC_PACKET_SIZE*/);
 #endif
-}
-
-AT(.audio_isr_text)
-__attribute__((weak))
-int dac_kick_api(void *sound_hld, void *pkick)
-{
-    return -1;
-}
-
-AT(.audio_isr_text)
-void dac_kick(void *sound_hld, void *pkick)
-{
-    sound_out_obj *psound = sound_hld;
-    if (psound->enable & B_DEC_RUN_EN) {
-        if (0 == (psound->enable & B_DEC_PAUSE)) {
-            /* debug_putchar('K'); */
-            /* if_kick_decoder(psound, pkick); */
-            dac_kick_api(psound, pkick);
-        }
-    } else {
-        if (0 == cbuf_get_data_size(psound->p_obuf)) {
-            /* log_char('L'); */
-            psound->enable &= ~B_DEC_OBUF_EN;
-        } else {
-            /* log_char('M'); */
-        }
-    }
 }
 
 AT(.audio_isr_text)
@@ -82,14 +56,15 @@ u32 fill_dac_fill_phy(u8 *buf, u32 len)
         if (0 == (dac_mge.ch & BIT(i))) {
             continue;
         }
-        if (false == dac_cbuff_active(dac_mge.sound[i])) {
+
+        if (false == dac_cbuff_active(dac_mge.sound_later[i])) {
             continue;
         }
         /* if ((cbuf_get_data_size(dac_mge.sound[i]->p_obuf) >= len) || \ */
         /*     (!(dac_mge.sound[i]->enable & B_DEC_RUN_EN))) { */
         /*     rptr[i] = cbuf_read_alloc(dac_mge.sound[i]->p_obuf, &olen[i]); */
         /* } */
-        rptr[i] = cbuf_read_alloc(dac_mge.sound[i]->p_obuf, &olen[i]);
+        rptr[i] = cbuf_read_alloc(dac_mge.sound_later[i]->p_obuf, &olen[i]);
         if (0 == olen[i]) {
             log_char('z');
             rptr[i] = 0;
@@ -105,7 +80,7 @@ u32 fill_dac_fill_phy(u8 *buf, u32 len)
                 continue;
             }
             if (0 == olen[i]) {
-                rptr[i] = cbuf_read_alloc(dac_mge.sound[i]->p_obuf, &olen[i]);
+                rptr[i] = cbuf_read_alloc(dac_mge.sound_later[i]->p_obuf, &olen[i]);
                 if (0 == olen[i]) {
                     log_char('x');
 
@@ -114,12 +89,20 @@ u32 fill_dac_fill_phy(u8 *buf, u32 len)
             }
 
             t_sp += *rptr[i];
-            if ((0 == (B_STEREO & dac_mge.sound[i]->info)) && \
+            if ((0 == (B_STEREO & dac_mge.sound_later[i]->info)) && \
                 (2 == DAC_TRACK_NUMBER)) {
                 if (1 == (sp_cnt & 0x01)) {
                     p_cnt[i]++;
                     rptr[i]++;
                 }
+            } else if ((B_STEREO & dac_mge.sound_later[i]->info) && \
+                       (1 == DAC_TRACK_NUMBER)) {
+                p_cnt[i]++;
+                rptr[i]++;
+                t_sp += *rptr[i];
+                p_cnt[i]++;
+                rptr[i]++;
+                t_sp = t_sp  / 2;
             } else {
                 p_cnt[i]++;
                 rptr[i]++;
@@ -132,11 +115,11 @@ u32 fill_dac_fill_phy(u8 *buf, u32 len)
             /* rptr[i]) */
 
             if ((p_cnt[i] * 2) >= olen[i]) {
-                cbuf_read_updata(dac_mge.sound[i]->p_obuf, p_cnt[i] * 2);
+                cbuf_read_updata(dac_mge.sound_later[i]->p_obuf, p_cnt[i] * 2);
                 /* rptr[i] = 0; */
                 olen[i] = 0;
                 p_cnt[i] = 0;
-                rptr[i] = cbuf_read_alloc(dac_mge.sound[i]->p_obuf, &olen[i]);
+                rptr[i] = cbuf_read_alloc(dac_mge.sound_later[i]->p_obuf, &olen[i]);
                 if (0 == olen[i]) {
                     log_char('y');
 
@@ -144,12 +127,14 @@ u32 fill_dac_fill_phy(u8 *buf, u32 len)
 
             }
         }
-#if 0
-        if (MAX_PHY_VOL != dac_mge.vol_phy) {
-            /* t_sp = (t_sp / (MAX_PHY_VOL + 1)) * dac_mge.vol_phy; */
-            t_sp = (t_sp * dac_mge.vol_phy) / (MAX_PHY_VOL + 1);
+        if (dac_mge.flag & B_DAC_DIG_VOL) {
+            u16 max_phy_vol = get_dac_max_phy_vol();
+            if (max_phy_vol != dac_mge.vol_l_phy) {
+                /* 使用数字音量默认以左声道音量调整样点 */
+                /* t_sp = (t_sp / (MAX_PHY_VOL + 1)) * dac_mge.vol_phy; */
+                t_sp = (t_sp * dac_mge.vol_l_phy) / (max_phy_vol + 1);
+            }
         }
-#endif
         t_sp += sp_buf[sp_cnt];
 #ifdef __PI32V2__
         L_sat(t_sp, t_sp);
@@ -176,9 +161,9 @@ u32 fill_dac_fill_phy(u8 *buf, u32 len)
             continue;
         }
         if (0 != rptr[i]) {
-            cbuf_read_updata(dac_mge.sound[i]->p_obuf, p_cnt[i] * 2);
+            cbuf_read_updata(dac_mge.sound_later[i]->p_obuf, p_cnt[i] * 2);
         }
-        dac_kick(dac_mge.sound[i], dac_mge.kick[i]);
+        sound_kick(dac_mge.sound_later[i], dac_mge.kick[i]);
     }
 
 #if TCFG_AUDIO_AUTO_MUTE_ENABLE
@@ -200,13 +185,13 @@ u32 fill_dac_only_one(u8 *buf, u32 len)
         if (0 == (dac_mge.ch & BIT(i))) {
             continue;
         }
-        if (false == dac_cbuff_active(dac_mge.sound[i])) {
+        if (false == dac_cbuff_active(dac_mge.sound_later[i])) {
             continue;
         }
-        rlen = cbuf_read(dac_mge.sound[i]->p_obuf, buf, len);
+        rlen = cbuf_read(dac_mge.sound_later[i]->p_obuf, buf, len);
         fifo_dac_fill_kick(i, len / 2 / DAC_TRACK_NUMBER);//mio依赖单声道数据量
 
-        dac_kick(dac_mge.sound[i], dac_mge.kick[i]);
+        sound_kick(dac_mge.sound_later[i], dac_mge.kick[i]);
     }
 #if TCFG_AUDIO_AUTO_MUTE_ENABLE
     audio_energy_detect_run((s16 *)buf, len);

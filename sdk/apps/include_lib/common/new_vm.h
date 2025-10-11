@@ -70,6 +70,11 @@ u32 nvm_read(NEW_VM_OBJ *p_nvm, u32 id, u8 *buf, u32 len);
 u32 nvm_write(NEW_VM_OBJ *p_nvm, u32 id, u8 *buf, u32 len);
 void nvm_pre_erasure_next(NEW_VM_OBJ *p_nvm, u16 using_next, u16 idle_next);
 
+u32 nvm_format_another_ignore(NEW_VM_OBJ *p_nvm, u32 *ignore_map, u32 ignore_bits);
+u32 nvm_get_half_addr(NEW_VM_OBJ *p_nvm);
+u32 nvm_get_half_len(NEW_VM_OBJ *p_nvm);
+u32 nvm_get_cur_date_len(NEW_VM_OBJ *p_nvm);
+
 /**********************************************************
  * 提供给库的回调函数
  * *****/
@@ -83,6 +88,7 @@ u32 nvm_format_anotheri_api(void);
 u32 nvm_read_api(u32 id, u8 *buf, u32 len);
 u32 nvm_write_api(u32 id, u8 *buf, u32 len);
 void nvm_erasure_next_api(void);
+void nvm_format_another_ignore_api(u32 *delete_map, u32 delete_bits);
 
 #endif
 

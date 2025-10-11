@@ -95,6 +95,9 @@
 #define audac_fade_step(n) ((n & 0xf) << 4)
 #define AUDAC_SRC_EN        BIT(1)
 #define AUDAC_VIL_INV       BIT(0)
+#define AUDAC_FADE_START    ( JL_AUDIO->DAC_CON &= ~A_DAC_FADE_DIS )
+#define AUDAC_FADE_STOP     ( JL_AUDIO->DAC_CON |=  A_DAC_FADE_DIS )
+#define AUDAC_FADING_FLAG   ( JL_AUDIO->DAC_CON & (0x01 << 11)     )
 
 /************************************************************************/
 
@@ -193,6 +196,19 @@ extern bool const audio_dac_lpf_renable;
 extern bool const audio_dac_lpf_lmute;
 extern bool const audio_dac_lpf_rmute;
 extern u32 fifo_dac_fill(u8 *buf, u32 len, AUDIO_TYPE type);
+
+
+
+
+u32 dac_sr_lookup(u32 sr);
+void dac_trim_api(void);
+void dac_phy_init(u32 sr_sel);
+u32 audac_sr_lookup(u32 sr);
+void audac_analog_open_api(u32 delay_flag);
+u32 dac_sr_set(u32 sr);
+void dac_phy_off(void);
+void dac_phy_vol(u16 dac_l, u16 dac_r);
+
 
 #endif
 

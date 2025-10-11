@@ -8,7 +8,7 @@
 #include "lcd_seg4x8_driver.h"
 
 #if LCD_4X8_EN
-#define LOG_TAG_CONST       NORM
+#define LOG_TAG_CONST       LCDC
 #define LOG_TAG             "[LCDC]"
 #include "log.h"
 
@@ -586,22 +586,14 @@ static void lcd_con_dump()
 void lcd_seg4x8_seg_init()
 {
     for (int j = 0; j < 8; j++) {
-        gpio_set_pull_up(__this->user_data->pin_cfg.pin_seg[j], 0);
-        gpio_set_pull_down(__this->user_data->pin_cfg.pin_seg[j], 0);
-        gpio_set_direction(__this->user_data->pin_cfg.pin_seg[j], 1);
-        gpio_set_die(__this->user_data->pin_cfg.pin_seg[j], 0);
-        gpio_set_dieh(__this->user_data->pin_cfg.pin_seg[j], 0);
+        gpio_set_mode(IO_PORT_SPILT(__this->user_data->pin_cfg.pin_seg[j]), PORT_HIGHZ);
     }
 }
 
 void lcd_seg4x8_com_init()
 {
     for (int i = 0; i < 4; i++) {
-        gpio_set_pull_up(__this->user_data->pin_cfg.pin_com[i], 0);
-        gpio_set_pull_down(__this->user_data->pin_cfg.pin_com[i], 0);
-        gpio_set_direction(__this->user_data->pin_cfg.pin_com[i], 1);
-        gpio_set_die(__this->user_data->pin_cfg.pin_com[i], 0);
-        gpio_set_dieh(__this->user_data->pin_cfg.pin_com[i], 0);
+        gpio_set_mode(IO_PORT_SPILT(__this->user_data->pin_cfg.pin_com[i]), PORT_HIGHZ);
     }
 }
 u32 seg_io_en = 0;
@@ -805,7 +797,7 @@ void lcd_seg4x8_test(void)
 /***************************复用,测试******************************/
 void lcd_seg_io_reuse_test_display()
 {
-    printf("---------------reuse test------------------\n");
+    log_info("---------------reuse test------------------\n");
     u32 cnt = 0;
     u32 tick_ = 0;
     u8 key_show = 0;
@@ -821,10 +813,10 @@ void lcd_seg_io_reuse_test_display()
     log_info("test:%s(): %d", __func__, __LINE__);
     while (1) {
         tick_++;
-        printf("+");
+        log_char("+");
 #if KEY_MATRIX_LCD_REUSE_EN
         if (lcd_key_num != 0xff) {
-            printf("\nreuse key(%d)cnt:%d\n", lcd_key_num, cnt);
+            log_info("\nreuse key(%d)cnt:%d\n", lcd_key_num, cnt);
             key_show = lcd_key_num;
             /* lcd_seg4x8_show_number(cnt); */
             /* lcd_seg4x8_show_number2(key_show); */

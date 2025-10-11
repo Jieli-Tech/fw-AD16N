@@ -1,7 +1,7 @@
 #ifndef _VM_H_
 #define _VM_H_
 
-#include "ioctl.h"
+// #include "ioctl.h"
 #include "dev_mg/device.h"
 
 //#define IOCTL_SET_VM_INFO               _IOW('V', 1, 1)
@@ -54,9 +54,6 @@ typedef enum _FLASH_ERASER {
     PAGE_ERASER,
 } FLASH_ERASER;
 
-typedef u32(*flash_code_protect_cb_t)(u32 offset, u32 len);
-u32 flash_code_protect_callback(u32 offset, u32 len);
-extern volatile u8 vm_busy;
 //
 void spi_cache_way_switch(u8 way_num);
 
@@ -83,12 +80,6 @@ void vm_api_write_mult(u16 start_id, u16 end_id, void *buf, u16 len, u32 delay);
 int vm_api_read_mult(u16 start_id, u16 end_id, void *buf, u16 len);
 VM_ERR syscfg_vm_init_phy(u32 eeprom_saddr, u32 eeprom_size);
 u16 vm_buff_alloc(u8 **buf);
-
-// vm擦写时可放出多个中断
-void vm_isr_response_index_register(u8 index);
-void vm_isr_response_index_unregister(u8 index);
-u32 get_vm_isr_response_index_h(void);//获取放出中断的高32位(index 32-63)
-u32 get_vm_isr_response_index_l(void);//获取放出中断的低32位(index 0-31)
 
 
 #endif  //_VM_H_

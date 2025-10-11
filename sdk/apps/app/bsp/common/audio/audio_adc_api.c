@@ -13,12 +13,18 @@
 #include "audio.h"
 #include "audio_adc.h"
 #include "audio_adc_api.h"
+#if defined (AUDIO_ADC_TYPE) && (AUDIO_ADC_TYPE == AUIN_USE_ALINK)
+#include "audio_link/audio_link_sync.h"
+#include "audio_link/audio_link_api.h"
+#endif
 /* #include "audio_analog.h" */
 #include "sound_mge.h"
+#include "uac_sync.h"
+#include "app_config.h"
 
 
 #define LOG_TAG_CONST       NORM
-#define LOG_TAG             "[normal]"
+#define LOG_TAG             "[audio_adc_api]"
 #include "log.h"
 
 
@@ -27,9 +33,10 @@
 
 typedef struct _AUDIO_ADC_MANAGE {
     /*多路数据流句柄*/
-    sound_out_obj *sound[AUADC_CHANNEL_TOTAL];
+    sound_out_obj *sound_pre[AUDIO_ADC_CHANNEL_TOTAL];
+    sound_out_obj *sound_later[AUDIO_ADC_CHANNEL_TOTAL];
     /*多路数据流句柄所对应的触发函数*/
-    void (*kick[AUADC_CHANNEL_TOTAL])(void *);
+    void (*kick[AUDIO_ADC_CHANNEL_TOTAL])(void *);
     u8 ch;          /*通路标记*/
     u8 track;       /*声道数目*/
 } AUDIO_ADC_MANAGE;
@@ -64,56 +71,26 @@ void audio_adc_mode_init(void)
 
 u32 audio_adc_init_api(u32 sr, AUDIO_ADC_MODE mode, u32 throw_sp_num)
 {
+    if (sr == 0) {
+        return E_ADC_SR;
+    }
     u32 res = 0;
     if (AUDIO_ADC_MIC == mode) {
-        single_micin_analog_open();
         audio_adc_mge.track = 1;
-        if (mic_rs_outside == audio_adc_mic_rs_mode) {
-            JL_PORTA->DIR |= BIT(0);
-            JL_PORTA->DIE &= ~BIT(0);
-            JL_PORTA->PU0 &= ~BIT(0);
-            JL_PORTA->PD0 &= ~BIT(0);
-        }
-        if (mic_input_pa1 == audio_adc_mic_input_mode) {
-            JL_PORTA->DIR |= BIT(1);
-            JL_PORTA->DIE &= ~BIT(1);
-            JL_PORTA->PU0 &= ~BIT(1);
-            JL_PORTA->PD0 &= ~BIT(1);
-        } else if (mic_input_pa2 == audio_adc_mic_input_mode) {
-            JL_PORTA->DIR |= BIT(2);
-            JL_PORTA->DIE &= ~BIT(2);
-            JL_PORTA->PU0 &= ~BIT(2);
-            JL_PORTA->PD0 &= ~BIT(2);
-        } else {
-            JL_PORTA->DIR |= BIT(1);
-            JL_PORTA->DIE &= ~BIT(1);
-            JL_PORTA->PU0 &= ~BIT(1);
-            JL_PORTA->PD0 &= ~BIT(1);
-            JL_PORTA->DIR |= BIT(2);
-            JL_PORTA->DIE &= ~BIT(2);
-            JL_PORTA->PU0 &= ~BIT(2);
-            JL_PORTA->PD0 &= ~BIT(2);
-        }
+        auadc_open_mic();
     } else if (AUDIO_ADC_LINEIN == mode) {
-        single_linin_analog_open();
+        auadc_open_linein();
         audio_adc_mge.track = 1;
-        JL_PORTA->DIR |= BIT(1);
-        JL_PORTA->DIE &= ~BIT(1);
-        JL_PORTA->PU0 &= ~BIT(1);
-        JL_PORTA->PD0 &= ~BIT(1);
-        JL_PORTA->DIR |= BIT(2);
-        JL_PORTA->DIE &= ~BIT(2);
-        JL_PORTA->PU0 &= ~BIT(2);
-        JL_PORTA->PD0 &= ~BIT(2);
+    } else if (AUDIO_LINK == mode) {
+#if defined (AUDIO_ADC_TYPE) && (AUDIO_ADC_TYPE == AUIN_USE_ALINK)
+        auadc_open_alink();
+        audio_adc_mge.track = 2;
+#endif
     } else {
-        audio_adc_mge.track = 0;
+        audio_adc_mge.track = 1;
     }
-    /* res = adc_analog_open(mode, ch); */
-    /* void dac_analog_init_t(); */
-    /* dac_analog_init_t(); */
-    if (0 == res) {
-        res = audio_adc_phy_init((void *)&c_audio_adc_hdl, sr, AUDIO_ADC_CON_DEFAULT, throw_sp_num);
-    }
+
+    res = auin_init((void *)&c_audio_adc_hdl, sr, AUDIO_ADC_CON_DEFAULT, throw_sp_num);
     return res;
 
 }
@@ -135,45 +112,59 @@ AT(.audio_isr_text)
 void fill_audio_adc_fill(u8 *buf, u32 len)
 {
     u32 i;
-    for (i = 0; i < AUADC_CHANNEL_TOTAL; i++) {
+    for (i = 0; i < AUDIO_ADC_CHANNEL_TOTAL; i++) {
         if (0 == (audio_adc_mge.ch & BIT(i))) {
             continue;
         }
-        if (0 == (audio_adc_mge.sound[i]->enable & B_DEC_RUN_EN)) {
+        if (0 == (audio_adc_mge.sound_pre[i]->enable & B_DEC_RUN_EN)) {
             continue;
         }
         u32 wlen;
-        wlen = cbuf_write(audio_adc_mge.sound[i]->p_obuf, buf, len);
+        wlen = cbuf_write(audio_adc_mge.sound_pre[i]->p_obuf, buf, len);
         if (wlen != len) {
-            log_char('*');
+            log_char('3');
+        } else {
+            /* putchar('4'); */
         }
-        /* if (audio_adc_mge.sound[i]->enable & B_REC_RUN) { */
         if (NULL !=  audio_adc_mge.kick[i]) {
-            audio_adc_mge.kick[i](audio_adc_mge.sound[i]);
+            audio_adc_mge.kick[i](audio_adc_mge.sound_pre[i]);
         }
-        /* kick_encode_api(); */
-        /* } */
-
-        /* if (audio_adc_mge.sound[i]->enable & B_LOUDSPEAKER) { */
-        /* kick_loudsperaker((void *)audio_adc_mge.sound[i]); */
-        /* } */
     }
 }
 
-bool regist_audio_adc_channel(void *psound, void *kick)
+/*----------------------------------------------------------------------------*/
+/**@brief   注册adc缓存函数
+   @param   psound_pre	:注册给ADC的SOUND
+			psound_later:ADC后级SOUND
+			kick		:回调函数
+   @return  TRUE:成功   false:失败
+   @author  note    bool regist_audio_adc_channel(void *psound_pre, void *psound_later, void *kick)
+*/
+/*----------------------------------------------------------------------------*/
+bool regist_audio_adc_channel(void *psound_pre, void *psound_later, void *kick)
 {
     u8 i;
-    for (i = 0; i < AUADC_CHANNEL_TOTAL; i++) {
+    for (i = 0; i < AUDIO_ADC_CHANNEL_TOTAL; i++) {
+        if (audio_adc_mge.ch & BIT(i)) {
+            if (audio_adc_mge.sound_pre[i] == psound_pre) {
+                log_error("current sound have been regist the same %d\n", i);
+            }
+            continue;
+        }
+    }
+    ///--------------------------
+    for (i = 0; i < AUDIO_ADC_CHANNEL_TOTAL; i++) {
         if (audio_adc_mge.ch & BIT(i)) {
             continue;
         }
         if (1 == audio_adc_mge.track) {
-            ((sound_out_obj *)psound)->info &= ~B_STEREO;
+            ((sound_out_obj *)psound_pre)->info &= ~B_STEREO;
         } else if (2 == audio_adc_mge.track) {
-            ((sound_out_obj *)psound)->info |= B_STEREO;
+            ((sound_out_obj *)psound_pre)->info |= B_STEREO;
         }
 
-        audio_adc_mge.sound[i] = psound;
+        audio_adc_mge.sound_pre[i] = psound_pre;
+        audio_adc_mge.sound_later[i] = psound_later;
         audio_adc_mge.kick[i] = kick;
         audio_adc_mge.ch |= BIT(i);
         return true;
@@ -181,23 +172,30 @@ bool regist_audio_adc_channel(void *psound, void *kick)
     return false;
 }
 
+/*----------------------------------------------------------------------------*/
+/**@brief   注销adc缓存函数
+   @param   psound	:注册给ADC的SOUND
+   @return
+   @author  note    bool unregist_audio_adc_channel(void *psound)
+*/
+/*----------------------------------------------------------------------------*/
 bool unregist_audio_adc_channel(void *psound)
 {
     u8 i;
     sound_out_obj *ps = psound;
 
-    for (i = 0; i < AUADC_CHANNEL_TOTAL; i++) {
+    for (i = 0; i < AUDIO_ADC_CHANNEL_TOTAL; i++) {
         if (0 == (audio_adc_mge.ch & BIT(i))) {
             continue;
         }
 
-        if (audio_adc_mge.sound[i] == psound) {
+        if (audio_adc_mge.sound_pre[i] == psound) {
             local_irq_disable();
-            audio_adc_mge.ch &= ~BIT(i);
-            /* audio_adc_mge.obuf[i] = 0; */
-            audio_adc_mge.sound[i] = 0;
-            audio_adc_mge.kick[i] = NULL;
             ps->enable &= ~B_DEC_OBUF_EN;
+            audio_adc_mge.ch &= ~BIT(i);
+            audio_adc_mge.sound_pre[i] = NULL;
+            audio_adc_mge.sound_later[i] = NULL;
+            audio_adc_mge.kick[i] = NULL;
             local_irq_enable();
             break;
         }
@@ -208,3 +206,89 @@ bool unregist_audio_adc_channel(void *psound)
 
 
 
+#if defined (AUDIO_ADC_TYPE) && (AUDIO_ADC_TYPE == AUIN_USE_ALINK)
+/* sync同步>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> */
+
+/* 统计ibuf和obuf的百分比 */
+void uac_audio_adc_percent(u8 ch)
+{
+    u32 src_ibuf = 0;
+    u32 src_ibuf_size = 0;
+    u32 src_obuf = 0;
+    u32 src_obuf_size = 0;
+    u32 insample = 0;
+    u32 outsample = 0;
+    u32 percent = 0;
+    if (0 == (audio_adc_mge.ch & BIT(ch))) {
+        return;
+    }
+    if ((audio_adc_mge.sound_later[ch] == NULL) || (audio_adc_mge.sound_pre[ch] == NULL)) {
+        return;
+    }
+    if (B_DEC_FIRST & audio_adc_mge.sound_later[ch]->enable) {	//是否首次开启
+        return;
+    }
+    EFFECT_OBJ *p_effect = audio_adc_mge.sound_pre[ch]->effect;
+    sound_in_obj *p_src_si = p_effect->p_si;
+    if (NULL == p_src_si) {		//即没有src 或 其他音效
+        return;
+    }
+    SRC_STUCT_API *p_ops = p_src_si->ops;
+
+    /* 1.读ibuf 数据长度 */
+    src_ibuf = cbuf_get_data_size(audio_adc_mge.sound_pre[ch]->p_obuf);
+    src_ibuf_size = cbuf_get_space(audio_adc_mge.sound_pre[ch]->p_obuf);
+    /* 2.前后级采样率	 */
+    insample = p_ops->config(
+                   p_src_si->p_dbuf,
+                   SRC_CMD_GET_INSAMPLE,
+                   (void *)NULL
+               );
+    insample /= 1000;
+
+    outsample = p_ops->config(
+                    p_src_si->p_dbuf,
+                    SRC_CMD_GET_OUTSAMPLE,
+                    (void *)NULL
+                );
+    outsample /= 1000;
+
+
+    /* 3.读src_obuf 数据长度*/
+    src_obuf = cbuf_get_data_size(audio_adc_mge.sound_later[ch]->p_obuf);
+    src_obuf_size = cbuf_get_space(audio_adc_mge.sound_later[ch]->p_obuf);
+    /* 4. 1和2的百分比*/
+    percent = (((src_ibuf * outsample / insample) + src_obuf) * 100) / ((src_ibuf_size * outsample / insample) + src_obuf_size);
+    audio_link_sync_accumulate(ch, percent);
+
+}
+
+void audio_adc_sync_once(void)
+{
+    u8 i;
+    EFFECT_OBJ *p_effect = NULL;
+
+    for (i = 0; i < AUDIO_LINK_CHANNEL_TOTAL; i++) {
+        if ((audio_adc_mge.ch & BIT(i)) == 0) {
+            continue;
+        }
+        if (NULL == audio_adc_mge.sound_later[i]) {
+            continue;
+        }
+        if (B_DEC_FIRST & audio_adc_mge.sound_later[i]->enable) {	//是否首次开启
+            continue;
+        }
+        p_effect = audio_adc_mge.sound_later[i]->effect;
+        if (p_effect == NULL) {
+            log_error("this %d channel no src\n", i);
+            continue;
+        }
+        /* 取同步间隔内百分比平均值 */
+        audio_link_sync_percent(i, p_effect);
+        audio_link_sync_reset(i);
+
+    }
+}
+
+/* sync同步<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
+#endif

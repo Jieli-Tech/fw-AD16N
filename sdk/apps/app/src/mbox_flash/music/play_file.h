@@ -9,7 +9,7 @@
 
 dec_obj *decoder_by_sclust(void *pvfs, play_control *ppctl);
 dec_obj *decoder_by_index(void *pvfs, play_control *ppctl);
-bool music_play_control(MBOX_MUSIC_CMD cmd, u32 index, DEC_STOP_WAIT mode);
+bool music_play_control(MBOX_MUSIC_CMD cmd, u32 index, IS_WAIT dec_stop_wait);
 // bool mbox_simple_play_file(u8 dindex, u32 findex);
 bool mbox_simple_play_file(play_control *ppctl);
 #endif

@@ -1,7 +1,7 @@
 #ifndef  __OTG_H__
 #define  __OTG_H__
 
-#include "usb/usb.h"
+#include "usb.h"
 #include "device.h"
 
 enum {

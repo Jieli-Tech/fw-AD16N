@@ -24,7 +24,7 @@
 #include "msg.h"
 /* #include "dac_api.h" */
 
-#define     UAC_DEBUG_ECHO_MODE 1
+#define     UAC_DEBUG_ECHO_MODE 0
 
 
 static volatile u8 speaker_stream_is_open = 0;
@@ -130,7 +130,8 @@ void uac_speaker_stream_open(u32 samplerate, u32 ch)
 
     cbuf_init(&uac_speaker.cbuf, uac_speaker.buffer, UAC_BUFFER_SIZE);
 
-    sound_out_init(&uac_spk_sound, (void *)&uac_speaker.cbuf, B_STEREO);
+    sound_out_init(&uac_spk_sound, (void *)&uac_speaker.cbuf, (SPK_CHANNEL == 2) ? B_STEREO : 0);
+    /* sound_out_init(&uac_spk_sound, (void *)&uac_speaker.cbuf, B_STEREO); */
     /* memset(&uac_speaker, 0, sizeof(struct uac_speaker_handle)); */
     /* uac_spk_sound.p_obuf = &uac_speaker.cbuf; */
     /* uac_spk_sound.info |= B_STEREO; */
@@ -308,14 +309,6 @@ static int uac_mic_echo_data(u8 *buf, u32 len)
         j += 2;
     }
 #endif
-#else
-    uac_speaker_read(NULL, buf, 2 * len);
-    u16 *r_ch = (u16 *)buf;
-    u16 *s_ch = r_ch;
-    for (int i = 0; i < len * 2 ; i += 2) {
-        *r_ch = s_ch[i * 2];
-        r_ch += 1;
-    }
 #endif
     return len;
 }
@@ -406,7 +399,7 @@ void uac_mic_stream_close()
 }
 
 #if 0
-struct uac_info_t uac_info = {
+struct uac_info_t _uac_info = {
     .uac_speaker_stream_open = uac_speaker_stream_open,
     .uac_speaker_stream_write = uac_speaker_stream_write,
     .uac_speaker_stream_close = uac_speaker_stream_close,
@@ -424,7 +417,7 @@ struct uac_info_t uac_info = {
     .mic_audio_res = MIC_AUDIO_RES,
 };
 #endif
-struct uac_info_t uac_info AT(.uac_var);
+struct uac_info_t _uac_info AT(.uac_var);
 
 void uac_init(void)
 {
@@ -432,25 +425,27 @@ void uac_init(void)
     last_spk_r_vol = (u32) - 1;
     last_mic_vol = (u32) - 1;
 
-    memset((void *)&uac_info, 0, sizeof(struct uac_info_t));
-    uac_info.uac_speaker_stream_open = uac_speaker_stream_open;
-    uac_info.uac_speaker_stream_write = uac_speaker_stream_write;
-    uac_info.uac_speaker_stream_close = uac_speaker_stream_close;
-    uac_info.uac_mute_volume = uac_mute_volume;
-    uac_info.uac_mic_stream_open = uac_mic_stream_open;
-    uac_info.uac_mic_stream_close = uac_mic_stream_close;
-    uac_info.uac_get_spk_vol = uac_get_spk_vol;
-    uac_info.uac_mic_stream_read = uac_mic_stream_read;
-    uac_info.spk_audio_rate = (u16)SPK_AUDIO_RATE;
-    uac_info.spk_channle = SPK_CHANNEL;
-    uac_info.spk_audio_res = SPK_AUDIO_RES;
+    memset((void *)&_uac_info, 0, sizeof(struct uac_info_t));
+    _uac_info.uac_speaker_stream_open = uac_speaker_stream_open;
+    _uac_info.uac_speaker_stream_write = uac_speaker_stream_write;
+    _uac_info.uac_speaker_stream_close = uac_speaker_stream_close;
+    _uac_info.uac_mute_volume = uac_mute_volume;
+    _uac_info.uac_mic_stream_open = uac_mic_stream_open;
+    _uac_info.uac_mic_stream_close = uac_mic_stream_close;
+    _uac_info.uac_get_spk_vol = uac_get_spk_vol;
+    _uac_info.uac_mic_stream_read = uac_mic_stream_read;
+    _uac_info.spk_audio_rate = (u32)SPK_AUDIO_RATE;
+    _uac_info.spk_channle = SPK_CHANNEL;
+    _uac_info.spk_audio_res = SPK_AUDIO_RES;
 
-    uac_info.mic_channle = MIC_CHANNEL;
-    uac_info.mic_audio_rate = (u16)MIC_AUDIO_RATE;
-    uac_info.mic_audio_res = MIC_AUDIO_RES;
+    _uac_info.mic_channle = MIC_CHANNEL;
+    _uac_info.mic_audio_rate = (u32)MIC_AUDIO_RATE;
+    _uac_info.mic_audio_res = MIC_AUDIO_RES;
 
-    uac_info.speaker_dma_buffer = usb_get_ep_buffer(0, SPK_ISO_EP_OUT);
-    uac_info.mic_dma_buffer = usb_get_ep_buffer(0, MIC_ISO_EP_IN | USB_DIR_IN);
+    _uac_info.speaker_dma_buffer = usb_get_ep_buffer(0, SPK_ISO_EP_OUT);
+    _uac_info.mic_dma_buffer = usb_get_ep_buffer(0, MIC_ISO_EP_IN | USB_DIR_IN);
+
+    set_usb_mic_info(NULL);//清除USB_MIC管理句柄
 }
 
 void uac_release_api(void)
@@ -461,6 +456,13 @@ void uac_release_api(void)
 #if (USB_DEVICE_CLASS_CONFIG & MIC_CLASS) == MIC_CLASS
     uac_mic_stream_close();
 #endif
+    set_usb_mic_func(NULL, NULL);//注册auadc mic
 }
+
+bool get_usb_mic_status()
+{
+    return mic_stream_is_open;
+}
+
 #endif
 

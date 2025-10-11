@@ -25,6 +25,7 @@ typedef enum {
     KEY_TYPE_IR,
     KEY_TYPE_TOUCH,
     KEY_TYPE_MIC,
+    KEY_TYPE_LPTOUCH,
 } KEY_TYPE;
 
 /*按键门槛值*/
@@ -51,6 +52,7 @@ enum {
 #define MATRIX_KEY_MAX_NUM  10
 #define IR_KEY_MAX_NUM 		21
 #define TOUCH_KEY_MAX_NUM	10
+#define LPTOUCH_KEY_MAX_NUM	8
 #define MIC_KEY_MAX_NUM     3
 
 #define KEY_DOUBLE_CLICK_CNT    35 //35*10ms

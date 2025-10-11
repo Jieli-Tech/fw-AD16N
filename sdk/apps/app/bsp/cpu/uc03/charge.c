@@ -2,7 +2,7 @@
 #include "charge.h"
 #include "asm/power_interface.h"
 #include "efuse.h"
-#include "saradc.h"
+#include "adc_api.h"
 #include "app_config.h"
 
 #define LOG_TAG_CONST       CHARGE
@@ -449,7 +449,7 @@ void charge_init(void)
 {
     log_info("%s\r\n", __func__);
 #ifdef SARADC_ISR_MODE
-    saradc_add_sample_ch(ADC_CH_PMU_1_4_VBAT);
+    adc_add_sample_ch(AD_CH_PMU_VBAT_4);
 #endif
     power_awakeup_gpio_enable(IO_CHGFL_DET, 0);
 
@@ -476,7 +476,7 @@ void charge_init(void)
 
     __this->full_flag = 0;
 
-    __this->vbat_voltage = saradc_get_vbat_voltage();
+    __this->vbat_voltage = adc_get_vbat_voltage();
 
     charge_dump();
 }

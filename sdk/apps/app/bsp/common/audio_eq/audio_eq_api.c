@@ -7,6 +7,7 @@
 #include "app_config.h"
 #include "effects_adj.h"
 
+#if defined(AUDIO_HW_EQ_EN) && (AUDIO_HW_EQ_EN)
 #define LOG_TAG_CONST       NORM
 #define LOG_TAG             "[eq]"
 #include "log.h"
@@ -59,9 +60,9 @@ void *link_eq_sound(void *p_sound_out, void *p_dac_cbuf, void **pp_effect, u32 s
         p_curr_sound->enable |= B_DEC_EFFECT;
         p_curr_sound = p_next_sound;
         p_curr_sound->p_obuf = p_dac_cbuf;
-        /* log_info("eq init succ\n"); */
+        log_info("audio eq init succ\n");
     } else {
-        log_info("eq init fail\n");
+        log_info("audio eq init fail\n");
     }
     return p_curr_sound;
 }
@@ -169,3 +170,4 @@ static void *eq_api(void *obuf, EQ_PARA_STRUCT *p_para, void **ppsound)
     *ppsound = &p_eq_obj->sound;
     return p_eq_obj;
 }
+#endif

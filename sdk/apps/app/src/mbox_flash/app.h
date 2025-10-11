@@ -13,6 +13,8 @@ typedef enum {
     SIMPLE_DEC_MODE,
     LOUDSPEAKER_MODE,
     RTC_MODE,
+    RF_RADIO_MODE,
+    REMOTECONTROL_MODE,
     MAX_WORK_MODE,
 
     SOFTOFF_MODE = 0xfe//该模式只由POWER_OFF消息进入

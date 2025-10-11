@@ -94,6 +94,11 @@ typedef enum __AUMIC_INPUT_MODE {
 } AUDIO_MIC_INPUT_MODE;
 extern AUDIO_MIC_INPUT_MODE const audio_adc_mic_input_mode;
 
+typedef enum __AUAUX_INPUT_MODE {
+    aux_input_pa1 = 19,          //PA1单端输入
+    aux_input_pa2 = 21,          //PA2单端输入
+} AUDIO_AUX_INPUT_MODE;
+
 typedef enum __AUDIO_MICLDO_VS {
     AUMIC_2v4 = 0,
     AUMIC_2v6 = 1,
@@ -169,6 +174,25 @@ void set_auadc_mic_bias_2_vcom1(bool flag);
 void set_auadc_mic_pga_6db(bool enable);
 void set_auadc_mic_pga(AUDIO_MICPGA_G pga);
 
+
+#define AUIN_USE_ADC     	1
+#define AUIN_USE_ALINK      2	//(UC03 不支持ALINK)
+
+#define AUDIO_ADC_TYPE      AUIN_USE_ADC
+
+#if (AUDIO_ADC_TYPE == AUIN_USE_ADC)
+// audio_adc
+#define auin_mode_init()
+#define auin_init(m,n,o,p)     		audio_adc_phy_init(m,n,o,p)
+#define auin_uninit     			audio_adc_off_api
+#define AUDIO_ADC_CHANNEL_TOTAL 	AUADC_CHANNEL_TOTAL
+
+#else
+#define auin_mode_init()
+#define auin_init(m,n,o,p)
+#define auin_uninit()
+#define AUDIO_ADC_CHANNEL_TOTAL 	1
+#endif
 
 
 

@@ -4,48 +4,40 @@
 #include "gpio.h"
 #include "key.h"
 
-#define IS_KEY0_DOWN()    	(!(JL_PORTB->IN & BIT(0)))
-#define IS_KEY1_DOWN()    	(!(JL_PORTB->IN & BIT(1)))
-#define IS_KEY2_DOWN()    	(!(JL_PORTB->IN & BIT(2)))
-#define IS_KEY3_DOWN()    	(!(JL_PORTB->IN & BIT(8)))
-#define IS_KEY4_DOWN()    	(!(JL_PORTB->IN & BIT(4)))
+#define IS_KEY0_DOWN()    	(!(JL_PORTA->IN & BIT(1)))
+#define IS_KEY1_DOWN()    	(!(JL_PORTA->IN & BIT(2)))
+#define IS_KEY2_DOWN()    	(!(JL_PORTA->IN & BIT(11)))
+#define IS_KEY3_DOWN()    	(!(JL_PORTA->IN & BIT(15)))
+// #define IS_KEY4_DOWN()    	(!(JL_PORTB->IN & BIT(4)))
+#define IS_KEY4_DOWN()      0
 #define IS_KEY5_DOWN()      0
 #define IS_KEY6_DOWN()      0
+#define IS_KEY7_DOWN()      0
 // #define IS_KEY5_DOWN()    	(!(JL_PORTB->IN & BIT(5)))
 // #define IS_KEY6_DOWN()    	(!(JL_PORTB->IN & BIT(6)))
-#define IS_KEY7_DOWN()    	(!(JL_PORTB->IN & BIT(7)))
+// #define IS_KEY7_DOWN()    	(!(JL_PORTB->IN & BIT(7)))
 
 #define KEY_INIT()        do{\
 							/**key0 init*/\
-							JL_PORTB->PU0 |= BIT(0),\
-							JL_PORTB->PD0 &= ~BIT(0),\
-							JL_PORTB->DIE |= BIT(0),\
-							JL_PORTB->DIR |= BIT(0);\
+							JL_PORTA->PU0 |= BIT(1),\
+							JL_PORTA->PD0 &= ~BIT(1),\
+							JL_PORTA->DIE |= BIT(1),\
+							JL_PORTA->DIR |= BIT(1);\
 							/**key1 init*/\
-							JL_PORTB->PU0 |= BIT(1),\
-							JL_PORTB->PD0 &= ~BIT(1),\
-							JL_PORTB->DIE |= BIT(1),\
-							JL_PORTB->DIR |= BIT(1);\
+							JL_PORTA->PU0 |= BIT(2),\
+							JL_PORTA->PD0 &= ~BIT(2),\
+							JL_PORTA->DIE |= BIT(2),\
+							JL_PORTA->DIR |= BIT(2);\
 							/**key2 init*/\
-							JL_PORTB->PU0 |= BIT(2),\
-							JL_PORTB->PD0 &= ~BIT(2),\
-							JL_PORTB->DIE |= BIT(2),\
-							JL_PORTB->DIR |= BIT(2);\
+							JL_PORTA->PU0 |= BIT(11),\
+							JL_PORTA->PD0 &= ~BIT(11),\
+							JL_PORTA->DIE |= BIT(11),\
+							JL_PORTA->DIR |= BIT(11);\
 							/**key3 init*/\
-							JL_PORTB->PU0 |= BIT(8),\
-							JL_PORTB->PD0 &= ~BIT(8),\
-							JL_PORTB->DIE |= BIT(8),\
-							JL_PORTB->DIR |= BIT(8);\
-							/**key4 init*/\
-							JL_PORTB->PU0 |= BIT(4),\
-							JL_PORTB->PD0 &= ~BIT(4),\
-							JL_PORTB->DIE |= BIT(4),\
-							JL_PORTB->DIR |= BIT(4);\
-							/**key7 init*/\
-							JL_PORTB->PU0 |= BIT(7),\
-							JL_PORTB->PD0 &= ~BIT(7),\
-							JL_PORTB->DIE |= BIT(7),\
-							JL_PORTB->DIR |= BIT(7);\
+							JL_PORTA->PU0 |= BIT(15),\
+							JL_PORTA->PD0 &= ~BIT(15),\
+							JL_PORTA->DIE |= BIT(15),\
+							JL_PORTA->DIR |= BIT(15);\
 					    	}while(0)
 
 extern const key_interface_t key_io_info;

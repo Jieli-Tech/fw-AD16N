@@ -9,7 +9,7 @@
 #include "device_drive.h"
 #include "malloc.h"
 #include "app_config.h"
-
+#include "tick_timer_driver.h"
 //#include "ioctl.h"
 //#include "config.h"
 //#include "clock.h"
@@ -38,7 +38,7 @@ static inline void flash_mutex_post(flash_mutex *sem)//
 {
     (*sem) = 1;
 }
-extern u32 maskrom_get_jiffies(void);
+// extern u32 maskrom_get_jiffies(void);
 static inline s8 flash_mutex_pend(flash_mutex *sem, u32 timeout)// 当为timeout=0时，死等
 {
     u32 _jiffies = maskrom_get_jiffies();

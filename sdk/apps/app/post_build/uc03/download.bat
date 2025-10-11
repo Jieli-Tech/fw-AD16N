@@ -6,7 +6,12 @@ cd /d %~dp0
 set OBJDUMP=C:\JL\pi32\bin\llvm-objdump.exe
 set OBJCOPY=C:\JL\pi32\bin\llvm-objcopy.exe
 
+set OBJSIZEDUMP=C:\JL\pi32\bin\llvm-objsizedump.exe
+%OBJSIZEDUMP% -lite -skip-zero -enable-dbg-info %ELF_NAME%.elf > %ELF_NAME%.txt
+
 %OBJDUMP% -d -print-imm-hex -print-dbg %ELF_NAME%.elf > %ELF_NAME%.lst
+%OBJDUMP% -d -print-imm-hex -print-dbg %ELF_NAME%.elf > %ELF_NAME%.lst
+
 %OBJCOPY% -O binary -j .app_code %ELF_NAME%.elf %ELF_NAME%.bin
 %OBJCOPY% -O binary -j .data %ELF_NAME%.elf data.bin
 %OBJCOPY% -O binary -j .startup_data %ELF_NAME%.elf startup_data.bin
@@ -19,7 +24,12 @@ copy /b %ELF_NAME%.bin+data.bin+startup_data.bin app.bin
 @echo % date %
 cd / d % ~dp0
 
-isd_download.exe -tonorflash -dev uc03 -boot 0x101600 -div8 -wait 300 -otp usbboot.bin -uboot uboot.boot -app app.bin 0x2f000 -res dir_a dir_song dir_eng dir_poetry dir_story dir_bin_f1x dir_notice dir_midi midi_cfg dir_eq -output-fw output_flash.fw
+
+
+
+
+isd_download.exe -tonorflash -dev uc03 -boot 0x101600 -div8 -wait 300 -otp usbboot.bin -uboot uboot.boot -app app.bin -res dir_a dir_song dir_eng dir_poetry dir_story dir_bin_f1x dir_notice dir_midi midi_cfg dir_eq -output-fw output_flash.fw
+
 
 ::-ex_flash
 ::-format all

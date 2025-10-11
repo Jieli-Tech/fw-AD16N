@@ -120,7 +120,7 @@ void sine_voice_kick(void)
             voice_tab[size] = vol * sine_tab[i] / 32;
             size++;
         }
-        tab_init(&g_sine_obj.obj, &voice_tab[0], size);
+        tab_init(&g_sine_obj.obj, &voice_tab[0], size * sizeof(voice_tab[0]));
         g_sine_obj.sr = dac_sr;
     }
 

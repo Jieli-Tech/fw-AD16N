@@ -3,7 +3,7 @@
 
 #include "typedef.h"
 
-u32 mp3_encode_api(void *p_file);
+u32 mp3_encode_api(void *p_file, void *input_func, void *output_func);
 
 
 

@@ -21,6 +21,11 @@ typedef enum {
     D_TYPE_MIDI_CTRL,
     D_TYPE_WAV,
     D_TYPE_MP3_ST = 7,
+    D_TYPE_OPUS = 8,
+    D_TYPE_IMA,
+    D_TYPE_SPEEX,
+    D_TYPE_SBC,
+    D_TYPE_JLA_LW,
 } DECOER_TYPE ;
 
 
@@ -75,13 +80,6 @@ u32 mp_output(void *priv, void *data, int len);
 void decoder_init(void);
 u32 decoder_set_sr(dec_obj *d_obj);
 
-typedef enum  {//停止解码时，是否需要将DAC中剩余的样点消耗完
-    NO_WAIT = 0,
-    NEED_WAIT = 1,
-} DEC_STOP_WAIT;
-
-
-
 
 extern u32 dec_hld_tab[];
 extern const u32 decoder_tab[];
@@ -99,7 +97,8 @@ void decoder_channel_set(u8 dc);
 
 u32 if_decoder_is_run(dec_obj *obj);
 bool decoder_pause(dec_obj *obj);
-bool decoder_stop(dec_obj *obj, DEC_STOP_WAIT wait, void *p_dp);
+bool decoder_stop(dec_obj *obj, IS_WAIT dec_stop_wait, void *p_dp);
+bool decoder_stop_phy(dec_obj *obj, IS_WAIT DEC_STOP_WAIT, void *p_dp, bool fade, bool(*unregist_func)(void *));
 int decoder_fun(void *pfile, u32 dec_ctl, s32 *dec_index);
 // dec_obj *decoder_io(void *pfile, u32 dec_ctl, dp_buff * dbuff);
 dec_obj *decoder_io(void *pfile, u32 dec_ctl, dp_buff *dbuff, u8 loop);
@@ -112,6 +111,8 @@ bool decoder_fr(dec_obj *obj, u8 step);	// 快退。step单位-秒
 
 void decoder_set_file_size(dec_obj *obj, u32 size);	// 设置解码文件长度
 void decoder_soft_hook(void);
+dec_obj *decoder_list(dec_data_stream *p_strm, u32 dec_ctl, dp_buff *dbuff, u8 loop, u32 output_sr);
+void kick_decoder_api(void *p_stream_in, void *psound);
 
 
 //需要解码以外的部分实现的函数

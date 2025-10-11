@@ -2,7 +2,7 @@
 #define  __USB_HOST_H__
 /* #include "system/task.h" */
 #include "dev_mg/device.h"
-#include "usb/usb.h"
+#include "usb.h"
 #include "usb/ch9.h"
 #include "usb/usb_phy.h"
 
@@ -92,7 +92,7 @@ u32 usb_host_unmount(const usb_dev usb_id);
 u32 usb_host_remount(const usb_dev usb_id, u32 retry, u32 delay, u32 ot, u8 notify);
 void usb_host_suspend(const usb_dev usb_id);
 void usb_host_resume(const usb_dev usb_id);
-void usb_host_config(usb_dev usb_id, void *__host_var);
+void usb_host_config(usb_dev usb_id);
 void usb_host_free(usb_dev usb_id);
 void *usb_h_get_ep_buffer(const usb_dev usb_id, u32 ep);
 void usb_h_isr_reg(const usb_dev usb_id, u8 priority, u8 cpu_id);

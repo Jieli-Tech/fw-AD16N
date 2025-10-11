@@ -25,13 +25,15 @@ void hardware_fade_in(void)
     dac_mge.vol_r_phy = vol_tab[dac_mge.vol_r];
     CPU_INT_EN();
 
-    JL_AUDIO->DAC_CON &= ~BIT(10);
+    u32 timeout = 50 * 16 * 1000 * get_sys_us_cnt();//硬件淡入淡出最长时间,50ms*16=800ms
+    AUDAC_FADE_START;
     dac_phy_vol(dac_mge.vol_l_phy, dac_mge.vol_r_phy);
-    while (JL_AUDIO->DAC_CON & (0x01 << 11)) {
+    while (AUDAC_FADING_FLAG && timeout) {
         /* putchar('b'); */
         wdt_clear();
+        timeout--;
     }
-    JL_AUDIO->DAC_CON |= BIT(10);
+    AUDAC_FADE_STOP;
 }
 
 void hardware_fade_out(void)
@@ -43,13 +45,15 @@ void hardware_fade_out(void)
     dac_mge.vol_r_phy = 0;
     CPU_INT_EN();
 
-    JL_AUDIO->DAC_CON &= ~BIT(10);
+    u32 timeout = 50 * 16 * 1000 * get_sys_us_cnt();//硬件淡入淡出最长时间,50ms*16=800ms
+    AUDAC_FADE_START;
     dac_phy_vol(dac_mge.vol_l_phy, dac_mge.vol_r_phy);
-    while (JL_AUDIO->DAC_CON & (0x01 << 11)) {
+    while (AUDAC_FADING_FLAG && timeout) {
         /* putchar('a'); */
         wdt_clear();
+        timeout--;
     }
-    JL_AUDIO->DAC_CON |= BIT(10);
+    AUDAC_FADE_STOP;
 }
 
 #endif

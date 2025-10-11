@@ -4,6 +4,7 @@
 #include "errno-base.h"
 #include "vfs.h"
 #include "boot.h"
+#include "app_modules.h"
 
 
 #define LOG_TAG_CONST       NORM
@@ -111,6 +112,7 @@ u32 norfs_name_api(void *pfile, void *name, u32 len)
 }
 
 //REGISTER_VFS_OPERATIONS(sydfvfs_ops) = {
+#if NORFS_EN
 const struct vfs_operations norfs_vfs_ops sec_used(.vfs_operations) = {
     .fs_type = "norfs",
     /* .init        = norfs_init_api, */
@@ -129,7 +131,7 @@ const struct vfs_operations norfs_vfs_ops sec_used(.vfs_operations) = {
     .flen        = norfs_filelen_api,
     .ioctl       = norfs_ioctl_api,
 };
-
+#endif
 
 
 

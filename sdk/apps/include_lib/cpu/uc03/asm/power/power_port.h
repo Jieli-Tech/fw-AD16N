@@ -14,6 +14,22 @@
 #ifndef __POWER_PORT_H__
 #define __POWER_PORT_H__
 
+#define B_USB_DP_OUT   BIT(0)
+#define B_USB_DM_OUT   BIT(1)
+#define B_USB_DP_DIR   BIT(2)
+#define B_USB_DM_DIR   BIT(3)
+#define B_USB_DP_PU    BIT(4)
+#define B_USB_DM_PU    BIT(5)
+#define B_USB_DP_PD    BIT(6)
+#define B_USB_DM_PD    BIT(7)
+#define B_USB_DP_DIE   BIT(8)
+#define B_USB_DM_DIE   BIT(9)
+#define B_USB_DP_DIEH  BIT(10)
+#define B_USB_DM_DIEH  BIT(11)
+
+void usb_port_clr(u32 clr_bit);
+void usb_port_set(u32 set_bit);
+
 enum {
     PORTA_GROUP = 0,
     PORTB_GROUP,
@@ -43,7 +59,7 @@ struct gpio_value {
 // | WP(D2)    | xxx  | xxx  |
 // | HOLD(D3)  | xxx  | xxx  |
 
-#define get_sfc_port() (JL_IOMC->IOMC0 & 0x1)
+// #define get_sfc_port() (JL_IOMC->IOMC0 & 0x1)
 
 ////////////////////////////////////////////////////////////////////////////////
 #define     PORT_SPI0_PWRA      D

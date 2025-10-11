@@ -19,7 +19,7 @@
 #include "usb/device/usb_stack.h"
 #include "usb/device/uac_audio.h"
 #include "usb/usr/usb_audio_interface.h"
-#include "usb/usr/uac_sync.h"
+#include "uac_sync.h"
 #include "audio_eq.h"
 
 #if  TCFG_PC_ENABLE
@@ -30,7 +30,8 @@
 #include "uart.h"
 
 EFFECT_OBJ *usb_src_obj;
-#if AUDIO_EQ_ENABLE
+
+#if defined(AUDIO_HW_EQ_EN) && (AUDIO_HW_EQ_EN)
 EFFECT_OBJ *usb_eq_obj;
 void *get_usb_eq_handle(void)
 {
@@ -86,7 +87,7 @@ void usb_slave_sound_close(sound_out_obj *p_sound)
         log_info("usb slave sound src effect null\n");
     }
     /* 释放eq句柄*/
-#if AUDIO_EQ_ENABLE
+#if defined(AUDIO_HW_EQ_EN) && (AUDIO_HW_EQ_EN)
     if (NULL != usb_eq_obj) {
         eq_reless((void **)&usb_eq_obj);
     } else {
@@ -104,13 +105,13 @@ void usb_slave_sound_open(sound_out_obj *p_sound, u32 sr)
         p_curr_sound = p_sound;
         void *cbuf_o = p_curr_sound->p_obuf;
 
-#if AUDIO_EQ_ENABLE
+#if defined(AUDIO_HW_EQ_EN) && (AUDIO_HW_EQ_EN)
         p_curr_sound = link_eq_sound(
                            p_curr_sound,
                            cbuf_o,
                            (void **)&usb_eq_obj,
                            sr,
-                           2
+                           (SPK_CHANNEL == 2) ? 2 : 1
                        );
 #endif
 #if TCFG_SPK_SRC_ENABLE
@@ -120,7 +121,7 @@ void usb_slave_sound_open(sound_out_obj *p_sound, u32 sr)
                            (void **)&usb_src_obj,
                            sr,
                            sr,
-                           2
+                           (SPK_CHANNEL == 2) ? 2 : 1
                        ); //为了省代码，没有写成上一句的样子
         if ((NULL != usb_src_obj) && (NULL != usb_src_obj->p_si)) {
             sound_in_obj *p_src_si = usb_src_obj->p_si;
@@ -133,11 +134,13 @@ void usb_slave_sound_open(sound_out_obj *p_sound, u32 sr)
         }
 #endif
 #if (1 == DAC_TRACK_NUMBER)
-        /* DAC差分输出时双声道音源融合成单声道 */
-        p_curr_sound->info |= B_LR_COMB;
+        /* DAC单声道输出时，双声道音源融合成单声道 */
+        if (p_curr_sound->info & B_STEREO) {
+            p_curr_sound->info |= B_LR_COMB;
+        }
 #endif
         /* usb_src_obj = p_sound->effect; */
-        regist_dac_channel(p_sound, NULL);//注册到DAC;
+        regist_dac_channel(NULL, p_sound, NULL);//注册到DAC;
         p_sound->enable |=  B_DEC_RUN_EN;
     }
 }
@@ -220,7 +223,7 @@ void usb_mic_init(void)
 
     //16k 采样,单声道
     err = audio_adc_init_api(MIC_AUDIO_RATE, ADC_MIC, BIT(0)); //PA13 -> mic
-    regist_audio_adc_channel(&usb_mic_sound, NULL); //注册到ADC;
+    regist_audio_adc_channel(&usb_mic_sound, NULL, NULL); //注册到ADC;
     audio_adc_enable(14);
     usb_mic_sound.enable |= B_DEC_RUN_EN;
 }

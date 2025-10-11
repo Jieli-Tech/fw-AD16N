@@ -18,7 +18,7 @@ TOOL_DIR := C:/JL/pi32/bin
 CC    := clang.exe
 CXX   := clang.exe
 LD    := pi32v2-lto-wrapper.exe
-AR    := pi32v2-lto-ar.exe
+AR    := llvm-ar.exe
 MKDIR := mkdir_win -p
 RM    := rm -rf
 
@@ -28,14 +28,14 @@ EXT_CFLAGS  := # Windows 下不需要 -D__SHELL__
 export PATH:=$(TOOL_DIR);$(PATH)
 
 ## 后处理脚本
-FIXBAT          := tools\utils\fixbat.exe # 用于处理 utf8->gbk 编码问题
-POST_SCRIPT     := apps\app\post_build\uc03\download.bat
-RUN_POST_SCRIPT := $(POST_SCRIPT)
+FIXBAT          := tools/utils/fixbat.exe # 用于处理 utf8->gbk 编码问题
+POST_SCRIPT     := apps/app/post_build/uc03/download.bat
+RUN_POST_SCRIPT := apps\app\post_build\uc03\download.bat
 else
 # Linux 下工具链位置
 TOOL_DIR := /opt/jieli/pi32v2/bin
 CC    := clang
-CXX   := clang++
+CXX   := clang
 LD    := lto-wrapper
 AR    := lto-ar
 MKDIR := mkdir -p
@@ -99,10 +99,12 @@ CXXFLAGS :=
 DEFINES := \
 	-D__FPGA=0 \
 	-DCONFIG_CPU_UC03=1 \
+	-DAPP_BT_BLE=0 \
+	-DCONFIG_CPU_UC04=1 \
 	-DD_MASKROM_CODE=0 \
 	-DD_IS_FLASH_SYSTEM \
 	-DD_SFC_DEVICE_EN \
-	-DFPGA=0 \
+	-DHAVE_MODULES_PRIVATE_C \
 	-DHAS_SRC_EN=1 \
 	-DHAS_MIO_PLAYER \
 	-DHAS_MP3_ST_DECODER \
@@ -113,21 +115,27 @@ DEFINES := \
 	-DHAS_A_DECODER \
 	-DHAS_MIDI_DECODER \
 	-DHAS_MIDI_KEYBOARD_DECODER \
-	-DHAS_DECODER_LOOP_EN \
+	-DHAS_midi_2byte_USED \
 	-DHAS_MP3_ENCODER \
+	-DMP3_ENCODER_SUPPORT_CH=2 \
 	-DHAS_UMP3_ENCODER \
 	-DHAS_A_ENCODER \
+	-DHAS_ANS_EN \
 	-DHAS_SPEED_EFFECT \
 	-DHAS_SONG_SPEED_EFFECT \
 	-DHAS_HOWLING_EFFECT \
 	-DHAS_ECHO_EFFECT \
 	-DHAS_VOICE_PITCH_EFFECT \
+	-DHAS_VOICE_CHANGER_EFFECT \
+	-DHAS_AUDIO_HW_EQ_EFFECT \
 	-DHAS_USB_EN=1 \
 	-DHAS_SDMMC_EN=1 \
 	-DHAS_EXTFLASH_EN=1 \
 	-DHAS_VFS_EN=1 \
 	-DHAS_NORFS_EN=1 \
 	-DHAS_SYDFS_EN=1 \
+	-DHAS_FATFS_EN=1 \
+	-DHAS_UPDATE_V1_EN=1 \
 	-DHAS_LINEIN_MODE \
 	-DHAS_SIMPLE_DEC_MODE \
 	-DHAS_RECORD_MODE \
@@ -147,28 +155,36 @@ INCLUDES := \
 	-Iapps/include_lib/fs/sydf \
 	-Iapps/include_lib/fs/nor_fs \
 	-Iapps/include_lib/fs/fat \
+	-Iapps/app/bsp/common/midi_open/midi_2byte \
+	-Iapps/app/bsp/common/midi_open/pi32v2_lto_r1 \
 	-Iapps/app/bsp/common/decoder/mio \
 	-Iapps/include_lib/encoder \
 	-Iapps/include_lib/encoder/list \
+	-Iapps/include_lib/ans \
 	-Iapps/app/src \
-	-Iapps/include_lib \
 	-Iapps/app/post_build/uc03 \
+	-Iapps/app/bsp \
+	-Iapps/app/bsp/common \
+	-Iapps/app/bsp/common/key \
+	-Iapps/app/bsp/common/power_manage \
+	-Iapps/app/bsp/common/usb/usr \
+	-Iapps/app/bsp/lib \
+	-Iapps/app/bsp/cpu/uc03 \
+	-Iapps/app/bsp/device \
+	-Iapps/app/bsp/rf \
+	-Iapps/app/bsp/start \
+	-Iapps/app/bsp/start/uc03 \
+	-Iapps/app/src/mbox_flash \
+	-Iapps/app/src/mbox_flash/uc03 \
+	-Iapps/include_lib \
 	-Iapps/include_lib/common \
 	-Iapps/include_lib/audio \
 	-Iapps/include_lib/audio_eq \
 	-Iapps/include_lib/cpu/uc03 \
+	-Iapps/include_lib/cpu/uc03/asm \
+	-Iapps/include_lib/cpu/uc03/power \
+	-Iapps/include_lib/cpu/uc03/audio_link \
 	-Iapps/include_lib/cpu \
-	-Iapps/maske_include \
-	-Iapps/app/bsp/lib \
-	-Iapps/app/bsp/start \
-	-Iapps/app/bsp/cpu/uc03 \
-	-Iapps/app/bsp/cpu/uc03/entry \
-	-Iapps/app/bsp/common \
-	-Iapps/app/bsp/common/power_manage \
-	-Iapps/app/bsp/common/usb/usr \
-	-Iapps/app/bsp/device \
-	-Iapps/app/src/mbox_flash \
-	-Iapps/app/src/mbox_flash/uc03 \
 	-Iapps/include_lib/msg \
 	-Iapps/include_lib/fs \
 	-Iapps/include_lib/dev_mg \
@@ -181,12 +197,11 @@ INCLUDES := \
 	-Iapps/include_lib/device/usb/device \
 	-Iapps/include_lib/device/usb/host \
 	-Iapps/include_lib/device/norflash \
-	-Iapps/include_lib/update \
+	-Iapps/include_lib/update/code_v2 \
 	-Iapps/include_lib/config \
-	-Iapps/app/bsp \
-	-Iapps/app/bsp/common/key \
 	-Iapps/include_lib/sound_effect_list \
-	-Iapps/include_lib/liba/ARCH/pi32v2_lto_r1/header \
+	-Iapps/include_lib/pcm_eq \
+	-Iapps/include_lib/remain_output \
 	-Iapps/app/src/mbox_flash/common \
 	-Iapps/app/src/mbox_flash/common/ui \
 	-Iapps/app/src/mbox_flash/music \
@@ -199,19 +214,28 @@ INCLUDES := \
 	-Iapps/app/src/mbox_flash/loudspeaker \
 	-Iapps/app/src/mbox_flash/rtc \
 	-Iapps/app/src/mbox_flash/softoff_app \
+	-Iapps/app/src/mbox_flash/rf_radio \
+	-Iapps/app/src/mbox_flash/rf_radio/connect_radio \
+	-Iapps/app/src/mbox_flash/rf_radio/connect_radio/half_duplex \
+	-Iapps/app/src/mbox_flash/rf_radio/connect_radio/full_duplex \
+	-Iapps/app/src/mbox_flash/rf_radio/padv \
+	-Iapps/app/src/mbox_flash/remotecontrol \
+	-Iapps/include_lib/liba/ARCH/pi32v2_lto_r1/header \
+	-Iapps/include_lib/liba/ARCH/pi32v2_lto_r1/header/midi_2byte \
 	-Iapps/app/src/mbox_flash/test_dir \
 	-Iapps/app/bsp/common/usb \
 	-Iapps/app/bsp/common/usb/device \
 	-Iapps/app/bsp/common/usb/host \
+	-Iapps/include_lib/update \
 	-I$(SYS_INC_DIR) \
 
 
 # 需要编译的 .c 文件
 c_SRC_FILES := \
 	apps/app/bsp/common/audio/audio_adc_api.c \
-	apps/app/bsp/common/audio/audio_dac_api.c \
 	apps/app/bsp/common/audio/audio_dac_fade.c \
 	apps/app/bsp/common/audio/fill_audac.c \
+	apps/app/bsp/common/audio/sound_kick.c \
 	apps/app/bsp/common/audio_eq/audio_eq_api.c \
 	apps/app/bsp/common/config/cfg_tools.c \
 	apps/app/bsp/common/decoder/decoder_api.c \
@@ -230,6 +254,7 @@ c_SRC_FILES := \
 	apps/app/bsp/common/decoder/mp_io.c \
 	apps/app/bsp/common/decoder/sine_play.c \
 	apps/app/bsp/common/encoder/encoder_api.c \
+	apps/app/bsp/common/encoder/encoder_file.c \
 	apps/app/bsp/common/encoder/list/a_encoder.c \
 	apps/app/bsp/common/encoder/list/mp3_encoder.c \
 	apps/app/bsp/common/encoder/list/ump3_encoder.c \
@@ -239,6 +264,7 @@ c_SRC_FILES := \
 	apps/app/bsp/common/fs/vfs.c \
 	apps/app/bsp/common/fs/vfs_fat.c \
 	apps/app/bsp/common/fs/vfs_resource.c \
+	apps/app/bsp/common/ir/ir_decoder.c \
 	apps/app/bsp/common/key/key.c \
 	apps/app/bsp/common/key/key_drv_ad.c \
 	apps/app/bsp/common/key/key_drv_io.c \
@@ -246,56 +272,75 @@ c_SRC_FILES := \
 	apps/app/bsp/common/key/key_drv_mic.c \
 	apps/app/bsp/common/key/key_ir.c \
 	apps/app/bsp/common/key/key_touch.c \
+	apps/app/bsp/common/midi_open/midi_2byte/midi_dec.c \
+	apps/app/bsp/common/midi_open/midi_2byte/midi_event.c \
+	apps/app/bsp/common/midi_open/midi_2byte/midi_play.c \
 	apps/app/bsp/common/msg/msg.c \
 	apps/app/bsp/common/my_malloc.c \
 	apps/app/bsp/common/norflash/norflash.c \
 	apps/app/bsp/common/power_manage/app_power_mg.c \
+	apps/app/bsp/common/reserved_area/reserved_area.c \
+	apps/app/bsp/common/sound_effect_list/ans_api.c \
 	apps/app/bsp/common/sound_effect_list/echo_api.c \
 	apps/app/bsp/common/sound_effect_list/notch_howling_api.c \
 	apps/app/bsp/common/sound_effect_list/pitchshift_howling_api.c \
 	apps/app/bsp/common/sound_effect_list/song_speed_api.c \
+	apps/app/bsp/common/sound_effect_list/spectral_analysis/spectral_anal.c \
 	apps/app/bsp/common/sound_effect_list/speed_api.c \
 	apps/app/bsp/common/sound_effect_list/vo_pitch_api.c \
+	apps/app/bsp/common/sound_effect_list/voicechanger_api.c \
 	apps/app/bsp/common/speaker/speak_api.c \
 	apps/app/bsp/common/sys_memory/sys_memory.c \
 	apps/app/bsp/common/tab_read.c \
 	apps/app/bsp/common/usb/device/cdc.c \
+	apps/app/bsp/common/usb/device/custom_hid.c \
 	apps/app/bsp/common/usb/device/descriptor.c \
 	apps/app/bsp/common/usb/device/hid.c \
 	apps/app/bsp/common/usb/device/msd.c \
 	apps/app/bsp/common/usb/device/task_pc.c \
+	apps/app/bsp/common/usb/device/uac1.c \
 	apps/app/bsp/common/usb/device/uac_stream.c \
 	apps/app/bsp/common/usb/device/usb_device.c \
 	apps/app/bsp/common/usb/device/usb_device_config.c \
+	apps/app/bsp/common/usb/device/usb_suspend_resume.c \
 	apps/app/bsp/common/usb/device/user_setup.c \
+	apps/app/bsp/common/usb/host/usb_bulk_transfer.c \
+	apps/app/bsp/common/usb/host/usb_ctrl_transfer.c \
 	apps/app/bsp/common/usb/host/usb_host.c \
+	apps/app/bsp/common/usb/host/usb_host_config.c \
+	apps/app/bsp/common/usb/host/usb_storage.c \
 	apps/app/bsp/common/usb/usb_test.c \
-	apps/app/bsp/common/usb/usr/uac_sync.c \
+	apps/app/bsp/common/usb/usr/auadc_2_usbmic.c \
+	apps/app/bsp/common/usb/usr/source_pcm.c \
 	apps/app/bsp/common/usb/usr/usb_audio_interface.c \
 	apps/app/bsp/common/usb/usr/usb_mic_interface.c \
 	apps/app/bsp/common/vm/nvm_api.c \
 	apps/app/bsp/common/vm/vm_api.c \
+	apps/app/bsp/cpu/uc03/adc_api.c \
+	apps/app/bsp/cpu/uc03/audio_adc_cpu.c \
+	apps/app/bsp/cpu/uc03/audio_dac_api.c \
 	apps/app/bsp/cpu/uc03/audio_dac_cpu.c \
 	apps/app/bsp/cpu/uc03/audio_effect/effects_adj.c \
 	apps/app/bsp/cpu/uc03/charge.c \
 	apps/app/bsp/cpu/uc03/clock.c \
-	apps/app/bsp/cpu/uc03/irflt.c \
+	apps/app/bsp/cpu/uc03/device.c \
+	apps/app/bsp/cpu/uc03/iic_api.c \
+	apps/app/bsp/cpu/uc03/iic_eeprom.c \
+	apps/app/bsp/cpu/uc03/iic_hw.c \
+	apps/app/bsp/cpu/uc03/iic_soft.c \
 	apps/app/bsp/cpu/uc03/lcd_seg4x8_driver.c \
 	apps/app/bsp/cpu/uc03/ledc.c \
+	apps/app/bsp/cpu/uc03/mcpwm.c \
 	apps/app/bsp/cpu/uc03/pl_cnt.c \
-	apps/app/bsp/cpu/uc03/port_wkup.c \
 	apps/app/bsp/cpu/uc03/power_api.c \
 	apps/app/bsp/cpu/uc03/power_port.c \
 	apps/app/bsp/cpu/uc03/put_float.c \
 	apps/app/bsp/cpu/uc03/rtc_api.c \
-	apps/app/bsp/cpu/uc03/saradc_isr.c \
 	apps/app/bsp/cpu/uc03/sd.c \
 	apps/app/bsp/cpu/uc03/spi.c \
 	apps/app/bsp/cpu/uc03/tick_timer_sys.c \
-	apps/app/bsp/cpu/uc03/timer_drv.c \
-	apps/app/bsp/cpu/uc03/timer_pwm.c \
+	apps/app/bsp/cpu/uc03/uac_sync.c \
 	apps/app/bsp/cpu/uc03/uart.c \
-	apps/app/bsp/cpu/uc03/uart_dev.c \
 	apps/app/bsp/device/device_app.c \
 	apps/app/bsp/device/device_list.c \
 	apps/app/bsp/start/bsp_loop.c \
@@ -334,6 +379,7 @@ c_SRC_FILES := \
 	apps/app/src/mbox_flash/simple_decode/simple_decode.c \
 	apps/app/src/mbox_flash/simple_decode/simple_decode_key.c \
 	apps/app/src/mbox_flash/softoff_app/softoff_mode.c \
+	apps/app/src/mbox_flash/uc03/cpu_config.c \
 	apps/app/src/mbox_flash/usb_slave/usb_slave_mode.c \
 	apps/app/src/mbox_flash/usb_slave/usb_slave_mode_key.c \
 
@@ -376,20 +422,24 @@ LFLAGS := \
 	--plugin-opt=-pi32v2-large-program=true \
 	--start-group \
 	apps/include_lib/liba/ARCH/pi32v2_lto_r1/mp3_patch_lib.a \
+	apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_wav_decoder.a \
 	apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_f1a_decode.a \
 	apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_a_decode.a \
 	apps/include_lib/liba/ARCH/pi32v2_lto_r1/ump3_dec_lib.a \
-	apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_midi_decode.a \
+	apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_midi_synth.a \
 	apps/include_lib/liba/uc03/mbox_flash/encoder_mge_lib.a \
 	apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_mp2_code.a \
 	apps/include_lib/liba/ARCH/pi32v2_lto_r1/ump2_enc_lib.a \
 	apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_a_code.a \
+	apps/include_lib/liba/ARCH/pi32v2_lto_r1/libNoiseSuppress_pi32v2_OnChip.a \
+	apps/include_lib/liba/ARCH/pi32v2_lto_r1/libFFT_pi32v2_OnChip.a \
 	apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_speed_pitch.a \
 	apps/include_lib/liba/ARCH/pi32v2_lto_r1/ps_song_lib.a \
 	apps/include_lib/liba/ARCH/pi32v2_lto_r1/howling.a \
 	apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_howling_fs.a \
 	apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_echo_cal.a \
 	apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_vopitch_cal.a \
+	apps/include_lib/liba/ARCH/pi32v2_lto_r1/lib_voiceChanger_va.a \
 	--start-group  \
 	apps/include_lib/liba/uc03/mbox_flash/decoder_mge_lib.a \
 	apps/include_lib/liba/uc03/mbox_flash/cpu_lib.a \
@@ -399,9 +449,13 @@ LFLAGS := \
 	apps/include_lib/liba/uc03/mbox_flash/malloc_lib.a \
 	apps/include_lib/liba/uc03/mbox_flash/fs_lib.a \
 	apps/include_lib/liba/uc03/mbox_flash/src_lib.a \
-	apps/include_lib/liba/uc03/mbox_flash/update_lib.a \
+	apps/include_lib/liba/uc03/mbox_flash/dual_bank_lib.a \
+	apps/include_lib/liba/uc03/mbox_flash/periphy_lib.a \
 	--end-group \
 	apps/include_lib/liba/uc03/mbox_flash/new_vm_lib.a \
+	apps/include_lib/liba/uc03/mbox_flash/iir_lib.a \
+	apps/include_lib/liba/uc03/mbox_flash/remain_output_lib.a \
+	apps/include_lib/liba/uc03/mbox_flash/update_lib.a \
 	--end-group  \
 	-Tapps/app/post_build/uc03/app.ld \
 	-M=apps/app/post_build/uc03/app.map \
@@ -461,7 +515,6 @@ all: pre_build $(OUT_ELF)
 
 pre_build:
 	$(info +PRE-BUILD)
-	$(QUITE) $(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -D__LD__ -E -P apps/app/bsp/common/app_modules_h.c -o tmp_app2022.txt
 	$(QUITE) $(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -D__LD__ -E -P apps/app/post_build/uc03/mbox_flash/app_ld.c -o apps/app/post_build/uc03/app.ld
 	$(QUITE) $(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -D__LD__ -E -P apps/app/post_build/uc03/mbox_flash/download_bat.c -o $(POST_SCRIPT)
 	$(QUITE) $(FIXBAT) $(POST_SCRIPT)
@@ -490,38 +543,32 @@ endif
 
 $(BUILD_DIR)/%.c.o : %.c
 	$(info +CC $<)
-	@$(MKDIR) $(@D)
-	@$(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -MM -MT $@ $< -o $(@:.o=.d)
-	$(QUITE) $(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@
+	$(QUITE) $(MKDIR) $(@D)
+	$(QUITE) $(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -MMD -MF $(@:.o=.d) -c $< -o $@
 
 $(BUILD_DIR)/%.S.o : %.S
 	$(info +AS $<)
-	@$(MKDIR) $(@D)
-	@$(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -MM -MT $@ $< -o $(@:.o=.d)
-	$(QUITE) $(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@
+	$(QUITE) $(MKDIR) $(@D)
+	$(QUITE) $(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -MMD -MF $(@:.o=.d) -c $< -o $@
 
 $(BUILD_DIR)/%.s.o : %.s
 	$(info +AS $<)
-	@$(MKDIR) $(@D)
-	@$(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -MM -MT $@ $< -o $(@:.o=.d)
-	$(QUITE) $(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@
+	$(QUITE) $(MKDIR) $(@D)
+	$(QUITE) $(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -MMD -MF $(@:.o=.d) -c $< -o $@
 
 $(BUILD_DIR)/%.cpp.o : %.cpp
 	$(info +CXX $<)
-	@$(MKDIR) $(@D)
-	@$(CXX) $(CFLAGS) $(CXXFLAGS) $(DEFINES) $(INCLUDES) -MM -MT $@ $< -o $(@:.o=.d)
-	$(QUITE) $(CXX) $(CXXFLAGS) $(CFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@
+	$(QUITE) $(MKDIR) $(@D)
+	$(QUITE) $(CXX) $(CXXFLAGS) $(CFLAGS) $(DEFINES) $(INCLUDES) -MMD -MF $(@:.o=.d) -c $< -o $@
 
 $(BUILD_DIR)/%.cxx.o : %.cxx
 	$(info +CXX $<)
-	@$(MKDIR) $(@D)
-	@$(CXX) $(CFLAGS) $(CXXFLAGS) $(DEFINES) $(INCLUDES) -MM -MT $@ $< -o $(@:.o=.d)
-	$(QUITE) $(CXX) $(CXXFLAGS) $(CFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@
+	$(QUITE) $(MKDIR) $(@D)
+	$(QUITE) $(CXX) $(CXXFLAGS) $(CFLAGS) $(DEFINES) $(INCLUDES) -MMD -MF $(@:.o=.d) -c $< -o $@
 
 $(BUILD_DIR)/%.cc.o : %.cc
 	$(info +CXX $<)
-	@$(MKDIR) $(@D)
-	@$(CXX) $(CFLAGS) $(CXXFLAGS) $(DEFINES) $(INCLUDES) -MM -MT $@ $< -o $(@:.o=.d)
-	$(QUITE) $(CXX) $(CXXFLAGS) $(CFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@
+	$(QUITE) $(MKDIR) $(@D)
+	$(QUITE) $(CXX) $(CXXFLAGS) $(CFLAGS) $(DEFINES) $(INCLUDES) -MMD -MF $(@:.o=.d) -c $< -o $@
 
 -include $(DEP_FILES)

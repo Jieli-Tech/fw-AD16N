@@ -1,25 +1,11 @@
 #include "vfs_fat.h"
 #include "vfs.h"
 #include "errno-base.h"
+#include "device.h"
 
 #define LOG_TAG_CONST       NORM
-#define LOG_TAG             "[normal]"
+#define LOG_TAG             "[vfs_fat]"
 #include "log.h"
-
-int vfs_get_fsize(void *pvfile, void *parm)
-{
-    struct imount *p_vfile = pvfile;
-    struct vfs_operations *ops;
-    if ((void *)NULL == p_vfile) {
-        return 0;
-    }
-    ops = p_vfile->ops;
-    if (((void *)NULL != ops)  && ((void *)NULL !=  ops->flen)) {
-        u32 res;
-        return ops->flen(p_vfile->pfile, (u32 *)parm);
-    }
-    return 0;
-}
 
 int vfs_ftell(void *pvfile, void *parm)
 {
@@ -278,4 +264,85 @@ int vfs_get_encfolder_info(void *pvfs, char *folder, char *ext, u32 *last_num, u
 /*     } */
 /*     return 0; */
 /* } */
+
+int vfs_format(void **ppvfs, const char *dev_name, const char *type, u32 clust_size, u8 create_new)
+{
+    if ((void *)NULL == *ppvfs) {
+        if (clust_size == 0) {
+            return E_NO_VFS;
+        }
+        *ppvfs = vfs_hdl_malloc();
+        if ((void *)NULL == *ppvfs) {
+            return E_NO_VFS;
+        }
+    }
+    int err;
+    void *device = dev_open(dev_name, NULL);
+    if (device == NULL) {
+        log_info("dev null !!!! \n");
+        return E_DEV_NULL;
+    }
+
+    struct vfs_operations *ops;
+    struct imount *pvfs = *ppvfs;
+    list_for_each_vfs_operation(ops) {
+        //log_info("%s, %s", ops->fs_type, type);
+        if (0 == strcmp(ops->fs_type, type)) {
+            pvfs->ops = ops;
+            break;
+        }
+    }
+    if (pvfs->ops == NULL) {
+        return E_NO_FS;
+    }
+
+    ops = pvfs->ops;
+    if (NULL != ops->format) {
+        err = ops->format(&(pvfs->pfs), device, clust_size, create_new);
+    } else {
+        err = E_VFS_OPS;
+    }
+    if (err) {
+        log_info("f_format: err = %x\n", err);
+    }
+
+    if (device) {
+        dev_ioctl(device, IOCTL_FLUSH, 0);
+    }
+
+    //全部释放，format之后需要使用mount
+    if (pvfs->pfs) {
+        pvfs->pfs = fat_fshdl_free(pvfs->pfs);
+    }
+    if (pvfs->pfile) {
+        pvfs->pfile = fat_fhdl_free(pvfs->pfile);
+    }
+    *ppvfs = vfs_fhdl_free(*ppvfs);
+    dev_close(device);
+    return err;
+}
+
+int vfs_fget_path(void *pvfile, struct vfscan *fscan, u8 *name, int len, u8 is_relative_path)
+{
+    int err = -1;
+    struct imount *p_vfile = pvfile;
+    if ((void *)NULL == p_vfile) {
+        return E_FS_PFILE;
+    }
+    struct vfs_operations *ops;
+    ops = p_vfile->ops;
+    int arg[4] = {0};
+    FIL *file = p_vfile->pfile;
+    arg[0] = (int)fscan;
+    arg[1] = (int)name;
+    arg[2] = (int)len;
+    arg[3] = (int)is_relative_path;
+    if (ops->ioctl) {
+        err = ops->ioctl(file, FS_IOCTL_GET_PATH, (int)arg);
+    }
+
+
+    return err;
+}
+
 

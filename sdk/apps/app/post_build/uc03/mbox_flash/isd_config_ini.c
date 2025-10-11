@@ -60,6 +60,7 @@ SUPPORTED_LIST=A
 //#     1 RD_I/O,          1 cmd       x addr
 //#     2 RD_I/O_CONTINUE] no_send_cmd x add
 //#SPI = data_width,clk,mode;
+//##AUTH_CODE=1;
 SPI=2_3_0_0;  #data_width,clk,mode;
 //#OSC=btosc;
 //#OSC_FREQ=24MHz; #[24MHz 12MHz]
@@ -68,7 +69,7 @@ UTTX=PA06;//uboot串口tx
 UTBD=1000000;//uboot串口波特率
 //#UTRX=DP;           //串口升级[PB00 PB05 PA05], 默认PB05
 //#RESET=PB01_08_0;   //port口_长按时间_有效电平（长按时间有00、04、08三个值可选，单位为秒，当长按时间为00时，则关闭长按复位功能。）
-//CACHE_WAY=1;// 范围1~4
+//#CACHE_WAY=1;// 范围1~4
 //#WAIT_TIME=10;// * 100ms
 #if TFG_EXT_FLASH_EN
 EX_FLASH=CAT2(TFG_SPI_CS_PORT,1A_NULL);  //#cs,spi1,A,flashpower
@@ -84,8 +85,8 @@ EX_FLASH_IO=CAT5(1,TFG_SPI_CLK_PORT,TFG_SPI_DO_PORT,TFG_SPI_DI_PORT,NULL_NULL); 
 
 //####################################################
 [TOOL_CONFIG]
-1TO2_MIN_VER=2.27.4
-1TO8_MIN_VER=3.1.19
+1TO2_MIN_VER=2.27.1
+1TO8_MIN_VER=3.1.17
 //BTBOX_MIN_VER=1.2.4.f
 //####################################################
 
@@ -94,8 +95,10 @@ EX_FLASH_IO=CAT5(1,TFG_SPI_CLK_PORT,TFG_SPI_DO_PORT,TFG_SPI_DI_PORT,NULL_NULL); 
 //OTP_BOOT 0,FLASH模式 1,OTP模式
 //####################################################
 [BURNER_PASSTHROUGH_CFG]
+//##AUTH_CODE_IN_FLASH=1;
 LIGHTING2TYPEC=0    //uboot_start
 OTP_BOOT=0
+//#FLASH_WRITE_PROTECT=NO;
 
 //####################################################
 //烧写器配置项

@@ -16,7 +16,7 @@ void read_current_time()
 {
     struct sys_time tmp_time;
     memset((u8 *)&tmp_time, 0, sizeof(tmp_time));
-    read_sys_time(&tmp_time); 				//读rtc时间
+    rtc_read_time(&tmp_time); 				//读rtc时间
     log_info("current_rtc_time: %d-%d-%d %d:%d:%d", tmp_time.year, \
              tmp_time.month, \
              tmp_time.day, \
@@ -35,7 +35,7 @@ void write_clock_time(u16 year, u8 month, u8 day, u8 hour, u8 min, u8 sec)
     tmp_time.hour = hour;
     tmp_time.min = min;
     tmp_time.sec = sec;
-    write_sys_time(&tmp_time); 		//修改rtc时间
+    rtc_write_time(&tmp_time); 		//修改rtc时间
     log_info("modification time : %d-%d-%d %d:%d:%d", tmp_time.year, \
              tmp_time.month, \
              tmp_time.day, \
@@ -49,7 +49,7 @@ void read_alarm_time()
 {
     struct sys_time tmp_time;
     memset((u8 *)&tmp_time, 0, sizeof(tmp_time));
-    read_alarm(&tmp_time); 				//读rtc时间
+    rtc_read_alarm(&tmp_time); 				//读rtc时间
     log_info("current_rtc_time: %d-%d-%d %d:%d:%d", tmp_time.year, \
              tmp_time.month, \
              tmp_time.day, \
@@ -68,7 +68,7 @@ void write_alarm_time(u16 year, u8 month, u8 day, u8 hour, u8 min, u8 sec)
     tmp_time.hour = hour;
     tmp_time.min = min;
     tmp_time.sec = sec;
-    write_alarm(&tmp_time); 		//修改rtc时间
+    rtc_write_alarm(&tmp_time); 		//修改rtc时间
     log_info("modification time : %d-%d-%d %d:%d:%d", tmp_time.year, \
              tmp_time.month, \
              tmp_time.day, \

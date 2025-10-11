@@ -244,7 +244,7 @@ void usb_test()
     memset(&uac_sound, 0, sizeof(uac_sound));
     cbuf_init(&cbuf_aux_o, &obuf_aux_o[0], sizeof(obuf_aux_o));
     uac_sound.p_obuf = &cbuf_aux_o;
-    regist_dac_channel(&uac_sound, NULL); //注册到DAC;
+    regist_dac_channel(NULL, &uac_sound, NULL); //注册到DAC;
     uac_sound.enable |= B_DEC_RUN_EN;
 
     /* test_audio_usb(); */

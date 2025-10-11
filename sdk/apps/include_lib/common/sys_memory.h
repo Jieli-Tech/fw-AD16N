@@ -2,43 +2,58 @@
 #define _SYS_MEMORY_H_
 #include "typedef.h"
 
-#define USE_NEW_VM      1
-#define USE_OLD_VM      2
-#define SYS_MEMORY_SELECT   USE_NEW_VM
-
-#if (SYS_MEMORY_SELECT == USE_NEW_VM)
-//新版vm，支持预擦除
-#include "new_vm.h"
-#define sysmem_phy_init(addr, size)         nvm_init_api(addr, size)
-#define sysmem_phy_read(id, buf, len)       nvm_read_api(id, buf, len)
-#define sysmem_phy_write(id, buf, len)      nvm_write_api(id, buf, len)
-#define sysmem_phy_pre_erase()              nvm_erasure_next_api()
-#define SYSMEM_INDEX_MAX                    BIT_MAP
-#elif (SYS_MEMORY_SELECT == USE_OLD_VM)
-//旧版vm
-#include "vm.h"
-#define sysmem_phy_init(addr, size)         syscfg_vm_init_phy(addr, size)
-#define sysmem_phy_read(id, buf, len)       vm_read_phy(id, buf, len)
-#define sysmem_phy_write(id, buf, len)      vm_write_phy(id, buf, len)
-#define sysmem_phy_pre_erase(...)
-#define SYSMEM_INDEX_MAX                    128
-#else
-#define sysmem_phy_init(addr, size)         -1
-#define sysmem_phy_read(id, buf, len)       -1
-#define sysmem_phy_write(id, buf, len)      -1
-#define sysmem_phy_pre_erase(...)
-#define SYSMEM_INDEX_MAX                    128
-#endif
+struct btif_item {
+    u16 id;
+    u16 data_len;
+};
 
 typedef enum {
+    //================系统内部 & 蓝牙库内使用，不可修改顺序===========================//
     SYSMEM_INDEX_DEMO = 0,
-    // 系统lib使用，预留32个id，不可修改顺序
+    // 系统lib使用，预留64个id，不可修改顺序
     LIB_SYSMEM_OLD_RTC_TIME     = 1,
     LIB_SYSMEM_OLD_REAL_TIME    = 2,
     LIB_SYSMEM_RTC_ALARM_TIME   = 3,
-    LIB_SYSMEM_END = 32,
+    CFG_BT_TRIM_INFO            = 4,
+    VM_BLE_LOCAL_INFO           = 5,
+    CFG_BT_FRE_OFFSET           = 6,    //BT 频偏
+    VM_PMU_VOLTAGE              = 7,
+    LIB_SYSMEM_VIR_RTC_TIME     = 8,
+    LIB_SYSMEM_VIR_RTC_ALM      = 9,
+    LIB_SYSMEM_VIR_RTC_CNT      = 10,
+    LIB_SYSMEM_SDK_LASTEST      = 11,
 
-    // 用户可以使用
+    //蓝牙类配置项[]
+    CFG_BLE_MODE_INFO           = 15,
+    CFG_TWS_PAIR_AA,
+    CFG_TWS_CONNECT_AA,
+    CFG_TWS_LOCAL_ADDR,
+    VM_DMA_RAND,
+    VM_TME_AUTH_COOKIE,
+    CFG_REMOTE_DB_00,
+    VM_BLE_REMOTE_DB_INFO,
+    VM_BLE_REMOTE_DB_00,
+    VM_BLE_REMOTE_DB_01,
+    VM_BLE_REMOTE_DB_02,
+    VM_BLE_REMOTE_DB_03,
+    VM_BLE_REMOTE_DB_04,
+    VM_BLE_REMOTE_DB_05,
+    VM_BLE_REMOTE_DB_06,
+    VM_BLE_REMOTE_DB_07,
+    VM_BLE_REMOTE_DB_08,
+    VM_BLE_REMOTE_DB_09,
+
+    LIB_SYSMEM_END = 64,
+    //================================================================================//
+
+    //=========================btif & cfg_tool.bin====================================//
+    CFG_BT_NAME,
+    CFG_BT_MAC_ADDR,
+    CFG_BT_RF_POWER_ID,
+    CFG_LRC_ID,
+    //================================================================================//
+    //
+    // 以下用户可以任意修改顺序或添加
     SYSMEM_INDEX_SONG,
     SYSMEM_INDEX_ENG,
     SYSMEM_INDEX_POETRY,
@@ -77,22 +92,25 @@ typedef enum {
     // eq
     SYSMEM_INDEX_EQ,
 
-    SYSMEM_LAST_INDEX = SYSMEM_INDEX_MAX,
+    // SYSMEM_LAST_INDEX = SYSMEM_INDEX_MAX,
+    //===============================================================================//
+    //                           蓝牙应用层库使用到                                  //
+    //===============================================================================//
+    CFG_AAP_MODE_INFO,
+    CFG_BLE_BONDING_REMOTE_INFO,
+    CFG_BLE_BONDING_REMOTE_INFO2,
+
 } SYSMEM_INDEX;
 
 int sysmem_init_api(u32 mem_addr, u32 mem_size);
 int sysmem_read_api(u32 id, u8 *data_buf, u16 len);
 int sysmem_write_api(u32 id, u8 *data_buf, u16 len);
 void sysmem_pre_erase_api(void);
+void sysmem_delete_api(u32 *delete_map, u32 delete_bits);
 
-// vm_sfc接口
-typedef u32(*flash_code_protect_cb_t)(u32 offset, u32 len);
-u32 flash_code_protect_callback(u32 offset, u32 len);
-extern volatile u8 vm_busy;
-// vm擦写时可放出多个中断
-void vm_isr_response_index_register(u8 index);
-void vm_isr_response_index_unregister(u8 index);
-u32 get_vm_isr_response_index_h(void);//获取放出中断的高32位(index 32-63)
-u32 get_vm_isr_response_index_l(void);//获取放出中断的低32位(index 0-31)
+// 蓝牙vm使用接口
+int syscfg_write(u16 item_id, const void *buf, u16 len);
+int syscfg_read(u16 item_id, void *buf, u16 len);
+
 #endif
 

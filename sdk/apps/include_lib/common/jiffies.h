@@ -23,15 +23,18 @@ extern volatile u32 jiffies;
 #define time_after(a,b)					((int)(b) - (int)(a) < 0)
 #define time_before(a,b)				time_after(b,a)
 
-extern unsigned char jiffies_unit;
+// extern unsigned char jiffies_unit;
 
-#define msecs_to_jiffies(msec) 		    ((msec)/jiffies_unit)
-#define jiffies_to_msecs(j) 		    ((j)*jiffies_unit)
+// #define msecs_to_jiffies(msec) 		    ((msec)/jiffies_unit)
+// #define jiffies_to_msecs(j) 		    ((j)*jiffies_unit)
+#define msecs_to_jiffies(msec) 		    ((msec)/jiffies)
+#define jiffies_to_msecs(j) 		    ((j)*jiffies)
 
 void delay(u32 i);
 void delay_10ms(u32 tick);
 void os_time_dly(u32 tick);
 
+#define delay_nops  delay
 
 #endif
 

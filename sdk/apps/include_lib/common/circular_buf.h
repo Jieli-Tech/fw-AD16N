@@ -57,4 +57,8 @@ u32 cbuf_prewrite(cbuffer_t *cbuffer, void *buf, u32 len);
 
 #define cbuf_get_available_space(a)		_cbuf_get_available_space(a)
 
+#define cbuf_get_start_addr(a)   ((cbuffer_t *)a)->begin
+
+#define cbuf_get_end_addr(a)     ((cbuffer_t *)a)->end
+
 #endif

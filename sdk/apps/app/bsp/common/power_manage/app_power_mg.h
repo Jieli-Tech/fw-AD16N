@@ -14,6 +14,10 @@
 #define low_power_warning_init
 #endif
 
+//TODO by bt
+#define LOW_POWER_WARN_VAL          240
+#define LOW_POWER_OFF_VAL           220
+
 void app_power_init(void);
 void app_power_scan(void);
 u16 app_power_get_vbat(void);
