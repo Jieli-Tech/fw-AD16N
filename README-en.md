@@ -37,17 +37,19 @@ Documentation
 
 * Chipset brief : [SoC datasheet](./doc)
 
-* Product Select Guide : [SoC Select Guide](./doc/README.md); [SoC Select Guide.pdf](./doc/杰理科技AD14_AD15_AD16_AD17系列语音MCU选型表.pdf)
+* Product Select Guide : [SoC Select Guide](./doc/README.md); [SoC Select Guide.pdf](./doc/杰理科技32位AD系列语音MCU选型表.pdf)
 
-* SDK Version: [SDK History](doc/AD16N_FLASH_SDK_发布版本信息.pdf)
+* SDK Version : [SDK History](doc/AD16N_FLASH_SDK_发布版本信息.pdf)
 
-* SDK introduction : [SDK quick start guide](./doc/AD16N_SDK手册_V1.1.pdf)
+* SDK introduction : [SDK quick start guide](./doc/AD16N_开源SDK手册_V1.2.pdf)
 
-* SDK architure : [SDK module architure ](./doc/architure)
+* SDK architure : [SDK module architure ](./doc/)
 
-* Video resource: [Video resource](https://space.bilibili.com/3493277347088769/dynamic)
+* Video resource : [Video resource](https://space.bilibili.com/3493277347088769/dynamic)
 
-* FAE support document: [FAE support](https://gitee.com/jieli-tech_fae/fw-jl)
+* FAE support document : [FAE support](https://gitee.com/jieli-tech_fae/fw-jl)
+
+* Zhieli Tools Documentation : [Zhieli Tools Documentation](https://doc.zh-jieli.com/Tools/zh-cn/index.html)
 
 SDK explanation video
 ------------

@@ -37,17 +37,20 @@ AD16N 系列通用MCU SDK 固件程序
 
 * 芯片简介 : [SoC 数据手册扼要](./doc)
 
-* 芯片选型号手册 : [SoC 选型手册](./doc/README.md); [SoC 选型手册.pdf](./doc/杰理科技AD14_AD15_AD16_AD17系列语音MCU选型表.pdf)
+* 芯片选型号手册 : [SoC 选型手册](./doc/README.md); [SoC 选型手册.pdf](./doc/杰理科技32位AD系列语音MCU选型表.pdf)
 
 * SDK 版本信息 : [SDK 历史版本](doc/AD16N_FLASH_SDK_发布版本信息.pdf)
 
-* SDK 介绍文档 : [SDK 快速开始简介](./doc/AD16N_SDK手册_V1.1.pdf)
+* SDK 介绍文档 : [SDK 快速开始简介](./doc/AD16N_开源SDK手册_V1.2.pdf)
 
 * SDK 结构文档 : [SDK 模块结构](./doc/)
 
 * 视频资源 : [视频链接](https://space.bilibili.com/3493277347088769/dynamic)
 
 * FAE 支持文档 : [FAE支持](https://gitee.com/jieli-tech_fae/fw-jl)
+
+* 杰理工具文档 : [杰理工具在线文档 ](https://doc.zh-jieli.com/Tools/zh-cn/index.html)
+
 
 SDK 培训视频
 ------------
