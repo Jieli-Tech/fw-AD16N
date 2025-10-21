@@ -157,17 +157,29 @@ char *get_device_name(u32 index)
 #if TFG_DEV_UPGRADE_SUPPORT
 #if defined(UPDATE_V2_EN) && (1 == UPDATE_V2_EN)
 //V2的文件名传到全局变量
-#define DEVICE_TRY_TO_UPDATE(device_name, ufw_file_name)  dev_update_check(device_name)
+#define DEVICE_TRY_TO_UPDATE(device_name, ufw_file_namei, check)  dev_update_check(device_name)
 #else
-#define DEVICE_TRY_TO_UPDATE(device_name, ufw_file_name)  try_to_upgrade(device_name, ufw_file_name)
+#define DEVICE_TRY_TO_UPDATE(device_name, ufw_file_name, check)  try_to_upgrade(device_name, ufw_file_name, check)
 #endif
 #endif
 
-void device_update(u8 update_dev)
+u32 device_update(u8 update_dev, bool check)
 {
+    u32 err = 0;
 #if TFG_DEV_UPGRADE_SUPPORT
+    static u8 ready_device = (u8) - 1;
     log_info("%s \n", (char *)device_name[update_dev]);
-    u32 err = DEVICE_TRY_TO_UPDATE((char *)device_name[update_dev], TFG_UPGRADE_FILE_NAME);
+    if (((u8) - 1) == update_dev) {
+        if (((u8) - 1) == ready_device) {
+            return DEVIVE_IDX_ERROR;
+        }
+        update_dev = ready_device;
+    }
+    err = DEVICE_TRY_TO_UPDATE((char *)device_name[update_dev], TFG_UPGRADE_FILE_NAME, check);
+    if ((1 == check) && (NO_ERROR == err)) {
+        ready_device = update_dev;
+    }
     log_error("dev update err 0x%x\n", err);
 #endif
+    return err;
 }

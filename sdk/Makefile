@@ -176,6 +176,7 @@ INCLUDES := \
 	-Iapps/app/bsp/start/uc03 \
 	-Iapps/app/src/mbox_flash \
 	-Iapps/app/src/mbox_flash/uc03 \
+	-Iapps/app/src/mbox_flash/update_app \
 	-Iapps/include_lib \
 	-Iapps/include_lib/common \
 	-Iapps/include_lib/audio \
@@ -380,6 +381,7 @@ c_SRC_FILES := \
 	apps/app/src/mbox_flash/simple_decode/simple_decode_key.c \
 	apps/app/src/mbox_flash/softoff_app/softoff_mode.c \
 	apps/app/src/mbox_flash/uc03/cpu_config.c \
+	apps/app/src/mbox_flash/update_app/update_app.c \
 	apps/app/src/mbox_flash/usb_slave/usb_slave_mode.c \
 	apps/app/src/mbox_flash/usb_slave/usb_slave_mode_key.c \
 

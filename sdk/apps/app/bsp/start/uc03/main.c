@@ -170,7 +170,7 @@ void c_main(int cfg_addr)
 
     /* gpio_clk_out(IO_PORTC_00, CLK_OUT_HSB); */
 
-    log_info("time & date %s %s \n  OTP-c_main\n", __TIME__, __DATE__);
+    log_info("time & date %s %s \n  OTP c_main\n", __TIME__, __DATE__);
 
     my_malloc_init();
 #if SYS_TIMER_EN

@@ -33,6 +33,8 @@
 
 #include "dev_update.h"
 
+#include "update/code_v1/update_v1.h"
+
 #include "usb/host/usb_host.h"
 #include "usb/device/usb_stack.h"
 #include "usb/otg.h"
@@ -96,7 +98,8 @@ static void music_info_init(u8 *p_dev)
 
     pctl[0].pdp = &breakpoint[0];
     pctl[0].dev_index = NO_DEVICE;
-    pctl[0].dec_type = BIT_WAV | BIT_MP3_ST | BIT_F1A1 | BIT_A | BIT_UMP3;  //播放需要使用的解码器
+    /* pctl[0].dec_type = BIT_WAV | BIT_MP3_ST | BIT_F1A1 | BIT_A | BIT_UMP3;  //播放需要使用的解码器 */
+    pctl[0].dec_type = BIT_WAV | BIT_MP3_ST | BIT_F1A1 | BIT_UMP3;  //播放需要使用的解码器
 #if HAS_SYDFS_EN
     pctl[0].pdir = (void *)&dir_inr_tab[0];
     pctl[0].dir_index = 0;
@@ -186,7 +189,12 @@ void music_app(void)
             used_device = msg[0] - MSG_USB_DISK_IN;
             log_info("DEV_IN %d\n", used_device);
 #if TFG_DEV_UPGRADE_SUPPORT
-            device_update(used_device);
+            err = device_update(used_device, 1);
+            if (NO_ERROR == err) {
+                work_mode = UPDATE_MODE;
+                post_msg(1, MSG_CHANGE_WORK_MODE);
+                break;
+            }
 #endif
             post_msg(1, MSG_SEL_NEW_DEVICE);
             break;
@@ -258,6 +266,7 @@ __find_last_device:
         case MSG_WAV_FILE_END:
         case MSG_MP3_FILE_END:
         case MSG_F1A1_FILE_END:
+            /* case MSG_A_FILE_END: */
             log_info("FILE_END:0x%x\n", msg[0]);
             if (pctl[0].p_dec_obj->sound.enable & B_DEC_ERR) {
                 music_play_control(FILE_CMD_AUTO_NEXT, 0, NEED_WAIT);
@@ -266,6 +275,7 @@ __find_last_device:
         case MSG_WAV_FILE_ERR:
         case MSG_MP3_FILE_ERR:
         case MSG_F1A1_FILE_ERR:
+            /* case MSG_A_FILE_ERR: */
             log_info("FILE_ERR:0x%x\n", msg[0]);
             if (pctl[0].p_dec_obj->sound.enable & B_DEC_ERR) {
                 music_play_control(FILE_CMD_AUTO_NEXT, 0, NO_WAIT);

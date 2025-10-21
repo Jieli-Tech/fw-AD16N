@@ -81,6 +81,7 @@
                 "${workspaceFolder}/apps/app/bsp/start/uc03",
                 "${workspaceFolder}/apps/app/src/mbox_flash",
                 "${workspaceFolder}/apps/app/src/mbox_flash/uc03",
+                "${workspaceFolder}/apps/app/src/mbox_flash/update_app",
                 "${workspaceFolder}/apps/include_lib",
                 "${workspaceFolder}/apps/include_lib/common",
                 "${workspaceFolder}/apps/include_lib/audio",

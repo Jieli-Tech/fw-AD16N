@@ -26,6 +26,7 @@
 #include "rf_radio_app.h"
 #endif
 #include "rc_app.h"
+#include "update_app.h"
 #include "softoff_mode.h"
 
 #include "jiffies.h"
@@ -259,6 +260,9 @@ void mbox_flash_main(void)
         /* #endif */
         /*             break; */
         /* #endif */
+        case UPDATE_MODE:
+            update_app();
+            break;
         case SOFTOFF_MODE:
             log_info("-SoftOff Mode\n");
             softoff_app();

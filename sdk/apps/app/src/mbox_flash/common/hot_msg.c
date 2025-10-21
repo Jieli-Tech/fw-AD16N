@@ -22,6 +22,8 @@
 
 #include "update.h"
 
+#include "update/code_v1/update_v1.h"
+
 #define LOG_TAG_CONST       NORM
 #define LOG_TAG             "[hot_msg]"
 #include "log.h"
@@ -103,7 +105,11 @@ __app_vol_deal:
         }
 #if TFG_DEV_UPGRADE_SUPPORT
         u8 update_dev = key - MSG_USB_DISK_IN;
-        device_update(update_dev);
+        err = device_update(update_dev, 1);
+        if (NO_ERROR == err) {
+            work_mode = UPDATE_MODE;
+            post_msg(1, MSG_CHANGE_WORK_MODE);
+        }
 #endif
         break;
 

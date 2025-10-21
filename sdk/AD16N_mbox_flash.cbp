@@ -100,6 +100,7 @@
 <Add directory="apps/app/bsp/start/uc03" />
 <Add directory="apps/app/src/mbox_flash" />
 <Add directory="apps/app/src/mbox_flash/uc03" />
+<Add directory="apps/app/src/mbox_flash/update_app" />
 <Add directory="apps/include_lib" />
 <Add directory="apps/include_lib/common" />
 <Add directory="apps/include_lib/audio" />
@@ -422,6 +423,8 @@
 <Unit filename="apps/app/src/mbox_flash/softoff_app/softoff_mode.h" />
 <Unit filename="apps/app/src/mbox_flash/uc03/app_modules.h" />
 <Unit filename="apps/app/src/mbox_flash/uc03/cpu_config.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/src/mbox_flash/update_app/update_app.c"><Option compilerVer="CC"/></Unit>
+<Unit filename="apps/app/src/mbox_flash/update_app/update_app.h" />
 <Unit filename="apps/app/src/mbox_flash/usb_slave/usb_slave_mode.c"><Option compilerVer="CC"/></Unit>
 <Unit filename="apps/app/src/mbox_flash/usb_slave/usb_slave_mode.h" />
 <Unit filename="apps/app/src/mbox_flash/usb_slave/usb_slave_mode_key.c"><Option compilerVer="CC"/></Unit>

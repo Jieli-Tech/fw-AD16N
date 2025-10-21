@@ -1,4 +1,4 @@
-# fw-AD6N
+# fw-AD16N
 About Firmware for Generic MCU SDK（AD16N series）, Support AD16N
 
 [tag download]:https://github.com/Jieli-Tech/fw-AD16N/tags

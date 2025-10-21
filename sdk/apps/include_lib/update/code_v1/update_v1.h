@@ -1,5 +1,5 @@
-#ifndef _UPDATE_H_
-#define _UPDATE_H_
+#ifndef _UPDATE_V1_H_
+#define _UPDATE_V1_H_
 
 #include "typedef.h"
 #include "csfr.h"
@@ -99,10 +99,11 @@ enum {
     FIND_OTA_ERROR,
     FIND_LOADER0_ERROR,
     FLASH_SIZE_ERROR,
+    DEVIVE_IDX_ERROR,
 };
 
 u32 check_ufw_file(char *dev_name, char *up_file_path);
-u32 try_to_upgrade(char *dev_name, char *up_file_path);
+u32 try_to_upgrade(char *dev_name, char *up_file_path, bool check);
 u32 try_to_upgrade_api(char *dev_name, char *up_file_path, bool check);
 
 // u32 get_up_suc_flag(void);
