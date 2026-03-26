@@ -51,6 +51,8 @@ Documentation
 
 * Zhieli Tools Documentation : [Zhieli Tools Documentation](https://doc.zh-jieli.com/Tools/zh-cn/index.html)
 
+* MIDI Application Development Manual : [MIDI Application Development Manual](https://doc.zh-jieli.com/MIDI/zh-cn/master/index.html)
+
 SDK explanation video
 ------------
 [AD16N FLASH SDK explanation video link](https://www.bilibili.com/video/BV15T411a7YE/?spm_id_from=333.337.search-card.all.click&vd_source=254273a14d3e073e6006d61b2acafb16)

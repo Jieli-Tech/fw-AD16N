@@ -51,6 +51,8 @@ AD16N 系列通用MCU SDK 固件程序
 
 * 杰理工具文档 : [杰理工具在线文档 ](https://doc.zh-jieli.com/Tools/zh-cn/index.html)
 
+* MIDI 应用开发手册 : [MIDI应用开发手册](https://doc.zh-jieli.com/MIDI/zh-cn/master/index.html)
+
 
 SDK 培训视频
 ------------
